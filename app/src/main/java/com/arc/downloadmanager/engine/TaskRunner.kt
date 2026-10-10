@@ -138,9 +138,11 @@ class TaskRunner
             }
 
             val segmentsWanted = resolveSegments(updated, totalBytes, opened.serverAcceptsRanges, settings, segmentCapFor)
+            var usedMulti = false
             val outcome =
                 if (segmentsWanted > 1 && totalBytes > 0 && opened.serverAcceptsRanges) {
                     opened.response.close()
+                    usedMulti = true
                     runMultiSegment(updated, totalBytes, segmentsWanted, settings, control)
                 } else {
                     runSingleStream(updated, opened, startOffset, totalBytes, settings, control)
@@ -149,6 +151,19 @@ class TaskRunner
 
             val fresh = store.getById(id) ?: return TaskOutcome.Canceled
             val staged = storage.stagingFile(fresh.id, fresh.filename)
+            if (!usedMulti) {
+                // Single stream writes to part_0; promote it to the staging file for finalization.
+                val part = storage.partFile(fresh.id, 0)
+                if (!part.exists()) {
+                    return TaskOutcome.Failed(DownloadError.IO_ERROR, "Downloaded data missing on disk")
+                }
+                staged.parentFile?.mkdirs()
+                if (staged.exists()) staged.delete()
+                if (!part.renameTo(staged)) {
+                    part.copyTo(staged, overwrite = true)
+                    part.delete()
+                }
+            }
             if (fresh.totalBytes > 0 && staged.length() != fresh.totalBytes) {
                 return TaskOutcome.Failed(DownloadError.IO_ERROR, "Size mismatch: ${staged.length()} of ${fresh.totalBytes}")
             }

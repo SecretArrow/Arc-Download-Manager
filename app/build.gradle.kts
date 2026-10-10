@@ -84,6 +84,17 @@ android {
     }
 }
 
+tasks.withType<Test> {
+    // Convert hangs into diagnosable failures instead of burning the whole job timeout.
+    timeout.set(java.time.Duration.ofMinutes(8))
+    testLogging {
+        events("started", "failed", "skipped")
+        showExceptions = true
+        showStackTraces = true
+        showCauses = true
+    }
+}
+
 ktlint {
     android.set(true)
     ignoreFailures.set(false)
