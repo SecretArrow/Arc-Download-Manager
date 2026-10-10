@@ -7,10 +7,10 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SegmentDao {
-    @Query("SELECT * FROM segments WHERE downloadId = :downloadId ORDER BY index ASC")
+    @Query("SELECT * FROM segments WHERE downloadId = :downloadId ORDER BY idx ASC")
     suspend fun getByDownload(downloadId: String): List<SegmentEntity>
 
-    @Query("SELECT * FROM segments WHERE downloadId = :downloadId ORDER BY index ASC")
+    @Query("SELECT * FROM segments WHERE downloadId = :downloadId ORDER BY idx ASC")
     fun observeByDownload(downloadId: String): Flow<List<SegmentEntity>>
 
     @Query("SELECT COALESCE(SUM(downloadedBytes),0) FROM segments WHERE downloadId = :downloadId")
@@ -22,7 +22,7 @@ interface SegmentDao {
     @Upsert
     suspend fun upsertAll(segments: List<SegmentEntity>)
 
-    @Query("UPDATE segments SET downloadedBytes = :downloadedBytes, status = :status, updatedAt = :now WHERE downloadId = :downloadId AND index = :index")
+    @Query("UPDATE segments SET downloadedBytes = :downloadedBytes, status = :status, updatedAt = :now WHERE downloadId = :downloadId AND idx = :index")
     suspend fun updateProgress(downloadId: String, index: Int, downloadedBytes: Long, status: String, now: Long = System.currentTimeMillis())
 
     @Query("DELETE FROM segments WHERE downloadId = :downloadId")

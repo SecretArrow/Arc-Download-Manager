@@ -3,7 +3,7 @@ package com.arc.downloadmanager.engine
 import java.util.Locale
 
 /**
- * Parses HTTP `Content-Range` headers, e.g. `bytes 100-999/1234` or `bytes 100-999/*`.
+ * Parses HTTP `Content-Range` headers, e.g. `bytes 100-999/1234` or `bytes 100-999/unknown-total`.
  */
 object ContentRangeParser {
 
