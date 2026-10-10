@@ -103,12 +103,17 @@ class DownloadEngine @Inject constructor(
     fun resume(id: String) {
         scope.launch {
             val entity = store.getById(id) ?: return@launch
-            when (entity.status) {
-                DownloadStatus.PAUSED, DownloadStatus.FAILED, DownloadStatus.AUTH_REQUIRED, DownloadStatus.CANCELED, DownloadStatus.WAITING_NETWORK, DownloadStatus.WAITING_STORAGE -> {
-                    store.updateStatus(id, DownloadStatus.QUEUED, null, null)
-                    schedule()
-                }
-                else -> Unit
+            val resumable = entity.status in listOf(
+                DownloadStatus.PAUSED,
+                DownloadStatus.FAILED,
+                DownloadStatus.AUTH_REQUIRED,
+                DownloadStatus.CANCELED,
+                DownloadStatus.WAITING_NETWORK,
+                DownloadStatus.WAITING_STORAGE,
+            )
+            if (resumable) {
+                store.updateStatus(id, DownloadStatus.QUEUED, null, null)
+                schedule()
             }
         }
     }
