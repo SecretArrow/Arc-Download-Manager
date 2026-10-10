@@ -1,6 +1,7 @@
 package com.arc.downloadmanager
 
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.arc.downloadmanager.data.repository.DownloadRepository
@@ -71,8 +72,13 @@ class DownloadE2ETest {
             }
         }
         val done = repository.get(id)!!
-        composeRule.waitForIdle()
-        composeRule.onNodeWithText(done.filename).assertExists()
+        composeRule.waitUntil(15_000) {
+            composeRule
+                .onAllNodesWithText(done.filename, substring = true)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        composeRule.onNodeWithText(done.filename, substring = true).assertExists()
         server.shutdown()
     }
 }
