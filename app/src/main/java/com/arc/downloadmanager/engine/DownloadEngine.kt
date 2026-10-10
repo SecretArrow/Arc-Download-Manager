@@ -177,7 +177,14 @@ class DownloadEngine @Inject constructor(
     fun resumeAll() {
         scope.launch {
             store.getAllNow()
-                .filter { it.status == DownloadStatus.PAUSED || it.status == DownloadStatus.FAILED || it.status == DownloadStatus.AUTH_REQUIRED }
+                .filter {
+                    it.status == DownloadStatus.PAUSED ||
+                        it.status == DownloadStatus.FAILED ||
+                        it.status == DownloadStatus.AUTH_REQUIRED ||
+                        it.status == DownloadStatus.CANCELED ||
+                        it.status == DownloadStatus.WAITING_NETWORK ||
+                        it.status == DownloadStatus.WAITING_STORAGE
+                }
                 .forEach { resume(it.id) }
         }
     }
