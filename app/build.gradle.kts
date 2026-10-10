@@ -1,3 +1,5 @@
+import java.time.Duration
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -86,7 +88,7 @@ android {
 
 tasks.withType<Test> {
     // Convert hangs into diagnosable failures instead of burning the whole job timeout.
-    timeout.set(java.time.Duration.ofMinutes(8))
+    timeout.set(Duration.ofMinutes(8))
     testLogging {
         events("started", "failed", "skipped")
         showExceptions = true
