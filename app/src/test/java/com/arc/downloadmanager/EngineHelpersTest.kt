@@ -219,7 +219,7 @@ class ChecksumTest {
     fun `sha256 matches known vector`() {
         assertEquals(
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            Checksum.normalize(Checksum.sha256Of("")),
+            Checksum.normalize(sha256Of("")),
         )
     }
 

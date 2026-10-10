@@ -4,6 +4,10 @@ import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.data.db.SegmentEntity
 import com.arc.downloadmanager.data.settings.EngineSettings
 import com.arc.downloadmanager.engine.store.DownloadStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import java.io.File
@@ -245,9 +249,9 @@ class TaskRunner @Inject constructor(
         }
 
         val limiter = BandwidthLimiter(connectedLimit(settings))
-        val results = kotlinx.coroutines.coroutineScope {
+        val results = coroutineScope {
             segments.map { seg ->
-                kotlinx.coroutines.async(kotlinx.coroutines.Dispatchers.IO) {
+                async(Dispatchers.IO) {
                     downloadSegment(entity, seg, settings, control, limiter)
                 }
             }.awaitAll()

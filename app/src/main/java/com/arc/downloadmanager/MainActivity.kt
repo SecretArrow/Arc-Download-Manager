@@ -40,8 +40,8 @@ class MainActivity : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         requestNotificationPermissionIfNeeded()
         setContent {
             val viewModel: MainViewModel = androidx.hilt.navigation.compose.hiltViewModel()

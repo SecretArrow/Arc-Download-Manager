@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.arc.downloadmanager.data.db.ArcDatabase
 import com.arc.downloadmanager.data.db.RoomDownloadStore
 import com.arc.downloadmanager.engine.CookieProvider
+import com.arc.downloadmanager.engine.EngineSettingsSource
 import com.arc.downloadmanager.engine.store.DownloadStore
 import com.arc.downloadmanager.browser.WebViewCookieProvider
 import dagger.Binds
