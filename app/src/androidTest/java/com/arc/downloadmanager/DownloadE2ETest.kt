@@ -79,7 +79,9 @@ class DownloadE2ETest {
                     .fetchSemanticsNodes()
                     .isNotEmpty()
             }
-            composeRule.onNodeWithText(done.filename, substring = true).assertExists()
+            // The file name appears in both the downloads list and the recent-files section.
+            val matches = composeRule.onAllNodesWithText(done.filename, substring = true).fetchSemanticsNodes()
+            org.junit.Assert.assertTrue("Expected download row to be visible", matches.isNotEmpty())
             server.shutdown()
         }
 }
