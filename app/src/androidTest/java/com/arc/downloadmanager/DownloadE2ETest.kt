@@ -2,7 +2,6 @@ package com.arc.downloadmanager
 
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.arc.downloadmanager.data.repository.DownloadRepository
 import com.arc.downloadmanager.domain.model.DownloadStatus
