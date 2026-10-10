@@ -605,7 +605,7 @@ class TaskRunner @Inject constructor(
     }
 
     private fun resolveRedirect(base: String, location: String): String? =
-        runCatching { base.toHttpUrlOrNull().resolve(location)?.toString() }.getOrNull()
+        runCatching { base.toHttpUrlOrNull()?.resolve(location)?.toString() }.getOrNull()
 
     private fun httpClientFor(entity: DownloadEntity, settings: EngineSettings): OkHttpClient {
         val builder = baseClient.newBuilder()
