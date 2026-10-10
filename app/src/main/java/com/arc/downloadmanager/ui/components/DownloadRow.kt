@@ -159,14 +159,23 @@ fun DownloadRow(
                 Row {
                     when {
                         active || status == DownloadStatus.PAUSING -> IconButton(onClick = onPauseResume) {
-                            Icon(Icons.Filled.PauseCircle, contentDescription = androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_pause))
+                            Icon(
+                                Icons.Filled.PauseCircle,
+                                contentDescription = androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_pause),
+                            )
                         }
                         status == DownloadStatus.PAUSED || status == DownloadStatus.WAITING_NETWORK ||
                             status == DownloadStatus.WAITING_STORAGE -> IconButton(onClick = onPauseResume) {
-                            Icon(Icons.Filled.PlayCircle, contentDescription = androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_resume))
+                            Icon(
+                                Icons.Filled.PlayCircle,
+                                contentDescription = androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_resume),
+                            )
                         }
                         status.isTerminal || status == DownloadStatus.AUTH_REQUIRED -> IconButton(onClick = onRetry) {
-                            Icon(Icons.Filled.Refresh, contentDescription = androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_retry))
+                            Icon(
+                                Icons.Filled.Refresh,
+                                contentDescription = androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_retry),
+                            )
                         }
                     }
                     if (!status.isTerminal || status == DownloadStatus.CANCELED) {
