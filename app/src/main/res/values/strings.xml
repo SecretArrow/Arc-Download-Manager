@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Arc Download Manager</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_browser">Browser</string>
+    <string name="nav_files">Files</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Download statuses -->
+    <string name="status_queued">Queued</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_downloading">Downloading</string>
+    <string name="status_pausing">Pausing…</string>
+    <string name="status_paused">Paused</string>
+    <string name="status_merging">Merging…</string>
+    <string name="status_verifying">Verifying…</string>
+    <string name="status_completed">Completed</string>
+    <string name="status_failed">Failed</string>
+    <string name="status_canceled">Canceled</string>
+    <string name="status_waiting_network">Waiting for network</string>
+    <string name="status_waiting_storage">Waiting for storage</string>
+    <string name="status_auth_required">Sign-in required</string>
+
+    <!-- Actions -->
+    <string name="action_add_download">Add download</string>
+    <string name="action_batch_download">Batch download</string>
+    <string name="action_paste_url">Paste URL</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_resume">Resume</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_restart">Restart</string>
+    <string name="action_open">Open</string>
+    <string name="action_share">Share</string>
+    <string name="action_rename">Rename</string>
+    <string name="action_start">Start</string>
+    <string name="action_start_all">Start all</string>
+    <string name="action_import_file">Import from file</string>
+    <string name="action_open_browser">Open browser</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="action_choose_folder">Choose folder</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_save">Save</string>
+    <string name="action_copy">Copy</string>
+
+    <!-- Add download -->
+    <string name="add_url_hint">Download URL</string>
+    <string name="add_filename_hint">File name</string>
+    <string name="add_batch_hint">One URL per line…</string>
+    <string name="add_destination">Destination</string>
+    <string name="add_segments">Parallel connections</string>
+    <string name="add_priority">Priority</string>
+    <string name="add_wifi_only">Wi-Fi only</string>
+    <string name="add_checksum_hint">SHA-256 checksum (optional)</string>
+    <string name="add_advanced">Advanced options</string>
+    <string name="add_invalid_url">Invalid URL</string>
+    <string name="add_empty_url">Enter a URL to start</string>
+    <string name="add_started">Download started</string>
+    <string name="add_batch_started">%1$d downloads queued, %2$d invalid entries skipped</string>
+
+    <!-- Home -->
+    <string name="home_active_downloads">Active downloads</string>
+    <string name="home_queue_count">%1$d active • %2$d queued • %3$d failed</string>
+    <string name="home_recent_files">Recent files</string>
+    <string name="home_needs_attention">Needs attention</string>
+    <string name="home_attention_empty">All downloads are running smoothly.</string>
+    <string name="home_no_downloads">No downloads yet. Add one to get started.</string>
+    <string name="home_storage_used">%1$s used • %2$s free</string>
+
+    <!-- Files -->
+    <string name="files_category_all">All</string>
+    <string name="files_category_images">Images</string>
+    <string name="files_category_videos">Videos</string>
+    <string name="files_category_audio">Audio</string>
+    <string name="files_category_documents">Documents</string>
+    <string name="files_category_archives">Archives</string>
+    <string name="files_category_apps">Apps</string>
+    <string name="files_category_other">Other</string>
+    <string name="files_empty">No downloaded files yet.</string>
+    <string name="files_search_hint">Search files</string>
+    <string name="files_deleted">File deleted</string>
+
+    <!-- Details -->
+    <string name="details_segments">Segments</string>
+    <string name="details_speed_avg">Average speed</string>
+    <string name="details_time_remaining">Time remaining</string>
+    <string name="details_resume_supported">Resumable</string>
+    <string name="details_resume_unsupported">Not resumable</string>
+    <string name="details_source">Source</string>
+    <string name="details_retries">Retries</string>
+    <string name="details_checksum">Checksum (SHA-256)</string>
+    <string name="details_error">Error</string>
+    <string name="details_open_folder">Open folder</string>
+
+    <!-- Browser -->
+    <string name="browser_address_hint">Search or enter address</string>
+    <string name="browser_download_started">Download sent to Arc: %1$s</string>
+    <string name="browser_new_tab">New tab</string>
+    <string name="browser_close_tab">Close tab</string>
+    <string name="browser_bookmark_added">Bookmark added</string>
+    <string name="browser_bookmark_removed">Bookmark removed</string>
+    <string name="browser_bookmarks">Bookmarks</string>
+    <string name="browser_history">History</string>
+    <string name="browser_desktop_site">Desktop site</string>
+    <string name="browser_private_mode">Private mode</string>
+    <string name="browser_copy_link">Copy link address</string>
+    <string name="browser_download_link">Download linked file</string>
+    <string name="browser_open_new_tab">Open in new tab</string>
+    <string name="browser_share_link">Share link</string>
+    <string name="browser_save_image">Save image</string>
+    <string name="browser_clear_data">Clear browsing data</string>
+    <string name="browser_cleared">Browsing data cleared</string>
+    <string name="browser_loading">Loading page…</string>
+
+    <!-- Settings -->
+    <string name="settings_downloads">Downloads</string>
+    <string name="settings_network">Network</string>
+    <string name="settings_browser">Browser &amp; privacy</string>
+    <string name="settings_storage">Storage</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_advanced">Advanced</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_dynamic_color">Dynamic color (Material You)</string>
+    <string name="settings_compact_rows">Compact download rows</string>
+    <string name="settings_max_concurrent">Simultaneous downloads</string>
+    <string name="settings_max_segments">Max connections per file</string>
+    <string name="settings_auto_segments">Auto detect multi-part</string>
+    <string name="settings_retries">Retry attempts</string>
+    <string name="settings_wifi_only">Wi-Fi only downloads</string>
+    <string name="settings_auto_resume">Auto resume on reconnect</string>
+    <string name="settings_notify_complete">Completion notifications</string>
+    <string name="settings_bandwidth_limit">Speed limit (KB/s, 0 = unlimited)</string>
+    <string name="settings_connect_timeout">Connection timeout (s)</string>
+    <string name="settings_read_timeout">Read timeout (s)</string>
+    <string name="settings_default_destination">Default destination</string>
+    <string name="settings_storage_usage">Storage usage</string>
+    <string name="settings_cleanup_temp">Clean up temporary files</string>
+    <string name="settings_sha256_after">Calculate SHA-256 after completion</string>
+    <string name="settings_export_prefs">Export preferences</string>
+    <string name="settings_reset">Reset settings</string>
+    <string name="settings_about">About</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_min_free_space">Minimum free space warning (MB)</string>
+    <string name="settings_overwrite_policy">Existing file policy</string>
+    <string name="settings_overwrite_rename">Rename copy</string>
+    <string name="settings_overwrite_skip">Skip</string>
+    <string name="settings_overwrite_replace">Replace</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_downloads">Downloads</string>
+    <string name="notif_channel_downloads_desc">Progress of active downloads</string>
+    <string name="notif_channel_status">Status</string>
+    <string name="notif_channel_status_desc">Completed and failed downloads</string>
+    <string name="notif_title_active">%1$d download(s) • %2$s</string>
+    <string name="notif_pause_all">Pause all</string>
+    <string name="notif_resume_all">Resume all</string>
+    <string name="notif_cancel_all">Cancel all</string>
+    <string name="notif_completed">Download completed</string>
+    <string name="notif_failed">Download failed</string>
+
+    <!-- Errors -->
+    <string name="error_network">No network connection</string>
+    <string name="error_server">Server error (HTTP %1$d)</string>
+    <string name="error_auth">Sign-in required. Open the browser, log in and retry.</string>
+    <string name="error_forbidden">Access denied for this resource</string>
+    <string name="error_expired">Download link may have expired</string>
+    <string name="error_no_range">Server does not support resumable downloads</string>
+    <string name="error_resource_changed">File changed on server. Restarting from scratch is required.</string>
+    <string name="error_rate_limited">Server is limiting connection speed. Retrying later.</string>
+    <string name="error_storage">Not enough free storage</string>
+    <string name="error_permission">Storage permission denied</string>
+    <string name="error_exists">File already exists</string>
+    <string name="error_segment_mismatch">Segment data does not match the file</string>
+    <string name="error_merge">Failed to merge downloaded segments</string>
+    <string name="error_checksum">Checksum mismatch. The file may be corrupted.</string>
+    <string name="error_invalid_url">The URL is not valid</string>
+    <string name="error_canceled">Download canceled</string>
+    <string name="error_unknown">Unexpected error: %1$s</string>
+
+    <!-- Duplicate dialog -->
+    <string name="duplicate_title">Download already exists</string>
+    <string name="duplicate_message">This URL is already in your downloads. What would you like to do?</string>
+    <string name="duplicate_skip">Skip</string>
+    <string name="duplicate_new_copy">Download another copy</string>
+    <string name="duplicate_replace">Replace existing</string>
+
+    <!-- Misc -->
+    <string name="speed_format">%1$s/s</string>
+    <string name="eta_format">About %1$s left</string>
+    <string name="permission_notif_rationale">Arc needs notification permission to show download progress and completion alerts.</string>
+    <string name="segments_active">%1$d of %2$d connections</string>
+</resources>

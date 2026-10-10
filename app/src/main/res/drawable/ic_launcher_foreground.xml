@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Rounded download arc + arrow -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,30 L54,62 M54,62 L40,48 M54,62 L68,48"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="7"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M32,58 L32,70 A6,6 0 0 0 38,76 L70,76 A6,6 0 0 0 76,70 L76,58"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="7"
+        android:strokeLineCap="round" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,30 m-7,0 a7,7 0 1 1 14,0 a7,7 0 1 1 -14,0" />
+</vector>
