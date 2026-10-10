@@ -3,6 +3,7 @@ package com.arc.downloadmanager.engine
 import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.data.db.SegmentEntity
 import com.arc.downloadmanager.data.settings.EngineSettings
+import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.engine.store.DownloadStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -37,6 +38,27 @@ sealed interface TaskOutcome {
 
 enum class PauseReason { USER, NO_NETWORK, LOW_STORAGE }
 
+/** Result of opening the initial HTTP stream for a task. */
+private sealed interface StreamOpen {
+    data class Opened(
+        val response: okhttp3.Response,
+        val finalUrl: String,
+        val contentLength: Long,
+        val contentRangeTotal: Long,
+        val resumableUsed: Boolean,
+        val restartFromZero: Boolean,
+        val serverAcceptsRanges: Boolean,
+        val eTag: String?,
+        val lastModified: String?,
+        val mimeType: String?,
+        val dispositionFilename: String?,
+    ) : StreamOpen
+
+    data class Failure(val error: DownloadError, val message: String?, val retryAfterSec: Long? = null) : StreamOpen
+
+    data object AuthRequired : StreamOpen
+}
+
 /**
  * Executes a single download task end-to-end: probe, range negotiation, single- or multi-stream
  * transfer, merge, verification and finalization. Pure engine logic on top of OkHttp + DownloadStore.
@@ -70,7 +92,7 @@ class TaskRunner @Inject constructor(
         segmentCapFor: (String) -> Int,
     ): TaskOutcome {
         val entity = store.getById(id) ?: return TaskOutcome.Canceled
-        if (control.cancelRequested.get()) return TaskOutcome.Canceled
+        if (control.cancelRequested) return TaskOutcome.Canceled
 
         store.updateStatus(id, DownloadStatus.CONNECTING)
         val open = openStream(entity, control, requestedStart = if (entity.resumable) entity.downloadedBytes else 0L, settings = settings)
@@ -161,8 +183,8 @@ class TaskRunner @Inject constructor(
                 body.byteStream().use { input ->
                     val buffer = ByteArray(BUFFER_SIZE)
                     while (true) {
-                        if (control.cancelRequested.get()) return TaskOutcome.Canceled
-                        if (control.pauseRequested.get()) {
+                        if (control.cancelRequested) return TaskOutcome.Canceled
+                        if (control.pauseRequested) {
                             store.updateProgress(entity.id, written, totalBytes)
                             return TaskOutcome.Paused(PauseReason.USER)
                         }
@@ -296,8 +318,8 @@ class TaskRunner @Inject constructor(
         var attempt = 0
         val maxAttempts = (settings.retryAttempts + 1).coerceAtLeast(1)
         while (attempt < maxAttempts) {
-            if (control.cancelRequested.get()) return SegmentResult.Canceled
-            if (control.pauseRequested.get()) {
+            if (control.cancelRequested) return SegmentResult.Canceled
+            if (control.pauseRequested) {
                 store.updateSegmentProgress(entity.id, segment.index, downloaded, DownloadStatus.PAUSED)
                 return SegmentResult.Paused(PauseReason.USER)
             }
@@ -398,8 +420,8 @@ class TaskRunner @Inject constructor(
                 body.byteStream().use { input ->
                     val buffer = ByteArray(BUFFER_SIZE)
                     while (true) {
-                        if (control.cancelRequested.get()) return WriteResult.Canceled
-                        if (control.pauseRequested.get()) {
+                        if (control.cancelRequested) return WriteResult.Canceled
+                        if (control.pauseRequested) {
                             store.updateSegmentProgress(entity.id, segment.index, written, DownloadStatus.PAUSED)
                             return WriteResult.Paused
                         }
@@ -450,7 +472,7 @@ class TaskRunner @Inject constructor(
         var url = entity.url
         var hops = 0
         while (hops < MAX_REDIRECTS) {
-            if (control.cancelRequested.get()) return StreamOpen.Failure(DownloadError.CANCELED, "Canceled")
+            if (control.cancelRequested) return StreamOpen.Failure(DownloadError.CANCELED, "Canceled")
             if (!networkMonitor.isOnline.value) return StreamOpen.Failure(DownloadError.NETWORK_UNAVAILABLE, "Offline")
             val request = buildRequest(entity, url, requestedStart, -1L, ifRange = if (requestedStart > 0) entity.eTag else null)
             val response = try {
@@ -672,7 +694,7 @@ class TaskRunner @Inject constructor(
         val entity = store.getById(id) ?: return
         when (outcome) {
             is TaskOutcome.Paused -> {
-                if (control.cancelRequested.get()) {
+                if (control.cancelRequested) {
                     markCanceled(entity)
                 } else {
                     val status = when (outcome.reason) {
@@ -685,7 +707,7 @@ class TaskRunner @Inject constructor(
             }
             is TaskOutcome.Canceled -> if (entity.status != DownloadStatus.CANCELED) markCanceled(entity)
             is TaskOutcome.Failed -> {
-                if (control.cancelRequested.get()) {
+                if (control.cancelRequested) {
                     markCanceled(entity)
                     return
                 }

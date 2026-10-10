@@ -79,7 +79,7 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
     val desktopMode by viewModel.desktopMode.collectAsStateWithLifecycle()
     val downloadEvent by viewModel.downloadEvents.collectAsStateWithLifecycle()
     val loadRequest by viewModel.loadRequests.collectAsStateWithLifecycle()
-    val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val appSettings by viewModel.settings.collectAsStateWithLifecycle()
 
     val snackbar = remember { SnackbarHostState() }
     var showTabs by remember { mutableStateOf(false) }
@@ -90,8 +90,8 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
 
     LaunchedEffect(Unit) {
-        viewModel.setDesktop(settings.desktopModeDefault)
-        if (settings.privateByDefault && !privateMode) viewModel.togglePrivate()
+        viewModel.setDesktop(appSettings.desktopModeDefault)
+        if (appSettings.privateByDefault && !privateMode) viewModel.togglePrivate()
     }
 
     LaunchedEffect(downloadEvent) {
@@ -228,8 +228,7 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
                             setOnLongClickListener {
                                 val result = hitTestResult
                                 when (result.type) {
-                                    android.webkit.WebView.HitTestResult.SRC_LINK_ANCHOR,
-                                    android.webkit.WebView.HitTestResult.LINK_TYPE,
+                                    android.webkit.WebView.HitTestResult.SRC_ANCHOR_TYPE,
                                     -> {
                                         showLinkMenu = result.extra
                                         true

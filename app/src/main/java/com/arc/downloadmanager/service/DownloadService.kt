@@ -10,6 +10,7 @@ import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.engine.DownloadEngine
 import com.arc.downloadmanager.engine.store.DownloadStore
+import com.arc.downloadmanager.util.SpeedTracker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

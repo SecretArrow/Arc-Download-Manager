@@ -25,6 +25,8 @@ class RoomDownloadStore @Inject constructor(
 
     override suspend fun pending(): List<DownloadEntity> = downloadDao.pending()
 
+    override suspend fun running(): List<DownloadEntity> = downloadDao.running()
+
     override suspend fun interrupted(): List<DownloadEntity> = downloadDao.interrupted()
 
     override fun observeActiveCount(): Flow<Int> = downloadDao.observeActiveCount()

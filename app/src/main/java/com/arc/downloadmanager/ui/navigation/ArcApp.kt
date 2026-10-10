@@ -76,17 +76,18 @@ fun ArcApp() {
             NavigationBar {
                 destinations.forEach { dest ->
                     val selected = currentRoute == dest.route
+                    val label = stringResource(dest.labelRes)
                     NavigationBarItem(
                         selected = selected,
                         onClick = { navigateTo(navController, dest.route) },
                         icon = {
                             Icon(
                                 imageVector = if (selected) dest.selectedIcon else dest.unselectedIcon,
-                                contentDescription = stringResource(dest.labelRes),
+                                contentDescription = label,
                             )
                         },
-                        label = { Text(stringResource(dest.labelRes)) },
-                        modifier = Modifier.semantics { contentDescription = stringResource(dest.labelRes) },
+                        label = { Text(label) },
+                        modifier = Modifier.semantics { contentDescription = label },
                     )
                 }
             }

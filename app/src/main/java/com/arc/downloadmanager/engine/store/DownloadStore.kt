@@ -22,6 +22,8 @@ interface DownloadStore {
 
     suspend fun pending(): List<DownloadEntity>
 
+    suspend fun running(): List<DownloadEntity>
+
     suspend fun interrupted(): List<DownloadEntity>
 
     fun observeActiveCount(): Flow<Int>

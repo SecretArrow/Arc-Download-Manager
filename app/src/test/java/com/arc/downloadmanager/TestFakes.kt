@@ -36,6 +36,9 @@ class InMemoryDownloadStore : DownloadStore {
     override suspend fun pending(): List<DownloadEntity> =
         synchronized(mutex) { downloads.values.filter { it.status.isRunningCandidate } }
 
+    override suspend fun running(): List<DownloadEntity> =
+        synchronized(mutex) { downloads.values.filter { it.status.isActive } }
+
     override suspend fun interrupted(): List<DownloadEntity> =
         synchronized(mutex) { downloads.values.filter { it.status.isActive } }
 

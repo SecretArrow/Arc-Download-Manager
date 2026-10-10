@@ -235,7 +235,7 @@ class DownloadEngine @Inject constructor(
         }
     }
 
-    private fun canStartNow(task: DownloadEntity, settings: EngineSettings): Boolean {
+    private suspend fun canStartNow(task: DownloadEntity, settings: EngineSettings): Boolean {
         val online = networkMonitor.isOnline.value
         if (!online) {
             if (task.status != DownloadStatus.WAITING_NETWORK) {

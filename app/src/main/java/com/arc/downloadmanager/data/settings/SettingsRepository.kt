@@ -46,7 +46,7 @@ class SettingsRepository @Inject constructor(
         val DEFAULT_DESTINATION = stringPreferencesKey("default_destination_uri")
     }
 
-    val settings: Flow<EngineSettings> = context.dataStore.data.map { p ->
+    override val settings: Flow<EngineSettings> = context.dataStore.data.map { p ->
         EngineSettings(
             maxConcurrentFiles = p[Keys.MAX_CONCURRENT] ?: 3,
             maxSegmentsPerFile = p[Keys.MAX_SEGMENTS] ?: 4,
@@ -73,7 +73,7 @@ class SettingsRepository @Inject constructor(
         )
     }
 
-    suspend fun snapshot(): EngineSettings = settings.first()
+    override suspend fun snapshot(): EngineSettings = settings.first()
 
     suspend fun setMaxConcurrentFiles(value: Int) = edit { it[Keys.MAX_CONCURRENT] = value.coerceIn(1, 10) }
 

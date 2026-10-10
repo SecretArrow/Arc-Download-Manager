@@ -2,7 +2,9 @@
 
 package com.arc.downloadmanager.ui.files
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -176,7 +178,7 @@ private fun FileRow(
                 modifier = Modifier.size(32.dp),
             )
             Column(Modifier.weight(1f)) {
-                Text(item.name, maxLines = 1, overflow = TextOverflow.MiddleEllipsis)
+                Text(item.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
                     Format.bytes(item.size),
                     style = MaterialTheme.typography.bodyMedium,

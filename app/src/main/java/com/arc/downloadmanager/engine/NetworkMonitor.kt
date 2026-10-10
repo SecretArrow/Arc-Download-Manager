@@ -20,10 +20,10 @@ class NetworkMonitor @Inject constructor(
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
     private val _isOnline = MutableStateFlow(currentState().first)
-    val isOnline: StateFlow<Boolean> = _isOnline
+    override val isOnline: StateFlow<Boolean> = _isOnline
 
     private val _isOnWifi = MutableStateFlow(currentState().second)
-    val isOnWifi: StateFlow<Boolean> = _isOnWifi
+    override val isOnWifi: StateFlow<Boolean> = _isOnWifi
 
     private val _isMetered = MutableStateFlow(!currentState().second)
     val isMetered: StateFlow<Boolean> = _isMetered

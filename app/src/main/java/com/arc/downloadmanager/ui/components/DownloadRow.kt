@@ -114,7 +114,7 @@ fun DownloadRow(
                     text = entity.filename,
                     style = MaterialTheme.typography.bodyLarge,
                     maxLines = 1,
-                    overflow = TextOverflow.MiddleEllipsis,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     text = buildString {
