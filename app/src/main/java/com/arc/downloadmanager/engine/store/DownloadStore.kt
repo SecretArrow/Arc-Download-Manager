@@ -32,15 +32,27 @@ interface DownloadStore {
 
     suspend fun update(entity: DownloadEntity)
 
-    suspend fun updateProgress(id: String, downloadedBytes: Long, totalBytes: Long)
+    suspend fun updateProgress(
+        id: String,
+        downloadedBytes: Long,
+        totalBytes: Long,
+    )
 
-    suspend fun updateStatus(id: String, status: DownloadStatus, errorCode: String? = null, errorMessage: String? = null)
+    suspend fun updateStatus(
+        id: String,
+        status: DownloadStatus,
+        errorCode: String? = null,
+        errorMessage: String? = null,
+    )
 
     suspend fun resetForRetry(id: String)
 
     suspend fun incrementRetry(id: String)
 
-    suspend fun updateFinalUri(id: String, uri: String?)
+    suspend fun updateFinalUri(
+        id: String,
+        uri: String?,
+    )
 
     suspend fun delete(id: String)
 
@@ -53,7 +65,12 @@ interface DownloadStore {
 
     suspend fun saveSegments(segments: List<SegmentEntity>)
 
-    suspend fun updateSegmentProgress(downloadId: String, index: Int, downloadedBytes: Long, status: DownloadStatus)
+    suspend fun updateSegmentProgress(
+        downloadId: String,
+        index: Int,
+        downloadedBytes: Long,
+        status: DownloadStatus,
+    )
 
     suspend fun totalSegmentBytes(downloadId: String): Long
 

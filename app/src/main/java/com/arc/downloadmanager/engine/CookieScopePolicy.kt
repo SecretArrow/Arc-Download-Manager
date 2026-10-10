@@ -9,10 +9,12 @@ import java.net.URI
  * and never across scheme downgrades.
  */
 object CookieScopePolicy {
-
     data class Decision(val allowCookies: Boolean, val allowReferer: Boolean)
 
-    fun evaluate(originalUrl: String, targetUrl: String): Decision {
+    fun evaluate(
+        originalUrl: String,
+        targetUrl: String,
+    ): Decision {
         val from = runCatching { URI(originalUrl) }.getOrNull() ?: return Decision(false, false)
         val to = runCatching { URI(targetUrl) }.getOrNull() ?: return Decision(false, false)
         val fromHost = from.host?.lowercase() ?: return Decision(false, false)
@@ -37,8 +39,10 @@ object CookieScopePolicy {
     }
 
     /** Serializes cookies back into a header value, dropping cross-origin names for the given target. */
-    fun cookieHeaderFor(url: String, cookies: Map<String, String>): String? =
-        if (cookies.isEmpty()) null else cookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
+    fun cookieHeaderFor(
+        url: String,
+        cookies: Map<String, String>,
+    ): String? = if (cookies.isEmpty()) null else cookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
 
     /** Extracts the host of a URL for logging/UI purposes, never logging query params. */
     fun hostOf(url: String): String = runCatching { URI(url).host ?: url.substringBefore('/') }.getOrDefault(url)

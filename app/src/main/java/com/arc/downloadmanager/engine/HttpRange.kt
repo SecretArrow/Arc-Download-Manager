@@ -6,7 +6,6 @@ import java.util.Locale
  * Parses HTTP `Content-Range` headers, e.g. `bytes 100-999/1234` or `bytes 100-999/unknown-total`.
  */
 object ContentRangeParser {
-
     /** Returns (start, endInclusive) or null when the header is missing or malformed. */
     fun parse(header: String?): Pair<Long, Long>? {
         if (header.isNullOrBlank()) return null
@@ -37,12 +36,16 @@ object ContentRangeParser {
 object RangeSupportDetector {
     private const val ACCEPT_RANGES = "accept-ranges"
 
-    fun supports(headers: Map<String, List<String>>, statusCode: Int): Boolean {
+    fun supports(
+        headers: Map<String, List<String>>,
+        statusCode: Int,
+    ): Boolean {
         if (statusCode == 206) return true
-        val acceptRanges = headers.entries
-            .firstOrNull { it.key.equals(ACCEPT_RANGES, ignoreCase = true) }
-            ?.value?.firstOrNull()
-            ?.lowercase(Locale.US)
+        val acceptRanges =
+            headers.entries
+                .firstOrNull { it.key.equals(ACCEPT_RANGES, ignoreCase = true) }
+                ?.value?.firstOrNull()
+                ?.lowercase(Locale.US)
         return acceptRanges != null && acceptRanges.contains("bytes")
     }
 }

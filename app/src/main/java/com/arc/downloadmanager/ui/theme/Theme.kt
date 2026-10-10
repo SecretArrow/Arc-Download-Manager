@@ -16,47 +16,49 @@ private val ArcBlue = Color(0xFF1A6BFF)
 private val ArcBlueDark = Color(0xFF9DBCFF)
 private val ArcTeal = Color(0xFF00B8A9)
 
-private val LightColors = lightColorScheme(
-    primary = ArcBlue,
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFD8E2FF),
-    onPrimaryContainer = Color(0xFF001A41),
-    secondary = Color(0xFF565E71),
-    onSecondary = Color.White,
-    secondaryContainer = Color(0xFFDAE2F9),
-    onSecondaryContainer = Color(0xFF131C2B),
-    tertiary = ArcTeal,
-    background = Color(0xFFF9F9FF),
-    onBackground = Color(0xFF191C20),
-    surface = Color(0xFFF9F9FF),
-    onSurface = Color(0xFF191C20),
-    surfaceVariant = Color(0xFFE0E2EC),
-    onSurfaceVariant = Color(0xFF44474E),
-    error = Color(0xFFBA1A1A),
-    errorContainer = Color(0xFFFFDAD6),
-    onErrorContainer = Color(0xFF410002),
-)
+private val LightColors =
+    lightColorScheme(
+        primary = ArcBlue,
+        onPrimary = Color.White,
+        primaryContainer = Color(0xFFD8E2FF),
+        onPrimaryContainer = Color(0xFF001A41),
+        secondary = Color(0xFF565E71),
+        onSecondary = Color.White,
+        secondaryContainer = Color(0xFFDAE2F9),
+        onSecondaryContainer = Color(0xFF131C2B),
+        tertiary = ArcTeal,
+        background = Color(0xFFF9F9FF),
+        onBackground = Color(0xFF191C20),
+        surface = Color(0xFFF9F9FF),
+        onSurface = Color(0xFF191C20),
+        surfaceVariant = Color(0xFFE0E2EC),
+        onSurfaceVariant = Color(0xFF44474E),
+        error = Color(0xFFBA1A1A),
+        errorContainer = Color(0xFFFFDAD6),
+        onErrorContainer = Color(0xFF410002),
+    )
 
-private val DarkColors = darkColorScheme(
-    primary = ArcBlueDark,
-    onPrimary = Color(0xFF00308C),
-    primaryContainer = Color(0xFF0047B3),
-    onPrimaryContainer = Color(0xFFD8E2FF),
-    secondary = Color(0xFFBEC6DC),
-    onSecondary = Color(0xFF293041),
-    secondaryContainer = Color(0xFF3F4759),
-    onSecondaryContainer = Color(0xFFDAE2F9),
-    tertiary = Color(0xFF4CDACC),
-    background = Color(0xFF111318),
-    onBackground = Color(0xFFE2E2E9),
-    surface = Color(0xFF111318),
-    onSurface = Color(0xFFE2E2E9),
-    surfaceVariant = Color(0xFF44474E),
-    onSurfaceVariant = Color(0xFFC4C6D0),
-    error = Color(0xFFFFB4AB),
-    errorContainer = Color(0xFF93000A),
-    onErrorContainer = Color(0xFFFFDAD6),
-)
+private val DarkColors =
+    darkColorScheme(
+        primary = ArcBlueDark,
+        onPrimary = Color(0xFF00308C),
+        primaryContainer = Color(0xFF0047B3),
+        onPrimaryContainer = Color(0xFFD8E2FF),
+        secondary = Color(0xFFBEC6DC),
+        onSecondary = Color(0xFF293041),
+        secondaryContainer = Color(0xFF3F4759),
+        onSecondaryContainer = Color(0xFFDAE2F9),
+        tertiary = Color(0xFF4CDACC),
+        background = Color(0xFF111318),
+        onBackground = Color(0xFFE2E2E9),
+        surface = Color(0xFF111318),
+        onSurface = Color(0xFFE2E2E9),
+        surfaceVariant = Color(0xFF44474E),
+        onSurfaceVariant = Color(0xFFC4C6D0),
+        error = Color(0xFFFFB4AB),
+        errorContainer = Color(0xFF93000A),
+        onErrorContainer = Color(0xFFFFDAD6),
+    )
 
 @Composable
 fun ArcTheme(
@@ -64,19 +66,21 @@ fun ArcTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val darkTheme = when (themeMode) {
-        ThemeMode.SYSTEM -> isSystemInDarkTheme()
-        ThemeMode.LIGHT -> false
-        ThemeMode.DARK -> true
-    }
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    val darkTheme =
+        when (themeMode) {
+            ThemeMode.SYSTEM -> isSystemInDarkTheme()
+            ThemeMode.LIGHT -> false
+            ThemeMode.DARK -> true
         }
-        darkTheme -> DarkColors
-        else -> LightColors
-    }
+    val colorScheme =
+        when {
+            dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+                val context = LocalContext.current
+                if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            }
+            darkTheme -> DarkColors
+            else -> LightColors
+        }
     MaterialTheme(
         colorScheme = colorScheme,
         typography = ArcTypography,

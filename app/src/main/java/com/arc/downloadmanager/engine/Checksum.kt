@@ -6,7 +6,6 @@ import java.security.MessageDigest
 
 /** Streaming SHA-256 helpers. */
 object Checksum {
-
     fun sha256(file: File): String {
         val digest = MessageDigest.getInstance("SHA-256")
         FileInputStream(file).use { input ->
@@ -22,5 +21,8 @@ object Checksum {
 
     fun normalize(hex: String): String = hex.trim().lowercase().removePrefix("sha256:").removePrefix("sha-256:").removePrefix("sha256 ")
 
-    fun matches(expected: String, actual: String): Boolean = normalize(expected) == normalize(actual)
+    fun matches(
+        expected: String,
+        actual: String,
+    ): Boolean = normalize(expected) == normalize(actual)
 }

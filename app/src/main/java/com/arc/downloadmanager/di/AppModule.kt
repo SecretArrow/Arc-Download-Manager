@@ -2,13 +2,13 @@ package com.arc.downloadmanager.di
 
 import android.content.Context
 import androidx.room.Room
+import com.arc.downloadmanager.browser.WebViewCookieProvider
 import com.arc.downloadmanager.data.db.ArcDatabase
 import com.arc.downloadmanager.data.db.RoomDownloadStore
-import com.arc.downloadmanager.engine.CookieProvider
 import com.arc.downloadmanager.engine.ConnectivityView
+import com.arc.downloadmanager.engine.CookieProvider
 import com.arc.downloadmanager.engine.EngineSettingsSource
 import com.arc.downloadmanager.engine.store.DownloadStore
-import com.arc.downloadmanager.browser.WebViewCookieProvider
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -22,10 +22,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
-
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): ArcDatabase =
+    fun provideDatabase(
+        @ApplicationContext context: Context,
+    ): ArcDatabase =
         Room.databaseBuilder(context, ArcDatabase::class.java, "arc_downloads.db")
             .fallbackToDestructiveMigration()
             .build()
@@ -46,7 +47,6 @@ object DatabaseModule {
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class BindingsModule {
-
     @Binds
     @Singleton
     abstract fun bindDownloadStore(impl: RoomDownloadStore): DownloadStore
@@ -71,7 +71,6 @@ abstract class BindingsModule {
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-
     @Provides
     @Singleton
     fun provideBaseOkHttpClient(): OkHttpClient =

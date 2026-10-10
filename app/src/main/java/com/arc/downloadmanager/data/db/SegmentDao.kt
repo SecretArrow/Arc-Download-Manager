@@ -23,7 +23,13 @@ interface SegmentDao {
     suspend fun upsertAll(segments: List<SegmentEntity>)
 
     @Query("UPDATE segments SET downloadedBytes = :downloadedBytes, status = :status, updatedAt = :now WHERE downloadId = :downloadId AND idx = :index")
-    suspend fun updateProgress(downloadId: String, index: Int, downloadedBytes: Long, status: String, now: Long = System.currentTimeMillis())
+    suspend fun updateProgress(
+        downloadId: String,
+        index: Int,
+        downloadedBytes: Long,
+        status: String,
+        now: Long = System.currentTimeMillis(),
+    )
 
     @Query("DELETE FROM segments WHERE downloadId = :downloadId")
     suspend fun deleteByDownload(downloadId: String)

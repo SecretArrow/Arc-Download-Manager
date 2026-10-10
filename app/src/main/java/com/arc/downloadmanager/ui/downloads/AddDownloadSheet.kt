@@ -3,7 +3,6 @@
 package com.arc.downloadmanager.ui.downloads
 
 import android.content.Intent
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -38,7 +37,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -82,33 +80,36 @@ fun AddDownloadSheet(
     var batchMessage by rememberSaveable { mutableStateOf("") }
     var error by rememberSaveable { mutableStateOf(false) }
 
-    val folderPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-        uri?.let {
-            runCatching {
-                context.contentResolver.takePersistableUriPermission(
-                    it,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-                )
+    val folderPicker =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+            uri?.let {
+                runCatching {
+                    context.contentResolver.takePersistableUriPermission(
+                        it,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+                    )
+                }
+                destination = it.toString()
             }
-            destination = it.toString()
         }
-    }
-    val fileImporter = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        uri?.let {
-            runCatching {
-                context.contentResolver.openInputStream(it)
-                    ?.bufferedReader()?.use { reader -> reader.readText() }
-            }.getOrNull()?.let { text -> batchText = text }
+    val fileImporter =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let {
+                runCatching {
+                    context.contentResolver.openInputStream(it)
+                        ?.bufferedReader()?.use { reader -> reader.readText() }
+                }.getOrNull()?.let { text -> batchText = text }
+            }
         }
-    }
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             TabRow(selectedTabIndex = tab) {
@@ -119,7 +120,10 @@ fun AddDownloadSheet(
             if (tab == 0) {
                 OutlinedTextField(
                     value = url,
-                    onValueChange = { url = it; error = false },
+                    onValueChange = {
+                        url = it
+                        error = false
+                    },
                     label = { Text(stringResource(R.string.add_url_hint)) },
                     isError = error,
                     supportingText = { if (error) Text(stringResource(R.string.add_empty_url)) },
@@ -193,9 +197,10 @@ fun AddDownloadSheet(
                     onValueChange = { batchText = it },
                     label = { Text(stringResource(R.string.add_batch_hint)) },
                     minLines = 5,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 140.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 140.dp),
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = { fileImporter.launch(arrayOf("text/plain", "text/*")) }) {
@@ -215,14 +220,16 @@ fun AddDownloadSheet(
                 Button(
                     enabled = valid > 0,
                     onClick = {
-                        val requests = urls
-                            .filter { CookieScopePolicy.isSupportedUrl(it) }
-                            .map { DownloadRequest(url = it, source = com.arc.downloadmanager.domain.model.DownloadSource.BATCH) }
+                        val requests =
+                            urls
+                                .filter { CookieScopePolicy.isSupportedUrl(it) }
+                                .map { DownloadRequest(url = it, source = com.arc.downloadmanager.domain.model.DownloadSource.BATCH) }
                         val template = context.getString(R.string.add_batch_started, 0, 0)
                         onAddBatch(requests) { started, invalid ->
-                            batchMessage = template
-                                .replace("%1\$d", started.toString())
-                                .replace("%2\$d", invalid.toString())
+                            batchMessage =
+                                template
+                                    .replace("%1\$d", started.toString())
+                                    .replace("%2\$d", invalid.toString())
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -235,7 +242,10 @@ fun AddDownloadSheet(
 }
 
 @Composable
-private fun SegmentsRow(selected: Int, onChange: (Int) -> Unit) {
+private fun SegmentsRow(
+    selected: Int,
+    onChange: (Int) -> Unit,
+) {
     val options = listOf(0 to "Auto", 2 to "2", 4 to "4", 8 to "8", 16 to "16")
     SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
         options.forEachIndexed { index, (value, label) ->
@@ -251,7 +261,10 @@ private fun SegmentsRow(selected: Int, onChange: (Int) -> Unit) {
 }
 
 @Composable
-private fun PriorityRow(selected: Int, onChange: (Int) -> Unit) {
+private fun PriorityRow(
+    selected: Int,
+    onChange: (Int) -> Unit,
+) {
     val options = listOf(0, 1, 2)
     SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
         options.forEachIndexed { index, value ->

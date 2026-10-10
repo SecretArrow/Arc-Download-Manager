@@ -34,7 +34,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -83,23 +82,25 @@ fun FilesScreen(viewModel: FilesViewModel = hiltViewModel()) {
                 leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
                 placeholder = { Text(stringResource(R.string.files_search_hint)) },
                 singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
             )
             LazyRow(
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                val categories = listOf(
-                    FileCategory.IMAGE to R.string.files_category_images,
-                    FileCategory.VIDEO to R.string.files_category_videos,
-                    FileCategory.AUDIO to R.string.files_category_audio,
-                    FileCategory.DOCUMENT to R.string.files_category_documents,
-                    FileCategory.ARCHIVE to R.string.files_category_archives,
-                    FileCategory.APP to R.string.files_category_apps,
-                    FileCategory.OTHER to R.string.files_category_other,
-                )
+                val categories =
+                    listOf(
+                        FileCategory.IMAGE to R.string.files_category_images,
+                        FileCategory.VIDEO to R.string.files_category_videos,
+                        FileCategory.AUDIO to R.string.files_category_audio,
+                        FileCategory.DOCUMENT to R.string.files_category_documents,
+                        FileCategory.ARCHIVE to R.string.files_category_archives,
+                        FileCategory.APP to R.string.files_category_apps,
+                        FileCategory.OTHER to R.string.files_category_other,
+                    )
                 item {
                     FilterChip(
                         selected = category == null,
@@ -115,9 +116,10 @@ fun FilesScreen(viewModel: FilesViewModel = hiltViewModel()) {
                     )
                 }
             }
-            val visible = files
-                .filter { category == FileCategory.OTHER || it.category == category }
-                .filter { query.isBlank() || it.name.contains(query, ignoreCase = true) }
+            val visible =
+                files
+                    .filter { category == FileCategory.OTHER || it.category == category }
+                    .filter { query.isBlank() || it.name.contains(query, ignoreCase = true) }
             if (visible.isEmpty()) {
                 Column(
                     Modifier
@@ -161,9 +163,10 @@ private fun FileRow(
     var newName by remember { mutableStateOf(item.name) }
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
         onClick = onOpen,
     ) {
         Row(

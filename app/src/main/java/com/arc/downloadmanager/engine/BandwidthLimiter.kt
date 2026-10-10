@@ -7,7 +7,6 @@ import kotlinx.coroutines.delay
  * A limit of 0 or less means unlimited. Coroutine-friendly (no thread blocking).
  */
 class BandwidthLimiter(private val bytesPerSecond: Long) {
-
     private var bucket: Long = if (bytesPerSecond > 0) bytesPerSecond / 2 else 0
     private var lastRefill: Long = System.nanoTime()
 

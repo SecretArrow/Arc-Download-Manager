@@ -10,15 +10,17 @@ import javax.inject.Singleton
  * or exports: they flow only into the download request headers.
  */
 @Singleton
-class WebViewCookieProvider @Inject constructor() : CookieProvider {
+class WebViewCookieProvider
+    @Inject
+    constructor() : CookieProvider {
+        override fun cookiesFor(url: String): String? =
+            runCatching {
+                val manager = CookieManager.getInstance()
+                if (!manager.hasCookies()) null else manager.getCookie(url)
+            }.getOrNull()
 
-    override fun cookiesFor(url: String): String? = runCatching {
-        val manager = CookieManager.getInstance()
-        if (!manager.hasCookies()) null else manager.getCookie(url)
-    }.getOrNull()
-
-    /** Clears cookies for the given origin (used by "clear browsing data"). */
-    fun clearFor(url: String) {
-        runCatching { CookieManager.getInstance().removeAllCookies(null) }
+        /** Clears cookies for the given origin (used by "clear browsing data"). */
+        fun clearFor(url: String) {
+            runCatching { CookieManager.getInstance().removeAllCookies(null) }
+        }
     }
-}

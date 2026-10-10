@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<checkstyle version="8.0">
+    <file name="/home/runner/work/Arc-Download-Manager/Arc-Download-Manager/app/src/test/java/com/arc/downloadmanager/EngineHelpersTest.kt">
+        <error line="3" column="1" severity="error" message="Imports must be ordered in lexicographic order without any empty lines in-between with &quot;java&quot;, &quot;javax&quot;, &quot;kotlin&quot; and aliases in the end" source="standard:import-ordering" />
+        <error line="24" column="1" severity="error" message="Class body should not start with blank line" source="standard:no-empty-first-line-in-class-body" />
+        <error line="58" column="31" severity="error" message="Class body should not start with blank line" source="standard:no-empty-first-line-in-class-body" />
+        <error line="87" column="32" severity="error" message="Class body should not start with blank line" source="standard:no-empty-first-line-in-class-body" />
+        <error line="101" column="27" severity="error" message="Class body should not start with blank line" source="standard:no-empty-first-line-in-class-body" />
+        <error line="134" column="23" severity="error" message="Class body should not start with blank line" source="standard:no-empty-first-line-in-class-body" />
+        <error line="155" column="21" severity="error" message="Class body should not start with blank line" source="standard:no-empty-first-line-in-class-body" />
+        <error line="174" column="25" severity="error" message="Class body should not start with blank line" source="standard:no-empty-first-line-in-class-body" />
+        <error line="216" column="15" severity="error" message="Class body should not start with blank line" source="standard:no-empty-first-line-in-class-body" />
+        <error line="240" column="18" severity="error" message="Class body should not start with blank line" source="standard:no-empty-first-line-in-class-body" />
+    </file>
+    <file name="/home/runner/work/Arc-Download-Manager/Arc-Download-Manager/app/src/test/java/com/arc/downloadmanager/TaskRunnerTest.kt">
+        <error line="3" column="1" severity="error" message="Imports must be ordered in lexicographic order without any empty lines in-between with &quot;java&quot;, &quot;javax&quot;, &quot;kotlin&quot; and aliases in the end" source="standard:import-ordering" />
+        <error line="57" column="1" severity="error" message="Class body should not start with blank line" source="standard:no-empty-first-line-in-class-body" />
+        <error line="72" column="18" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="73" column="12" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="74" column="16" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="75" column="20" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="76" column="24" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="77" column="28" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="82" column="4" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="86" column="35" severity="error" message="Newline expected after opening parenthesis" source="standard:function-signature" />
+        <error line="86" column="57" severity="error" message="Parameter should start on a newline" source="standard:function-signature" />
+        <error line="86" column="70" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="87" column="9" severity="error" message="Newline expected before closing parenthesis" source="standard:function-signature" />
+        <error line="87" column="9" severity="error" message="Missing trailing comma before &quot;)&quot;" source="standard:trailing-comma-on-declaration-site" />
+        <error line="87" column="17" severity="error" message="First line of body expression fits on same line as function signature" source="standard:function-signature" />
+        <error line="93" column="62" severity="error" message="Newline expected after opening parenthesis" source="standard:function-signature" />
+        <error line="93" column="83" severity="error" message="Parameter should start on a newline" source="standard:function-signature" />
+        <error line="94" column="7" severity="error" message="Parameter should start on a newline" source="standard:function-signature" />
+        <error line="95" column="17" severity="error" message="Newline expected before closing parenthesis" source="standard:function-signature" />
+        <error line="95" column="18" severity="error" message="Missing trailing comma before &quot;)&quot;" source="standard:trailing-comma-on-declaration-site" />
+        <error line="108" column="49" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="110" column="26" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="110" column="75" severity="error" message="First line of body expression fits on same line as function signature" source="standard:function-signature" />
+        <error line="113" column="22" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="174" column="9" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="175" column="30" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="175" column="71" severity="error" message="First line of body expression fits on same line as function signature" source="standard:function-signature" />
+        <error line="178" column="21" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="190" column="21" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="191" column="34" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="191" column="67" severity="error" message="First line of body expression fits on same line as function signature" source="standard:function-signature" />
+        <error line="194" column="15" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="206" column="33" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="207" column="38" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="207" column="63" severity="error" message="First line of body expression fits on same line as function signature" source="standard:function-signature" />
+        <error line="210" column="35" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="221" column="45" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="222" column="42" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="223" column="74" severity="error" message="Unexpected indentation (16) (should be 20)" source="standard:indent" />
+        <error line="225" column="13" severity="error" message="Unexpected indentation (20) (should be 24)" source="standard:indent" />
+        <error line="227" column="6" severity="error" message="Unexpected indentation (16) (should be 20)" source="standard:indent" />
+        <error line="228" column="18" severity="error" message="Unexpected indentation (16) (should be 20)" source="standard:indent" />
+        <error line="229" column="7" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="229" column="25" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="242" column="32" severity="error" message="Class body should not start with blank line" source="standard:no-empty-first-line-in-class-body" />
+        <error line="261" column="57" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="262" column="70" severity="error" message="First line of body expression fits on same line as function signature" source="standard:function-signature" />
+        <error line="262" column="81" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="265" column="71" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="269" column="9" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="271" column="19" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="272" column="1" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="272" column="46" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="274" column="19" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="277" column="2" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="279" column="19" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="280" column="25" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="281" column="21" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="284" column="10" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="284" column="40" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="312" column="2" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="314" column="17" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="314" column="48" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="317" column="9" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="318" column="11" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="318" column="71" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="319" column="17" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="321" column="10" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+    </file>
+    <file name="/home/runner/work/Arc-Download-Manager/Arc-Download-Manager/app/src/test/java/com/arc/downloadmanager/TestFakes.kt">
+        <error line="1" column="1" severity="error" message="First line of body expression fits on same line as function signature" source="standard:function-signature" />
+        <error line="3" column="1" severity="error" message="Imports must be ordered in lexicographic order without any empty lines in-between with &quot;java&quot;, &quot;javax&quot;, &quot;kotlin&quot; and aliases in the end" source="standard:import-ordering" />
+        <error line="23" column="60" severity="error" message="First line of body expression fits on same line as function signature" source="standard:function-signature" />
+        <error line="26" column="58" severity="error" message="First line of body expression fits on same line as function signature" source="standard:function-signature" />
+        <error line="33" column="55" severity="error" message="First line of body expression fits on same line as function signature" source="standard:function-signature" />
+        <error line="36" column="35" severity="error" message="First line of body expression fits on same line as function signature" source="standard:function-signature" />
+        <error line="39" column="27" severity="error" message="First line of body expression fits on same line as function signature" source="standard:function-signature" />
+        <error line="42" column="23" severity="error" message="First line of body expression fits on same line as function signature" source="standard:function-signature" />
+        <error line="45" column="3" severity="error" message="First line of body expression fits on same line as function signature" source="standard:function-signature" />
+        <error line="50" column="104" severity="error" message="Newline expected after opening parenthesis" source="standard:function-signature" />
+        <error line="52" column="6" severity="error" message="Parameter should start on a newline" source="standard:function-signature" />
+        <error line="52" column="37" severity="error" message="Parameter should start on a newline" source="standard:function-signature" />
+        <error line="52" column="61" severity="error" message="Newline expected before closing parenthesis" source="standard:function-signature" />
+        <error line="52" column="61" severity="error" message="Missing trailing comma before &quot;)&quot;" source="standard:trailing-comma-on-declaration-site" />
+        <error line="52" column="102" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="52" column="107" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="53" column="103" severity="error" message="Unexpected indentation (4) (should be 8)" source="standard:indent" />
+        <error line="61" column="23" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="61" column="36" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="63" column="4" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="63" column="36" severity="error" message="Unexpected indentation (16) (should be 20)" source="standard:indent" />
+        <error line="64" column="8" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="64" column="28" severity="error" message="Unexpected indentation (16) (should be 24)" source="standard:indent" />
+        <error line="65" column="36" severity="error" message="Unexpected indentation (16) (should be 24)" source="standard:indent" />
+        <error line="66" column="44" severity="error" message="Unexpected indentation (16) (should be 24)" source="standard:indent" />
+        <error line="67" column="52" severity="error" message="Unexpected indentation (16) (should be 24)" source="standard:indent" />
+        <error line="72" column="29" severity="error" message="Unexpected indentation (12) (should be 20)" source="standard:indent" />
+        <error line="72" column="51" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="72" column="65" severity="error" message="Unexpected indentation (4) (should be 8)" source="standard:indent" />
+        <error line="73" column="11" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="75" column="18" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="75" column="32" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="76" column="3" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="77" column="1" severity="error" message="Unexpected indentation (16) (should be 20)" source="standard:indent" />
+        <error line="77" column="30" severity="error" message="Unexpected indentation (16) (should be 24)" source="standard:indent" />
+        <error line="80" column="3" severity="error" message="Unexpected indentation (16) (should be 24)" source="standard:indent" />
+        <error line="83" column="28" severity="error" message="Unexpected indentation (16) (should be 24)" source="standard:indent" />
+        <error line="83" column="73" severity="error" message="Unexpected indentation (16) (should be 24)" source="standard:indent" />
+        <error line="84" column="31" severity="error" message="Unexpected indentation (12) (should be 20)" source="standard:indent" />
+        <error line="84" column="35" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="84" column="53" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="84" column="67" severity="error" message="Unexpected indentation (4) (should be 8)" source="standard:indent" />
+        <error line="87" column="74" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="87" column="79" severity="error" message="Newline expected after opening parenthesis" source="standard:function-signature" />
+        <error line="88" column="4" severity="error" message="Parameter should start on a newline" source="standard:function-signature" />
+        <error line="88" column="24" severity="error" message="Newline expected before closing parenthesis" source="standard:function-signature" />
+        <error line="88" column="25" severity="error" message="Missing trailing comma before &quot;)&quot;" source="standard:trailing-comma-on-declaration-site" />
+        <error line="88" column="43" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="88" column="69" severity="error" message="Unexpected indentation (4) (should be 8)" source="standard:indent" />
+        <error line="93" column="22" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="93" column="26" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="96" column="66" severity="error" message="Unexpected indentation (4) (should be 8)" source="standard:indent" />
+        <error line="98" column="32" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="98" column="65" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="99" column="17" severity="error" message="Unexpected indentation (4) (should be 8)" source="standard:indent" />
+        <error line="105" column="59" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="111" column="18" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="115" column="1" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="116" column="1" severity="error" message="Unexpected indentation (4) (should be 8)" source="standard:indent" />
+        <error line="116" column="19" severity="error" message="A multiline expression should start on a new line" source="standard:multiline-expression-wrapping" />
+        <error line="121" column="23" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="121" column="75" severity="error" message="Unexpected indentation (12) (should be 16)" source="standard:indent" />
+        <error line="121" column="92" severity="error" message="First line of body expression fits on same line as function signature" source="standard:function-signature" />
+        <error line="123" column="85" severity="error" message="Unexpected indentation (8) (should be 12)" source="standard:indent" />
+        <error line="123" column="99" severity="error" message="Unexpected indentation (4) (should be 8)" source="standard:indent" />
+        <error line="130" column="30" severity="error" message="Class body should not start with blank line" source="standard:no-empty-first-line-in-class-body" />
+        <error line="130" column="44" severity="error" message="Newline expected after opening parenthesis" source="standard:function-signature" />
+        <error line="132" column="1" severity="error" message="Parameter should start on a newline" source="standard:function-signature" />
+        <error line="132" column="19" severity="error" message="Newline expected before closing parenthesis" source="standard:function-signature" />
+        <error line="132" column="21" severity="error" message="Missing trailing comma before &quot;)&quot;" source="standard:trailing-comma-on-declaration-site" />
+        <error line="132" column="33" severity="error" message="First line of body expression fits on same line as function signature" source="standard:function-signature" />
+        <error line="135" column="5" severity="error" message="Newline expected after opening parenthesis" source="standard:function-signature" />
+        <error line="135" column="34" severity="error" message="Parameter should start on a newline" source="standard:function-signature" />
+        <error line="135" column="58" severity="error" message="Newline expected before closing parenthesis" source="standard:function-signature" />
+        <error line="135" column="61" severity="error" message="Missing trailing comma before &quot;)&quot;" source="standard:trailing-comma-on-declaration-site" />
+        <error line="135" column="72" severity="error" message="First line of body expression fits on same line as function signature" source="standard:function-signature" />
+        <error line="137" column="4" severity="error" message="Newline expected after opening parenthesis" source="standard:function-signature" />
+        <error line="137" column="33" severity="error" message="Parameter should start on a newline" source="standard:function-signature" />
+        <error line="138" column="15" severity="error" message="Parameter should start on a newline" source="standard:function-signature" />
+        <error line="138" column="42" severity="error" message="Newline expected before closing parenthesis" source="standard:function-signature" />
+        <error line="139" column="1" severity="error" message="Missing trailing comma before &quot;)&quot;" source="standard:trailing-comma-on-declaration-site" />
+        <error line="154" column="36" severity="error" message="Newline expected after opening parenthesis" source="standard:function-signature" />
+        <error line="155" column="23" severity="error" message="Parameter should start on a newline" source="standard:function-signature" />
+        <error line="156" column="19" severity="error" message="Newline expected before closing parenthesis" source="standard:function-signature" />
+        <error line="156" column="24" severity="error" message="Missing trailing comma before &quot;)&quot;" source="standard:trailing-comma-on-declaration-site" />
+    </file>
+</checkstyle>

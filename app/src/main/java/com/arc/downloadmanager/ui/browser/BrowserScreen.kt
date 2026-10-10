@@ -3,12 +3,9 @@
 package com.arc.downloadmanager.ui.browser
 
 import android.graphics.Bitmap
-import android.view.View
 import android.webkit.CookieManager
-import android.webkit.DownloadListener
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
-import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Box
@@ -52,7 +49,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -115,9 +111,10 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
             // Address bar row
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
             ) {
                 IconButton(onClick = { showTabs = true }) {
                     BadgedBox(badge = { Badge { Text(tabs.size.toString()) } }) {
@@ -147,10 +144,22 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
                     BrowserMenu(
                         expanded = menuOpen,
                         onDismiss = { menuOpen = false },
-                        onBookmarks = { showBookmarks = true; menuOpen = false },
-                        onHistory = { showHistory = true; menuOpen = false },
-                        onDesktop = { viewModel.toggleDesktop(); menuOpen = false },
-                        onPrivate = { viewModel.togglePrivate(); menuOpen = false },
+                        onBookmarks = {
+                            showBookmarks = true
+                            menuOpen = false
+                        },
+                        onHistory = {
+                            showHistory = true
+                            menuOpen = false
+                        },
+                        onDesktop = {
+                            viewModel.toggleDesktop()
+                            menuOpen = false
+                        },
+                        onPrivate = {
+                            viewModel.togglePrivate()
+                            menuOpen = false
+                        },
                         onClearData = {
                             menuOpen = false
                             CookieManager.getInstance().removeAllCookies(null)
@@ -166,10 +175,11 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
                         onShare = {
                             menuOpen = false
                             webViewRef?.url?.let { url ->
-                                val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                                    type = "text/plain"
-                                    putExtra(android.content.Intent.EXTRA_TEXT, url)
-                                }
+                                val intent =
+                                    android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                        type = "text/plain"
+                                        putExtra(android.content.Intent.EXTRA_TEXT, url)
+                                    }
                                 context.startActivity(android.content.Intent.createChooser(intent, null))
                             }
                         },
@@ -195,10 +205,11 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
                     modifier = Modifier.fillMaxSize(),
                     factory = { ctx ->
                         WebView(ctx).apply {
-                            layoutParams = android.view.ViewGroup.LayoutParams(
-                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                            )
+                            layoutParams =
+                                android.view.ViewGroup.LayoutParams(
+                                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                                )
                             settings.javaScriptEnabled = true
                             settings.domStorageEnabled = true
                             settings.loadWithOverviewMode = true
@@ -210,11 +221,15 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
                             setAcceptThirdParty()
 
                             webViewClient = ArcWebViewClient(viewModel)
-                            webChromeClient = object : WebChromeClient() {
-                                override fun onProgressChanged(view: WebView?, newProgress: Int) {
-                                    viewModel.setLoading(newProgress < 100, newProgress)
+                            webChromeClient =
+                                object : WebChromeClient() {
+                                    override fun onProgressChanged(
+                                        view: WebView?,
+                                        newProgress: Int,
+                                    ) {
+                                        viewModel.setLoading(newProgress < 100, newProgress)
+                                    }
                                 }
-                            }
                             setDownloadListener { url, userAgent, contentDisposition, mimetype, _ ->
                                 val cookies = runCatching { CookieManager.getInstance().getCookie(url) }.getOrNull()
                                 viewModel.downloadFromBrowser(
@@ -259,9 +274,10 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
             // Bottom controls
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
             ) {
                 IconButton(onClick = { webViewRef?.goBack() }, enabled = webViewRef?.canGoBack() == true) {
                     Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
@@ -397,10 +413,11 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
                     showLinkMenu = null
                 }) { Text(stringResource(R.string.browser_download_link)) }
                 TextButton(onClick = {
-                    val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(android.content.Intent.EXTRA_TEXT, link)
-                    }
+                    val intent =
+                        android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(android.content.Intent.EXTRA_TEXT, link)
+                        }
                     context.startActivity(android.content.Intent.createChooser(intent, null))
                     showLinkMenu = null
                 }) { Text(stringResource(R.string.browser_share_link)) }
@@ -435,7 +452,10 @@ private fun BrowserMenu(
 private class ArcWebViewClient(
     private val viewModel: BrowserViewModel,
 ) : WebViewClient() {
-    override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+    override fun shouldOverrideUrlLoading(
+        view: WebView,
+        request: WebResourceRequest,
+    ): Boolean {
         val url = request.url.toString()
         val scheme = request.url.scheme?.lowercase() ?: ""
         if (scheme !in listOf("http", "https")) {
@@ -448,11 +468,18 @@ private class ArcWebViewClient(
         return false
     }
 
-    override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
+    override fun onPageStarted(
+        view: WebView,
+        url: String,
+        favicon: Bitmap?,
+    ) {
         viewModel.setLoading(true)
     }
 
-    override fun onPageFinished(view: WebView, url: String) {
+    override fun onPageFinished(
+        view: WebView,
+        url: String,
+    ) {
         viewModel.onNavigated(url, view.title ?: "")
         viewModel.setLoading(false, 100)
     }

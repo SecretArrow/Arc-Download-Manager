@@ -18,47 +18,49 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class DownloadDetailViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
-    private val repository: DownloadRepository,
-    store: DownloadStore,
-) : ViewModel() {
+class DownloadDetailViewModel
+    @Inject
+    constructor(
+        savedStateHandle: SavedStateHandle,
+        private val repository: DownloadRepository,
+        store: DownloadStore,
+    ) : ViewModel() {
+        private val id: String = savedStateHandle.get<String>("id") ?: ""
 
-    private val id: String = savedStateHandle.get<String>("id") ?: ""
+        val detail: StateFlow<DetailUiState> =
+            combine(
+                repository.observeById(id),
+                store.observeSegments(id),
+                flow {
+                    while (true) {
+                        emit(System.currentTimeMillis())
+                        delay(1_000)
+                    }
+                },
+            ) { entity, segments, _ ->
+                DetailUiState(
+                    entity = entity,
+                    segments = segments,
+                )
+            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DetailUiState())
 
-    val detail: StateFlow<DetailUiState> = combine(
-        repository.observeById(id),
-        store.observeSegments(id),
-        flow {
-            while (true) {
-                emit(System.currentTimeMillis())
-                delay(1_000)
+        fun pause() = repository.pause(id)
+
+        fun resume() = repository.resume(id)
+
+        fun cancel() = repository.cancel(id)
+
+        fun retry() = repository.retry(id)
+
+        fun restart() = repository.restart(id)
+
+        fun delete(onDone: () -> Unit) {
+            viewModelScope.launch {
+                repository.delete(id, deleteFile = false)
+                onDone()
             }
-        },
-    ) { entity, segments, _ ->
-        DetailUiState(
-            entity = entity,
-            segments = segments,
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DetailUiState())
-
-    fun pause() = repository.pause(id)
-
-    fun resume() = repository.resume(id)
-
-    fun cancel() = repository.cancel(id)
-
-    fun retry() = repository.retry(id)
-
-    fun restart() = repository.restart(id)
-
-    fun delete(onDone: () -> Unit) {
-        viewModelScope.launch {
-            repository.delete(id, deleteFile = false)
-            onDone()
         }
     }
-}
 
 data class DetailUiState(
     val entity: DownloadEntity? = null,

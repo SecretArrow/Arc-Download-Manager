@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -37,10 +38,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -55,7 +54,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arc.downloadmanager.R
-import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.data.settings.OverwritePolicy
 import com.arc.downloadmanager.domain.model.DownloadRequest
 import com.arc.downloadmanager.engine.CookieScopePolicy
@@ -102,9 +100,10 @@ fun HomeScreen(
         },
     ) { padding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 96.dp),
         ) {
             item {
@@ -148,9 +147,10 @@ fun HomeScreen(
             }
             item {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
@@ -244,19 +244,21 @@ private fun AggregateCard(
     onOpenFiles: () -> Unit,
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
     ) {
         Column(Modifier.padding(16.dp)) {
             Text(
-                text = stringResource(
-                    R.string.home_queue_count,
-                    ui.activeCount,
-                    ui.queuedCount,
-                    ui.failedCount,
-                ),
+                text =
+                    stringResource(
+                        R.string.home_queue_count,
+                        ui.activeCount,
+                        ui.queuedCount,
+                        ui.failedCount,
+                    ),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
@@ -279,11 +281,12 @@ private fun AggregateCard(
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = if (ui.activeCount > 0) {
-                        "${Format.bytes(ui.activeBytes)} / ${Format.bytes(ui.activeTotalBytes)}"
-                    } else {
-                        "${ui.completedCount} completed"
-                    },
+                    text =
+                        if (ui.activeCount > 0) {
+                            "${Format.bytes(ui.activeBytes)} / ${Format.bytes(ui.activeTotalBytes)}"
+                        } else {
+                            "${ui.completedCount} completed"
+                        },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.weight(1f),
@@ -309,9 +312,10 @@ private fun QuickActions(
     onBrowser: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         AssistChip(onClick = onPaste, label = { Text(stringResource(R.string.action_paste_url)) })
@@ -331,7 +335,10 @@ private fun SectionHeader(title: String) {
 }
 
 @Composable
-private fun ViewModeSwitch(selected: Int, onSelect: (Int) -> Unit) {
+private fun ViewModeSwitch(
+    selected: Int,
+    onSelect: (Int) -> Unit,
+) {
     SingleChoiceSegmentedButtonRow {
         SegmentedButton(
             selected = selected == 0,

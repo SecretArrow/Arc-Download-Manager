@@ -84,11 +84,12 @@ fun DownloadDetailScreen(
             return@Scaffold
         }
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             ProgressCard(entity, state.segments)
@@ -99,7 +100,10 @@ fun DownloadDetailScreen(
 }
 
 @Composable
-private fun ProgressCard(entity: DownloadEntity, segments: List<com.arc.downloadmanager.data.db.SegmentEntity>) {
+private fun ProgressCard(
+    entity: DownloadEntity,
+    segments: List<com.arc.downloadmanager.data.db.SegmentEntity>,
+) {
     val percent = Format.percent(entity.downloadedBytes, entity.totalBytes)
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -116,16 +120,18 @@ private fun ProgressCard(entity: DownloadEntity, segments: List<com.arc.download
                     if (entity.totalBytes > 0) Format.bytes(entity.totalBytes) else "?"
                 }  •  ${stringResource(statusLabelRes(entity.status))}",
                 style = MaterialTheme.typography.bodyMedium,
-                color = statusColor(entity.status).takeIf { it != androidx.compose.ui.graphics.Color.Unspecified }
-                    ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                color =
+                    statusColor(entity.status).takeIf { it != androidx.compose.ui.graphics.Color.Unspecified }
+                        ?: MaterialTheme.colorScheme.onSurfaceVariant,
             )
             if (segments.isNotEmpty()) {
                 Text(
-                    text = stringResource(
-                        R.string.segments_active,
-                        segments.count { it.status == DownloadStatus.DOWNLOADING },
-                        segments.size,
-                    ),
+                    text =
+                        stringResource(
+                            R.string.segments_active,
+                            segments.count { it.status == DownloadStatus.DOWNLOADING },
+                            segments.size,
+                        ),
                     style = MaterialTheme.typography.labelMedium,
                 )
                 segments.forEach { segment ->
@@ -185,10 +191,11 @@ private fun ActionRow(
                 onClick = {
                     runCatching {
                         val uri = android.net.Uri.parse(entity.finalUri)
-                        val intent = Intent(Intent.ACTION_VIEW).apply {
-                            setDataAndType(uri, entity.mimeType ?: "*/*")
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
+                        val intent =
+                            Intent(Intent.ACTION_VIEW).apply {
+                                setDataAndType(uri, entity.mimeType ?: "*/*")
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
                         context.startActivity(intent)
                     }
                 },
@@ -199,11 +206,12 @@ private fun ActionRow(
             OutlinedButton(
                 onClick = {
                     runCatching {
-                        val intent = Intent(Intent.ACTION_SEND).apply {
-                            type = entity.mimeType ?: "*/*"
-                            putExtra(Intent.EXTRA_STREAM, android.net.Uri.parse(entity.finalUri))
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
+                        val intent =
+                            Intent(Intent.ACTION_SEND).apply {
+                                type = entity.mimeType ?: "*/*"
+                                putExtra(Intent.EXTRA_STREAM, android.net.Uri.parse(entity.finalUri))
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
                         context.startActivity(Intent.createChooser(intent, null))
                     }
                 },
@@ -252,7 +260,10 @@ private fun InfoSection(entity: DownloadEntity) {
 }
 
 @Composable
-private fun InfoRow(label: String, value: String) {
+private fun InfoRow(
+    label: String,
+    value: String,
+) {
     Row(Modifier.fillMaxWidth()) {
         Text(
             text = label,

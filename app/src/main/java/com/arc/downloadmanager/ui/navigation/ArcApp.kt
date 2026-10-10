@@ -60,12 +60,13 @@ private data class Destination(
 @Composable
 fun ArcApp() {
     val navController = rememberNavController()
-    val destinations = listOf(
-        Destination(Routes.HOME, R.string.nav_home, Icons.Filled.Home, Icons.Outlined.Home),
-        Destination(Routes.BROWSER, R.string.nav_browser, Icons.Filled.Public, Icons.Outlined.Public),
-        Destination(Routes.FILES, R.string.nav_files, Icons.Filled.Description, Icons.Outlined.Description),
-        Destination(Routes.SETTINGS, R.string.nav_settings, Icons.Filled.Settings, Icons.Outlined.Settings),
-    )
+    val destinations =
+        listOf(
+            Destination(Routes.HOME, R.string.nav_home, Icons.Filled.Home, Icons.Outlined.Home),
+            Destination(Routes.BROWSER, R.string.nav_browser, Icons.Filled.Public, Icons.Outlined.Public),
+            Destination(Routes.FILES, R.string.nav_files, Icons.Filled.Description, Icons.Outlined.Description),
+            Destination(Routes.SETTINGS, R.string.nav_settings, Icons.Filled.Settings, Icons.Outlined.Settings),
+        )
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     val showBars = currentRoute in destinations.map { it.route }
@@ -128,7 +129,10 @@ fun ArcApp() {
     }
 }
 
-private fun navigateTo(navController: NavHostController, route: String) {
+private fun navigateTo(
+    navController: NavHostController,
+    route: String,
+) {
     navController.navigate(route) {
         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true
@@ -137,7 +141,10 @@ private fun navigateTo(navController: NavHostController, route: String) {
 }
 
 @Composable
-private fun ArcNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
+private fun ArcNavHost(
+    navController: NavHostController,
+    modifier: Modifier = Modifier,
+) {
     Box(modifier.fillMaxSize()) {
         NavHost(navController = navController, startDestination = Routes.HOME) {
             composable(Routes.HOME) {

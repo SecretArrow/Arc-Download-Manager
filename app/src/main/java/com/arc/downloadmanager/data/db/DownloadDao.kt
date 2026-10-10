@@ -44,19 +44,41 @@ interface DownloadDao {
     suspend fun upsert(entity: DownloadEntity)
 
     @Query("UPDATE downloads SET downloadedBytes = :downloadedBytes, totalBytes = :totalBytes, updatedAt = :now WHERE id = :id")
-    suspend fun updateProgress(id: String, downloadedBytes: Long, totalBytes: Long, now: Long = System.currentTimeMillis())
+    suspend fun updateProgress(
+        id: String,
+        downloadedBytes: Long,
+        totalBytes: Long,
+        now: Long = System.currentTimeMillis(),
+    )
 
     @Query("UPDATE downloads SET status = :status, errorCode = :errorCode, errorMessage = :errorMessage, updatedAt = :now WHERE id = :id")
-    suspend fun updateStatus(id: String, status: String, errorCode: String?, errorMessage: String?, now: Long = System.currentTimeMillis())
+    suspend fun updateStatus(
+        id: String,
+        status: String,
+        errorCode: String?,
+        errorMessage: String?,
+        now: Long = System.currentTimeMillis(),
+    )
 
     @Query("UPDATE downloads SET status = :status, errorCode = NULL, errorMessage = NULL, retryCount = 0, updatedAt = :now WHERE id = :id")
-    suspend fun resetForRetry(id: String, status: String, now: Long = System.currentTimeMillis())
+    suspend fun resetForRetry(
+        id: String,
+        status: String,
+        now: Long = System.currentTimeMillis(),
+    )
 
     @Query("UPDATE downloads SET retryCount = retryCount + 1, updatedAt = :now WHERE id = :id")
-    suspend fun incrementRetry(id: String, now: Long = System.currentTimeMillis())
+    suspend fun incrementRetry(
+        id: String,
+        now: Long = System.currentTimeMillis(),
+    )
 
     @Query("UPDATE downloads SET finalUri = :uri, updatedAt = :now WHERE id = :id")
-    suspend fun updateFinalUri(id: String, uri: String?, now: Long = System.currentTimeMillis())
+    suspend fun updateFinalUri(
+        id: String,
+        uri: String?,
+        now: Long = System.currentTimeMillis(),
+    )
 
     @Query("DELETE FROM downloads WHERE id = :id")
     suspend fun delete(id: String)

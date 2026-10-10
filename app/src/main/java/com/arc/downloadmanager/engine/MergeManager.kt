@@ -10,12 +10,14 @@ import java.io.InputStream
  * The output file is created atomically-ish: content is written to a staging path and then renamed.
  */
 object MergeManager {
-
     private const val COPY_BUFFER = 512 * 1024
 
     /** Merges [parts] (in order) into [output]. Returns the output file on success. */
     @Throws(IOException::class)
-    fun merge(parts: List<File>, output: File): File {
+    fun merge(
+        parts: List<File>,
+        output: File,
+    ): File {
         require(parts.isNotEmpty()) { "No parts to merge" }
         output.parentFile?.mkdirs()
         val staging = File(output.parentFile, output.name + ".staging")
@@ -43,7 +45,10 @@ object MergeManager {
         }
     }
 
-    private fun copy(input: InputStream, output: FileOutputStream) {
+    private fun copy(
+        input: InputStream,
+        output: FileOutputStream,
+    ) {
         val buffer = ByteArray(COPY_BUFFER)
         var read = input.read(buffer)
         while (read != -1) {

@@ -10,7 +10,6 @@ import javax.inject.Inject
 
 @HiltAndroidApp
 class ArcApp : Application(), Configuration.Provider {
-
     @Inject
     lateinit var engine: DownloadEngine
 
@@ -27,7 +26,8 @@ class ArcApp : Application(), Configuration.Provider {
     }
 
     override val workManagerConfiguration: Configuration
-        get() = Configuration.Builder()
-            .setWorkerFactory(workerFactory)
-            .build()
+        get() =
+            Configuration.Builder()
+                .setWorkerFactory(workerFactory)
+                .build()
 }

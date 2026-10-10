@@ -23,318 +23,337 @@ import javax.inject.Singleton
  * channels, adaptive parallelism and recovery. Persists everything through [DownloadStore].
  */
 @Singleton
-class DownloadEngine @Inject constructor(
-    private val store: DownloadStore,
-    baseClient: OkHttpClient,
-    private val storage: TaskStorage,
-    private val settingsRepository: EngineSettingsSource,
-    private val networkMonitor: ConnectivityView,
-    private val cookieProvider: CookieProvider,
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val taskRunner = TaskRunner(
-        store = store,
-        baseClient = baseClient,
-        storage = storage,
-        networkMonitor = networkMonitor,
-        cookieProvider = cookieProvider,
-    )
+class DownloadEngine
+    @Inject
+    constructor(
+        private val store: DownloadStore,
+        baseClient: OkHttpClient,
+        private val storage: TaskStorage,
+        private val settingsRepository: EngineSettingsSource,
+        private val networkMonitor: ConnectivityView,
+        private val cookieProvider: CookieProvider,
+    ) {
+        private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        private val taskRunner =
+            TaskRunner(
+                store = store,
+                baseClient = baseClient,
+                storage = storage,
+                networkMonitor = networkMonitor,
+                cookieProvider = cookieProvider,
+            )
 
-    private val running = ConcurrentHashMap<String, kotlinx.coroutines.Job>()
-    private val controls = ConcurrentHashMap<String, TaskControl>()
-    private val scheduleMutex = Mutex()
-    private val retryNotBefore = ConcurrentHashMap<String, Long>()
-    private val throttledHostsUntil = ConcurrentHashMap<String, Long>()
+        private val running = ConcurrentHashMap<String, kotlinx.coroutines.Job>()
+        private val controls = ConcurrentHashMap<String, TaskControl>()
+        private val scheduleMutex = Mutex()
+        private val retryNotBefore = ConcurrentHashMap<String, Long>()
+        private val throttledHostsUntil = ConcurrentHashMap<String, Long>()
 
-    private val started = MutableStateFlow(false)
+        private val started = MutableStateFlow(false)
 
-    /** Emits the engine's liveness so the UI/service can react. */
-    val isStarted: Flow<Boolean> = started
+        /** Emits the engine's liveness so the UI/service can react. */
+        val isStarted: Flow<Boolean> = started
 
-    fun start() {
-        if (!started.compareAndSet(expect = false, update = true)) return
-        scope.launch {
-            // Recover tasks interrupted by process death.
-            recoverInterruptedTasks()
-            schedule()
-        }
-        scope.launch {
-            // Ticker: retries queued tasks after backoff, waits out rate limits and network loss.
-            while (true) {
-                delay(TICKER_INTERVAL_MS)
-                if (!networkMonitor.isOnline.value) continue
-                wakeWaitingTasks()
+        fun start() {
+            if (!started.compareAndSet(expect = false, update = true)) return
+            scope.launch {
+                // Recover tasks interrupted by process death.
+                recoverInterruptedTasks()
                 schedule()
             }
-        }
-        scope.launch {
-            networkMonitor.isOnline.collect { online ->
-                if (online) {
+            scope.launch {
+                // Ticker: retries queued tasks after backoff, waits out rate limits and network loss.
+                while (true) {
+                    delay(TICKER_INTERVAL_MS)
+                    if (!networkMonitor.isOnline.value) continue
                     wakeWaitingTasks()
                     schedule()
                 }
             }
-        }
-    }
-
-    /** Public API ---------------------------------------------------------------- */
-
-    suspend fun enqueue(entity: DownloadEntity): String {
-        store.insert(entity)
-        schedule()
-        return entity.id
-    }
-
-    fun pause(id: String) {
-        val control = controls[id]
-        if (control != null) {
-            control.pauseRequested = true
-            scope.launch { store.updateStatus(id, DownloadStatus.PAUSING) }
-        } else {
             scope.launch {
-                val entity = store.getById(id) ?: return@launch
-                if (entity.status.isRunningCandidate || entity.status.isActive) {
-                    store.updateStatus(id, DownloadStatus.PAUSED)
+                networkMonitor.isOnline.collect { online ->
+                    if (online) {
+                        wakeWaitingTasks()
+                        schedule()
+                    }
                 }
             }
         }
-    }
 
-    fun resume(id: String) {
-        scope.launch {
-            val entity = store.getById(id) ?: return@launch
-            val resumable = entity.status in listOf(
-                DownloadStatus.PAUSED,
-                DownloadStatus.FAILED,
-                DownloadStatus.AUTH_REQUIRED,
-                DownloadStatus.CANCELED,
-                DownloadStatus.WAITING_NETWORK,
-                DownloadStatus.WAITING_STORAGE,
-            )
-            if (resumable) {
-                store.updateStatus(id, DownloadStatus.QUEUED, null, null)
+        /** Public API ---------------------------------------------------------------- */
+
+        suspend fun enqueue(entity: DownloadEntity): String {
+            store.insert(entity)
+            schedule()
+            return entity.id
+        }
+
+        fun pause(id: String) {
+            val control = controls[id]
+            if (control != null) {
+                control.pauseRequested = true
+                scope.launch { store.updateStatus(id, DownloadStatus.PAUSING) }
+            } else {
+                scope.launch {
+                    val entity = store.getById(id) ?: return@launch
+                    if (entity.status.isRunningCandidate || entity.status.isActive) {
+                        store.updateStatus(id, DownloadStatus.PAUSED)
+                    }
+                }
+            }
+        }
+
+        fun resume(id: String) {
+            scope.launch {
+                val entity = store.getById(id) ?: return@launch
+                val resumable =
+                    entity.status in
+                        listOf(
+                            DownloadStatus.PAUSED,
+                            DownloadStatus.FAILED,
+                            DownloadStatus.AUTH_REQUIRED,
+                            DownloadStatus.CANCELED,
+                            DownloadStatus.WAITING_NETWORK,
+                            DownloadStatus.WAITING_STORAGE,
+                        )
+                if (resumable) {
+                    store.updateStatus(id, DownloadStatus.QUEUED, null, null)
+                    schedule()
+                }
+            }
+        }
+
+        fun cancel(id: String) {
+            val control = controls[id]
+            if (control != null) control.cancelRequested = true
+            scope.launch {
+                val entity = store.getById(id) ?: return@launch
+                if (entity.status.isTerminal && entity.status != DownloadStatus.CANCELED) return@launch
+                storage.cleanup(id)
+                store.deleteSegments(id)
+                store.updateStatus(id, DownloadStatus.CANCELED, DownloadError.CANCELED.name, null)
+            }
+        }
+
+        fun retry(id: String) {
+            scope.launch {
+                store.getById(id) ?: return@launch
+                store.resetForRetry(id)
+                retryNotBefore.remove(id)
                 schedule()
             }
         }
-    }
 
-    fun cancel(id: String) {
-        val control = controls[id]
-        if (control != null) control.cancelRequested = true
-        scope.launch {
-            val entity = store.getById(id) ?: return@launch
-            if (entity.status.isTerminal && entity.status != DownloadStatus.CANCELED) return@launch
-            storage.cleanup(id)
-            store.deleteSegments(id)
-            store.updateStatus(id, DownloadStatus.CANCELED, DownloadError.CANCELED.name, null)
-        }
-    }
-
-    fun retry(id: String) {
-        scope.launch {
-            store.getById(id) ?: return@launch
-            store.resetForRetry(id)
-            retryNotBefore.remove(id)
-            schedule()
-        }
-    }
-
-    /** Restarts a task from scratch, discarding all partial data. */
-    fun restart(id: String) {
-        scope.launch {
-            val entity = store.getById(id) ?: return@launch
-            if (running.containsKey(id)) controls[id]?.cancelRequested = true
-            storage.cleanup(id)
-            store.deleteSegments(id)
-            store.update(
-                entity.copy(
-                    downloadedBytes = 0L,
-                    status = DownloadStatus.QUEUED,
-                    errorCode = null,
-                    errorMessage = null,
-                    retryCount = 0,
-                    resumable = false,
-                    finalUri = null,
-                    completedAt = null,
-                ),
-            )
-            store.updateProgress(id, 0L, entity.totalBytes)
-            schedule()
-        }
-    }
-
-    fun pauseAll() {
-        scope.launch {
-            store.running().forEach { pause(it.id) }
-            store.pending().forEach { store.updateStatus(it.id, DownloadStatus.PAUSED) }
-        }
-    }
-
-    /** Cancels every active and pending task. */
-    fun cancelAll() {
-        scope.launch {
-            store.getAllNow()
-                .filter { !it.status.isTerminal }
-                .forEach { cancel(it.id) }
-        }
-    }
-
-    fun resumeAll() {
-        scope.launch {
-            store.getAllNow()
-                .filter {
-                    it.status == DownloadStatus.PAUSED ||
-                        it.status == DownloadStatus.FAILED ||
-                        it.status == DownloadStatus.AUTH_REQUIRED ||
-                        it.status == DownloadStatus.CANCELED ||
-                        it.status == DownloadStatus.WAITING_NETWORK ||
-                        it.status == DownloadStatus.WAITING_STORAGE
-                }
-                .forEach { resume(it.id) }
-        }
-    }
-
-    suspend fun delete(id: String, deleteFile: Boolean) {
-        cancel(id)
-        val entity = store.getById(id)
-        if (deleteFile && entity?.finalUri != null) {
-            storage.deleteFinal(entity.finalUri)
-        }
-        store.delete(id)
-    }
-
-    fun schedule() {
-        scope.launch { pump() }
-    }
-
-    /** Runs recovery (reconcile temp data, requeue interrupted tasks) then schedules. */
-    fun recover() {
-        scope.launch {
-            recoverInterruptedTasks()
-            schedule()
-        }
-    }
-
-    /** Adaptive parallelism: reduces connections for hosts that throttled us recently. */
-    fun segmentCapFor(host: String): Int {
-        val until = throttledHostsUntil[host] ?: return 16
-        return if (System.currentTimeMillis() < until) MIN_THROTTLED_SEGMENTS else 16
-    }
-
-    fun noteThrottled(host: String, retryAfterMs: Long) {
-        throttledHostsUntil[host] = System.currentTimeMillis() + retryAfterMs
-    }
-
-    fun isRunning(id: String): Boolean = running.containsKey(id)
-
-    /** Internals ------------------------------------------------------------------ */
-
-    private suspend fun pump() {
-        val settings = settingsRepository.snapshot()
-        scheduleMutex.withLock {
-            val capacity = settings.maxConcurrentFiles - running.size
-            if (capacity <= 0) return
-            val candidates = store.pending()
-                .filter { !running.containsKey(it.id) }
-                .sortedWith(compareByDescending<DownloadEntity> { it.priority.value }.thenBy { it.createdAt })
-            for (task in candidates) {
-                if (running.size >= settings.maxConcurrentFiles) break
-                val notBefore = retryNotBefore[task.id] ?: 0L
-                if (System.currentTimeMillis() < notBefore) continue
-                if (!canStartNow(task, settings)) continue
-                launchTask(task.id, settings)
-            }
-        }
-    }
-
-    private suspend fun canStartNow(task: DownloadEntity, settings: EngineSettings): Boolean {
-        val online = networkMonitor.isOnline.value
-        if (!online) {
-            if (task.status != DownloadStatus.WAITING_NETWORK) {
-                scope.launch { store.updateStatus(task.id, DownloadStatus.WAITING_NETWORK) }
-            }
-            return false
-        }
-        val wantsWifi = task.wifiOnly || settings.wifiOnly
-        if (wantsWifi && !networkMonitor.isOnWifi.value) {
-            if (task.status != DownloadStatus.WAITING_NETWORK) {
-                scope.launch { store.updateStatus(task.id, DownloadStatus.WAITING_NETWORK) }
-            }
-            return false
-        }
-        val needed = if (task.totalBytes > 0) task.totalBytes - task.downloadedBytes else 128L * 1024L * 1024L
-        if (!storage.hasFreeSpace(needed.coerceAtLeast(0))) {
-            if (task.status != DownloadStatus.WAITING_STORAGE) {
-                scope.launch { store.updateStatus(task.id, DownloadStatus.WAITING_STORAGE) }
-            }
-            return false
-        }
-        return true
-    }
-
-    private fun launchTask(id: String, settings: EngineSettings) {
-        val control = TaskControl()
-        controls[id] = control
-        running[id] = scope.launch {
-            try {
-                taskRunner.run(
-                    id = id,
-                    settings = settings,
-                    control = control,
-                    segmentCapFor = ::segmentCapFor,
-                    onEnded = { endedId ->
-                        scope.launch {
-                            noteHostThrottleFromStore(endedId)
-                            pump()
-                        }
-                    },
+        /** Restarts a task from scratch, discarding all partial data. */
+        fun restart(id: String) {
+            scope.launch {
+                val entity = store.getById(id) ?: return@launch
+                if (running.containsKey(id)) controls[id]?.cancelRequested = true
+                storage.cleanup(id)
+                store.deleteSegments(id)
+                store.update(
+                    entity.copy(
+                        downloadedBytes = 0L,
+                        status = DownloadStatus.QUEUED,
+                        errorCode = null,
+                        errorMessage = null,
+                        retryCount = 0,
+                        resumable = false,
+                        finalUri = null,
+                        completedAt = null,
+                    ),
                 )
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                store.updateStatus(id, DownloadStatus.FAILED, DownloadError.UNKNOWN.name, e.message)
-            } finally {
-                controls.remove(id)
-                running.remove(id)
-                scope.launch { pump() }
+                store.updateProgress(id, 0L, entity.totalBytes)
+                schedule()
             }
         }
-    }
 
-    private suspend fun noteHostThrottleFromStore(id: String) {
-        val entity = store.getById(id) ?: return
-        if (entity.errorCode == DownloadError.RATE_LIMITED.name) {
-            val host = CookieScopePolicy.hostOf(entity.finalUrl ?: entity.url)
-            noteThrottled(host, DEFAULT_THROTTLE_MS)
-            retryNotBefore[id] = System.currentTimeMillis() + DEFAULT_THROTTLE_MS
+        fun pauseAll() {
+            scope.launch {
+                store.running().forEach { pause(it.id) }
+                store.pending().forEach { store.updateStatus(it.id, DownloadStatus.PAUSED) }
+            }
         }
-    }
 
-    private suspend fun recoverInterruptedTasks() {
-        store.interrupted().forEach { entity ->
-            // MERGING/VERIFYING tasks may be mid-finalization; restart them as queued.
-            store.updateStatus(entity.id, DownloadStatus.QUEUED, null, null)
+        /** Cancels every active and pending task. */
+        fun cancelAll() {
+            scope.launch {
+                store.getAllNow()
+                    .filter { !it.status.isTerminal }
+                    .forEach { cancel(it.id) }
+            }
         }
-        // Reconcile temp files: remove orphaned dirs, truncate oversized parts on next run.
-        val all = store.getAllNow()
-        storage.cleanupOrphans(all.map { it.id }.toSet())
-    }
 
-    private suspend fun wakeWaitingTasks() {
-        val now = System.currentTimeMillis()
-        store.getAllNow().forEach { entity ->
-            if (entity.status == DownloadStatus.WAITING_NETWORK || entity.status == DownloadStatus.WAITING_STORAGE) {
-                val notBefore = retryNotBefore[entity.id] ?: 0L
-                if (now >= notBefore) {
-                    store.updateStatus(entity.id, DownloadStatus.QUEUED, null, null)
+        fun resumeAll() {
+            scope.launch {
+                store.getAllNow()
+                    .filter {
+                        it.status == DownloadStatus.PAUSED ||
+                            it.status == DownloadStatus.FAILED ||
+                            it.status == DownloadStatus.AUTH_REQUIRED ||
+                            it.status == DownloadStatus.CANCELED ||
+                            it.status == DownloadStatus.WAITING_NETWORK ||
+                            it.status == DownloadStatus.WAITING_STORAGE
+                    }
+                    .forEach { resume(it.id) }
+            }
+        }
+
+        suspend fun delete(
+            id: String,
+            deleteFile: Boolean,
+        ) {
+            cancel(id)
+            val entity = store.getById(id)
+            if (deleteFile && entity?.finalUri != null) {
+                storage.deleteFinal(entity.finalUri)
+            }
+            store.delete(id)
+        }
+
+        fun schedule() {
+            scope.launch { pump() }
+        }
+
+        /** Runs recovery (reconcile temp data, requeue interrupted tasks) then schedules. */
+        fun recover() {
+            scope.launch {
+                recoverInterruptedTasks()
+                schedule()
+            }
+        }
+
+        /** Adaptive parallelism: reduces connections for hosts that throttled us recently. */
+        fun segmentCapFor(host: String): Int {
+            val until = throttledHostsUntil[host] ?: return 16
+            return if (System.currentTimeMillis() < until) MIN_THROTTLED_SEGMENTS else 16
+        }
+
+        fun noteThrottled(
+            host: String,
+            retryAfterMs: Long,
+        ) {
+            throttledHostsUntil[host] = System.currentTimeMillis() + retryAfterMs
+        }
+
+        fun isRunning(id: String): Boolean = running.containsKey(id)
+
+        /** Internals ------------------------------------------------------------------ */
+
+        private suspend fun pump() {
+            val settings = settingsRepository.snapshot()
+            scheduleMutex.withLock {
+                val capacity = settings.maxConcurrentFiles - running.size
+                if (capacity <= 0) return
+                val candidates =
+                    store.pending()
+                        .filter { !running.containsKey(it.id) }
+                        .sortedWith(compareByDescending<DownloadEntity> { it.priority.value }.thenBy { it.createdAt })
+                for (task in candidates) {
+                    if (running.size >= settings.maxConcurrentFiles) break
+                    val notBefore = retryNotBefore[task.id] ?: 0L
+                    if (System.currentTimeMillis() < notBefore) continue
+                    if (!canStartNow(task, settings)) continue
+                    launchTask(task.id, settings)
                 }
             }
         }
-    }
 
-    companion object {
-        private const val TICKER_INTERVAL_MS = 15_000L
-        private const val DEFAULT_THROTTLE_MS = 30_000L
-        private const val MIN_THROTTLED_SEGMENTS = 2
+        private suspend fun canStartNow(
+            task: DownloadEntity,
+            settings: EngineSettings,
+        ): Boolean {
+            val online = networkMonitor.isOnline.value
+            if (!online) {
+                if (task.status != DownloadStatus.WAITING_NETWORK) {
+                    scope.launch { store.updateStatus(task.id, DownloadStatus.WAITING_NETWORK) }
+                }
+                return false
+            }
+            val wantsWifi = task.wifiOnly || settings.wifiOnly
+            if (wantsWifi && !networkMonitor.isOnWifi.value) {
+                if (task.status != DownloadStatus.WAITING_NETWORK) {
+                    scope.launch { store.updateStatus(task.id, DownloadStatus.WAITING_NETWORK) }
+                }
+                return false
+            }
+            val needed = if (task.totalBytes > 0) task.totalBytes - task.downloadedBytes else 128L * 1024L * 1024L
+            if (!storage.hasFreeSpace(needed.coerceAtLeast(0))) {
+                if (task.status != DownloadStatus.WAITING_STORAGE) {
+                    scope.launch { store.updateStatus(task.id, DownloadStatus.WAITING_STORAGE) }
+                }
+                return false
+            }
+            return true
+        }
+
+        private fun launchTask(
+            id: String,
+            settings: EngineSettings,
+        ) {
+            val control = TaskControl()
+            controls[id] = control
+            running[id] =
+                scope.launch {
+                    try {
+                        taskRunner.run(
+                            id = id,
+                            settings = settings,
+                            control = control,
+                            segmentCapFor = ::segmentCapFor,
+                            onEnded = { endedId ->
+                                scope.launch {
+                                    noteHostThrottleFromStore(endedId)
+                                    pump()
+                                }
+                            },
+                        )
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        store.updateStatus(id, DownloadStatus.FAILED, DownloadError.UNKNOWN.name, e.message)
+                    } finally {
+                        controls.remove(id)
+                        running.remove(id)
+                        scope.launch { pump() }
+                    }
+                }
+        }
+
+        private suspend fun noteHostThrottleFromStore(id: String) {
+            val entity = store.getById(id) ?: return
+            if (entity.errorCode == DownloadError.RATE_LIMITED.name) {
+                val host = CookieScopePolicy.hostOf(entity.finalUrl ?: entity.url)
+                noteThrottled(host, DEFAULT_THROTTLE_MS)
+                retryNotBefore[id] = System.currentTimeMillis() + DEFAULT_THROTTLE_MS
+            }
+        }
+
+        private suspend fun recoverInterruptedTasks() {
+            store.interrupted().forEach { entity ->
+                // MERGING/VERIFYING tasks may be mid-finalization; restart them as queued.
+                store.updateStatus(entity.id, DownloadStatus.QUEUED, null, null)
+            }
+            // Reconcile temp files: remove orphaned dirs, truncate oversized parts on next run.
+            val all = store.getAllNow()
+            storage.cleanupOrphans(all.map { it.id }.toSet())
+        }
+
+        private suspend fun wakeWaitingTasks() {
+            val now = System.currentTimeMillis()
+            store.getAllNow().forEach { entity ->
+                if (entity.status == DownloadStatus.WAITING_NETWORK || entity.status == DownloadStatus.WAITING_STORAGE) {
+                    val notBefore = retryNotBefore[entity.id] ?: 0L
+                    if (now >= notBefore) {
+                        store.updateStatus(entity.id, DownloadStatus.QUEUED, null, null)
+                    }
+                }
+            }
+        }
+
+        companion object {
+            private const val TICKER_INTERVAL_MS = 15_000L
+            private const val DEFAULT_THROTTLE_MS = 30_000L
+            private const val MIN_THROTTLED_SEGMENTS = 2
+        }
     }
-}

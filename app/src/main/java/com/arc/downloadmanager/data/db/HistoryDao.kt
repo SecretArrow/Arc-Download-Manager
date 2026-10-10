@@ -10,7 +10,11 @@ interface HistoryDao {
     fun observeRecent(limit: Int = 200): Flow<List<HistoryEntity>>
 
     @Query("INSERT INTO history (url, title, visitedAt) VALUES (:url, :title, :visitedAt)")
-    suspend fun insert(url: String, title: String, visitedAt: Long = System.currentTimeMillis())
+    suspend fun insert(
+        url: String,
+        title: String,
+        visitedAt: Long = System.currentTimeMillis(),
+    )
 
     @Query("DELETE FROM history")
     suspend fun clear()

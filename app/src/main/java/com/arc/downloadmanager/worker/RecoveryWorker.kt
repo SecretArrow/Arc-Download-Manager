@@ -13,14 +13,15 @@ import dagger.assisted.AssistedInject
  * after process death, boot, or connectivity loss.
  */
 @HiltWorker
-class RecoveryWorker @AssistedInject constructor(
-    @Assisted appContext: Context,
-    @Assisted params: WorkerParameters,
-    private val engine: DownloadEngine,
-) : CoroutineWorker(appContext, params) {
-
-    override suspend fun doWork(): Result {
-        engine.recover()
-        return Result.success()
+class RecoveryWorker
+    @AssistedInject
+    constructor(
+        @Assisted appContext: Context,
+        @Assisted params: WorkerParameters,
+        private val engine: DownloadEngine,
+    ) : CoroutineWorker(appContext, params) {
+        override suspend fun doWork(): Result {
+            engine.recover()
+            return Result.success()
+        }
     }
-}

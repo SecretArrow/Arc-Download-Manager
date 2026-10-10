@@ -13,7 +13,10 @@ class BackoffPolicy(
     private val random: Random = Random.Default,
 ) {
     /** Milliseconds to wait before the [attempt]-th retry (1-based). Honors Retry-After when present. */
-    fun delayFor(attempt: Int, retryAfterSeconds: Long? = null): Long {
+    fun delayFor(
+        attempt: Int,
+        retryAfterSeconds: Long? = null,
+    ): Long {
         if (retryAfterSeconds != null && retryAfterSeconds > 0) {
             return min(retryAfterSeconds * 1000L, maxDelayMs)
         }

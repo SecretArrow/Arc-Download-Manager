@@ -26,7 +26,6 @@ import javax.inject.Inject
  */
 @AndroidEntryPoint
 class DownloadService : Service() {
-
     @Inject
     lateinit var engine: DownloadEngine
 
@@ -48,7 +47,11 @@ class DownloadService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int,
+    ): Int {
         when (intent?.action) {
             ACTION_PAUSE_ALL -> engine.pauseAll()
             ACTION_RESUME_ALL -> engine.resumeAll()
@@ -143,25 +146,27 @@ class DownloadService : Service() {
 /**
  * Observes the download queue and starts/stops the foreground service as tasks come and go.
  */
-class DownloadServiceController @Inject constructor(
-    @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context,
-    private val store: DownloadStore,
-) {
-    fun startObserving() {
-        if (started) return
-        started = true
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-        scope.launch {
-            store.observeActiveCount().collectLatest { count ->
-                if (count > 0) {
-                    DownloadService.start(context)
+class DownloadServiceController
+    @Inject
+    constructor(
+        @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context,
+        private val store: DownloadStore,
+    ) {
+        fun startObserving() {
+            if (started) return
+            started = true
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+            scope.launch {
+                store.observeActiveCount().collectLatest { count ->
+                    if (count > 0) {
+                        DownloadService.start(context)
+                    }
                 }
             }
         }
-    }
 
-    companion object {
-        @Volatile
-        private var started = false
+        companion object {
+            @Volatile
+            private var started = false
+        }
     }
-}

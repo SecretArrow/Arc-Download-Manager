@@ -7,11 +7,21 @@ import java.io.File
  * Storage surface used by the engine, abstracted so unit tests can run on the JVM.
  */
 interface TaskStorage {
-    fun partFile(downloadId: String, index: Int): File
+    fun partFile(
+        downloadId: String,
+        index: Int,
+    ): File
 
-    fun stagingFile(downloadId: String, filename: String): File
+    fun stagingFile(
+        downloadId: String,
+        filename: String,
+    ): File
 
-    fun reconcilePart(downloadId: String, index: Int, recordedBytes: Long): Long
+    fun reconcilePart(
+        downloadId: String,
+        index: Int,
+        recordedBytes: Long,
+    ): Long
 
     fun cleanup(downloadId: String)
 
@@ -19,7 +29,10 @@ interface TaskStorage {
 
     suspend fun hasFreeSpace(bytesNeeded: Long): Boolean
 
-    suspend fun finalize(entity: DownloadEntity, staged: File): String
+    suspend fun finalize(
+        entity: DownloadEntity,
+        staged: File,
+    ): String
 
     suspend fun deleteFinal(finalUri: String?): Boolean
 }
