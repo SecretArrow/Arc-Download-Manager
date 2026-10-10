@@ -28,6 +28,18 @@ object DatabaseModule {
         Room.databaseBuilder(context, ArcDatabase::class.java, "arc_downloads.db")
             .fallbackToDestructiveMigration()
             .build()
+
+    @Provides
+    fun provideDownloadDao(db: ArcDatabase): com.arc.downloadmanager.data.db.DownloadDao = db.downloadDao()
+
+    @Provides
+    fun provideSegmentDao(db: ArcDatabase): com.arc.downloadmanager.data.db.SegmentDao = db.segmentDao()
+
+    @Provides
+    fun provideBookmarkDao(db: ArcDatabase): com.arc.downloadmanager.data.db.BookmarkDao = db.bookmarkDao()
+
+    @Provides
+    fun provideHistoryDao(db: ArcDatabase): com.arc.downloadmanager.data.db.HistoryDao = db.historyDao()
 }
 
 @Module
@@ -45,6 +57,14 @@ abstract class BindingsModule {
     @Binds
     @Singleton
     abstract fun bindEngineSettingsSource(impl: com.arc.downloadmanager.data.settings.SettingsRepository): EngineSettingsSource
+
+    @Binds
+    @Singleton
+    abstract fun bindTaskStorage(impl: com.arc.downloadmanager.engine.StorageManager): com.arc.downloadmanager.engine.TaskStorage
+
+    @Binds
+    @Singleton
+    abstract fun bindConnectivityView(impl: com.arc.downloadmanager.engine.NetworkMonitor): ConnectivityView
 }
 
 @Module
