@@ -1,5 +1,6 @@
 package com.arc.downloadmanager
 
+import com.arc.downloadmanager.domain.model.ByteRange
 import com.arc.downloadmanager.engine.BackoffPolicy
 import com.arc.downloadmanager.engine.Checksum
 import com.arc.downloadmanager.engine.ContentRangeParser
@@ -8,10 +9,6 @@ import com.arc.downloadmanager.engine.FilenameDetector
 import com.arc.downloadmanager.engine.MergeManager
 import com.arc.downloadmanager.engine.RangeSupportDetector
 import com.arc.downloadmanager.engine.SegmentPlanner
-import com.arc.downloadmanager.domain.model.ByteRange
-import java.io.File
-import java.security.MessageDigest
-import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -19,9 +16,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
+import java.security.MessageDigest
+import kotlin.random.Random
 
 class SegmentPlannerTest {
-
     @Test
     fun `small files use a single segment`() {
         val ranges = SegmentPlanner.plan(1024L, 8)
@@ -56,7 +55,6 @@ class SegmentPlannerTest {
 }
 
 class ContentRangeParserTest {
-
     @Test
     fun `parses valid header`() {
         assertEquals(100L to 999L, ContentRangeParser.parse("bytes 100-999/1234"))
@@ -85,7 +83,6 @@ class ContentRangeParserTest {
 }
 
 class RangeSupportDetectorTest {
-
     @Test
     fun `206 implies support`() {
         assertTrue(RangeSupportDetector.supports(emptyMap(), 206))
@@ -99,7 +96,6 @@ class RangeSupportDetectorTest {
 }
 
 class FilenameDetectorTest {
-
     @Test
     fun `extracts from content disposition`() {
         assertEquals("report.pdf", FilenameDetector.fromDisposition("attachment; filename=\"report.pdf\""))
@@ -132,7 +128,6 @@ class FilenameDetectorTest {
 }
 
 class BackoffPolicyTest {
-
     @Test
     fun `grows exponentially and is capped`() {
         val backoff = BackoffPolicy(baseDelayMs = 1000, maxDelayMs = 60_000, random = Random(1))
@@ -153,7 +148,6 @@ class BackoffPolicyTest {
 }
 
 class SpeedTrackerTest {
-
     @Test
     fun `computes smoothed speed`() {
         val tracker = com.arc.downloadmanager.util.SpeedTracker()
@@ -172,7 +166,6 @@ class SpeedTrackerTest {
 }
 
 class CookieScopePolicyTest {
-
     @Test
     fun `same host cookies allowed`() {
         val decision = CookieScopePolicy.evaluate("https://a.example.com/page", "https://a.example.com/file.zip")
@@ -214,7 +207,6 @@ class CookieScopePolicyTest {
 }
 
 class ChecksumTest {
-
     @Test
     fun `sha256 matches known vector`() {
         assertEquals(
@@ -238,7 +230,6 @@ class ChecksumTest {
 }
 
 class MergeManagerTest {
-
     @get:Rule
     val tmp = TemporaryFolder()
 

@@ -4,9 +4,8 @@ import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.data.settings.EngineSettings
 import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.engine.DownloadEngine
-import com.arc.downloadmanager.engine.TaskRunner
 import com.arc.downloadmanager.engine.TaskControl
-import java.io.File
+import com.arc.downloadmanager.engine.TaskRunner
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import okhttp3.OkHttpClient
@@ -23,6 +22,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 
 /** MockWebServer dispatcher that behaves like a byte-range capable file server. */
 class RangeFileDispatcher(private val body: ByteArray) : Dispatcher() {
@@ -54,7 +54,6 @@ class RangeFileDispatcher(private val body: ByteArray) : Dispatcher() {
 }
 
 class TaskRunnerTest {
-
     @get:Rule
     val tmp = TemporaryFolder()
 
@@ -69,13 +68,14 @@ class TaskRunnerTest {
         server.start()
         store = InMemoryDownloadStore()
         storage = FakeTaskStorage(tmp.newFolder("storage"))
-        runner = TaskRunner(
-            store = store,
-            baseClient = OkHttpClient(),
-            storage = storage,
-            networkMonitor = FakeConnectivity(),
-            cookieProvider = FixedCookieProvider(),
-        )
+        runner =
+            TaskRunner(
+                store = store,
+                baseClient = OkHttpClient(),
+                storage = storage,
+                networkMonitor = FakeConnectivity(),
+                cookieProvider = FixedCookieProvider(),
+            )
     }
 
     @After
@@ -83,14 +83,21 @@ class TaskRunnerTest {
         server.shutdown()
     }
 
-    private fun entity(url: String, segments: Int = 0) = DownloadEntity(
+    private fun entity(
+        url: String,
+        segments: Int = 0,
+    ) = DownloadEntity(
         id = "task-${System.nanoTime()}",
         url = url,
         filename = "file.bin",
         segmentsPlanned = segments,
     )
 
-    private fun awaitStatus(id: String, vararg statuses: DownloadStatus, timeoutMs: Long = 15_000): DownloadEntity =
+    private fun awaitStatus(
+        id: String,
+        vararg statuses: DownloadStatus,
+        timeoutMs: Long = 15_000,
+    ): DownloadEntity =
         runBlocking {
             withTimeout(timeoutMs) {
                 while (true) {
@@ -105,10 +112,10 @@ class TaskRunnerTest {
     @Test
     fun `single stream download completes with correct content`() {
         val payload = "Hello Arc Download Manager!".toByteArray()
-        server.dispatcher = object : Dispatcher() {
-            override fun dispatch(request: RecordedRequest): MockResponse =
-                MockResponse().setResponseCode(200).setBody(Buffer().write(payload))
-        }
+        server.dispatcher =
+            object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse = MockResponse().setResponseCode(200).setBody(Buffer().write(payload))
+            }
         val task = entity(server.url("/file").toString())
         runBlocking { store.insert(task) }
 
@@ -170,10 +177,10 @@ class TaskRunnerTest {
 
     @Test
     fun `auth required on 401`() {
-        server.dispatcher = object : Dispatcher() {
-            override fun dispatch(request: RecordedRequest): MockResponse =
-                MockResponse().setResponseCode(401).setBody("unauthorized")
-        }
+        server.dispatcher =
+            object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse = MockResponse().setResponseCode(401).setBody("unauthorized")
+            }
         val task = entity(server.url("/protected").toString())
         runBlocking { store.insert(task) }
 
@@ -186,10 +193,10 @@ class TaskRunnerTest {
     fun `falls back to single stream when ranges are ignored`() {
         // Server ignores Range and always returns 200 with full body.
         val payload = "no-range-server".toByteArray()
-        server.dispatcher = object : Dispatcher() {
-            override fun dispatch(request: RecordedRequest): MockResponse =
-                MockResponse().setResponseCode(200).setBody(Buffer().write(payload))
-        }
+        server.dispatcher =
+            object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse = MockResponse().setResponseCode(200).setBody(Buffer().write(payload))
+            }
         val task = entity(server.url("/plain").toString(), segments = 4)
         runBlocking { store.insert(task.copy(downloadedBytes = 3L, resumable = true)) }
 
@@ -202,10 +209,10 @@ class TaskRunnerTest {
     @Test
     fun `checksum mismatch fails the task`() {
         val payload = "payload-for-checksum".toByteArray()
-        server.dispatcher = object : Dispatcher() {
-            override fun dispatch(request: RecordedRequest): MockResponse =
-                MockResponse().setResponseCode(200).setBody(Buffer().write(payload))
-        }
+        server.dispatcher =
+            object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse = MockResponse().setResponseCode(200).setBody(Buffer().write(payload))
+            }
         val task = entity(server.url("/sum").toString())
         runBlocking { store.insert(task.copy(expectedSha256 = "deadbeef")) }
 
@@ -217,14 +224,15 @@ class TaskRunnerTest {
     @Test
     fun `follows redirects and completes`() {
         val payload = "redirected-content".toByteArray()
-        server.dispatcher = object : Dispatcher() {
-            override fun dispatch(request: RecordedRequest): MockResponse {
-                if (request.path == "/start") {
-                    return MockResponse().setResponseCode(302).setHeader("Location", "/final")
+        server.dispatcher =
+            object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse {
+                    if (request.path == "/start") {
+                        return MockResponse().setResponseCode(302).setHeader("Location", "/final")
+                    }
+                    return MockResponse().setResponseCode(200).setBody(Buffer().write(payload))
                 }
-                return MockResponse().setResponseCode(200).setBody(Buffer().write(payload))
             }
-        }
         val task = entity(server.url("/start").toString()).copy(referer = server.url("/start").toString())
         runBlocking { store.insert(task) }
 
@@ -235,7 +243,6 @@ class TaskRunnerTest {
 }
 
 class DownloadEngineTest {
-
     @get:Rule
     val tmp = TemporaryFolder()
 
@@ -257,25 +264,27 @@ class DownloadEngineTest {
     @Test
     fun `processes queue with concurrency limit and finishes all tasks`() {
         val payload = "queue-test-payload".toByteArray()
-        server.dispatcher = object : Dispatcher() {
-            override fun dispatch(request: RecordedRequest): MockResponse =
-                MockResponse().setResponseCode(200).setBody(Buffer().write(payload))
-        }
+        server.dispatcher =
+            object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse = MockResponse().setResponseCode(200).setBody(Buffer().write(payload))
+            }
         val storage = FakeTaskStorage(tmp.newFolder("storage"))
         val settings = FixedSettingsSource(EngineSettings(maxConcurrentFiles = 2))
-        val engine = DownloadEngine(
-            store = store,
-            baseClient = OkHttpClient(),
-            storage = storage,
-            settingsRepository = settings,
-            networkMonitor = FakeConnectivity(),
-            cookieProvider = FixedCookieProvider(),
-        )
+        val engine =
+            DownloadEngine(
+                store = store,
+                baseClient = OkHttpClient(),
+                storage = storage,
+                settingsRepository = settings,
+                networkMonitor = FakeConnectivity(),
+                cookieProvider = FixedCookieProvider(),
+            )
         engine.start()
 
-        val ids = (1..4).map { index ->
-            "task-$index"
-        }
+        val ids =
+            (1..4).map { index ->
+                "task-$index"
+            }
         runBlocking {
             ids.forEach { id ->
                 engine.enqueue(
@@ -305,14 +314,15 @@ class DownloadEngineTest {
     @Test
     fun `cancel removes task data and marks canceled`() {
         val storage = FakeTaskStorage(tmp.newFolder("storage2"))
-        val engine = DownloadEngine(
-            store = store,
-            baseClient = OkHttpClient(),
-            storage = storage,
-            settingsRepository = FixedSettingsSource(),
-            networkMonitor = FakeConnectivity(),
-            cookieProvider = FixedCookieProvider(),
-        )
+        val engine =
+            DownloadEngine(
+                store = store,
+                baseClient = OkHttpClient(),
+                storage = storage,
+                settingsRepository = FixedSettingsSource(),
+                networkMonitor = FakeConnectivity(),
+                cookieProvider = FixedCookieProvider(),
+            )
         runBlocking {
             val id = "cancel-me"
             store.insert(DownloadEntity(id = id, url = "http://example.invalid/file", filename = "f.bin"))

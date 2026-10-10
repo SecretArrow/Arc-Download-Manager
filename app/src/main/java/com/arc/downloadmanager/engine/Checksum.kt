@@ -19,8 +19,7 @@ object Checksum {
         return digest.digest().joinToString("") { "%02x".format(it) }
     }
 
-    fun normalize(hex: String): String =
-        hex.trim().lowercase().removePrefix("sha256:").removePrefix("sha-256:").removePrefix("sha256 ").trim()
+    fun normalize(hex: String): String = hex.trim().lowercase().removePrefix("sha256:").removePrefix("sha-256:").removePrefix("sha256 ").trim()
 
     fun matches(
         expected: String,
