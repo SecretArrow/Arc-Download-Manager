@@ -112,7 +112,7 @@ class TaskRunnerTest {
         val task = entity(server.url("/file").toString())
         runBlocking { store.insert(task) }
 
-        runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {})
+        runBlocking { runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {}) }
         val done = awaitStatus(task.id, DownloadStatus.COMPLETED)
         assertEquals(payload.size.toLong(), done.downloadedBytes)
         val finalUri = requireNotNull(done.finalUri)
@@ -130,7 +130,7 @@ class TaskRunnerTest {
         val task = entity(server.url("/big.bin").toString(), segments = 4)
         runBlocking { store.insert(task) }
 
-        runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {})
+        runBlocking { runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {}) }
         val done = awaitStatus(task.id, DownloadStatus.COMPLETED, timeoutMs = 60_000)
         assertEquals(payload.size.toLong(), done.totalBytes)
 
@@ -162,7 +162,7 @@ class TaskRunnerTest {
             storage.partFile(task.id, 0).writeBytes(payload.copyOfRange(0, partial.toInt()))
         }
 
-        runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {})
+        runBlocking { runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {}) }
         val done = awaitStatus(task.id, DownloadStatus.COMPLETED, timeoutMs = 30_000)
         val finalFile = File(java.net.URI(requireNotNull(done.finalUri)).path)
         assertTrue(finalFile.readBytes().contentEquals(payload))
@@ -177,7 +177,7 @@ class TaskRunnerTest {
         val task = entity(server.url("/protected").toString())
         runBlocking { store.insert(task) }
 
-        runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {})
+        runBlocking { runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {}) }
         val failed = awaitStatus(task.id, DownloadStatus.AUTH_REQUIRED)
         assertEquals("AUTH_REQUIRED", failed.errorCode)
     }
@@ -193,7 +193,7 @@ class TaskRunnerTest {
         val task = entity(server.url("/plain").toString(), segments = 4)
         runBlocking { store.insert(task.copy(downloadedBytes = 3L, resumable = true)) }
 
-        runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {})
+        runBlocking { runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {}) }
         val done = awaitStatus(task.id, DownloadStatus.COMPLETED)
         val finalFile = File(java.net.URI(requireNotNull(done.finalUri)).path)
         assertTrue(finalFile.readBytes().contentEquals(payload))
@@ -209,7 +209,7 @@ class TaskRunnerTest {
         val task = entity(server.url("/sum").toString())
         runBlocking { store.insert(task.copy(expectedSha256 = "deadbeef")) }
 
-        runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {})
+        runBlocking { runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {}) }
         val failed = awaitStatus(task.id, DownloadStatus.FAILED)
         assertEquals("CHECKSUM_MISMATCH", failed.errorCode)
     }
@@ -228,7 +228,7 @@ class TaskRunnerTest {
         val task = entity(server.url("/start").toString()).copy(referer = server.url("/start").toString())
         runBlocking { store.insert(task) }
 
-        runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {})
+        runBlocking { runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {}) }
         val done = awaitStatus(task.id, DownloadStatus.COMPLETED)
         assertEquals(payload.size.toLong(), done.downloadedBytes)
     }

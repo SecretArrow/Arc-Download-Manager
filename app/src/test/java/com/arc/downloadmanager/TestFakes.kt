@@ -45,11 +45,11 @@ class InMemoryDownloadStore : DownloadStore {
     override fun observeActiveCount(): Flow<Int> =
         MutableStateFlow(0).map { synchronized(mutex) { downloads.values.count { it.status.isActive } } }
 
-    override suspend fun insert(entity: DownloadEntity) = synchronized(mutex) { downloads[entity.id] = entity }
+    override suspend fun insert(entity: DownloadEntity): Unit = synchronized(mutex) { downloads[entity.id] = entity }
 
-    override suspend fun update(entity: DownloadEntity) = synchronized(mutex) { downloads[entity.id] = entity }
+    override suspend fun update(entity: DownloadEntity): Unit = synchronized(mutex) { downloads[entity.id] = entity }
 
-    override suspend fun updateProgress(id: String, downloadedBytes: Long, totalBytes: Long) = synchronized(mutex) {
+    override suspend fun updateProgress(id: String, downloadedBytes: Long, totalBytes: Long): Unit = synchronized(mutex) {
         downloads[id]?.let { downloads[id] = it.copy(downloadedBytes = downloadedBytes, totalBytes = totalBytes) }
     }
 
@@ -58,7 +58,7 @@ class InMemoryDownloadStore : DownloadStore {
         status: DownloadStatus,
         errorCode: String?,
         errorMessage: String?,
-    ) = synchronized(mutex) {
+    ): Unit = synchronized(mutex) {
         downloads[id]?.let {
             downloads[id] = it.copy(
                 status = status,
@@ -69,7 +69,7 @@ class InMemoryDownloadStore : DownloadStore {
         }
     }
 
-    override suspend fun resetForRetry(id: String) = synchronized(mutex) {
+    override suspend fun resetForRetry(id: String): Unit = synchronized(mutex) {
         downloads[id]?.let {
             downloads[id] = it.copy(
                 status = DownloadStatus.QUEUED,
@@ -80,15 +80,15 @@ class InMemoryDownloadStore : DownloadStore {
         }
     }
 
-    override suspend fun incrementRetry(id: String) = synchronized(mutex) {
+    override suspend fun incrementRetry(id: String): Unit = synchronized(mutex) {
         downloads[id]?.let { downloads[id] = it.copy(retryCount = it.retryCount + 1) }
     }
 
-    override suspend fun updateFinalUri(id: String, uri: String?) = synchronized(mutex) {
+    override suspend fun updateFinalUri(id: String, uri: String?): Unit = synchronized(mutex) {
         downloads[id]?.let { downloads[id] = it.copy(finalUri = uri) }
     }
 
-    override suspend fun delete(id: String) = synchronized(mutex) {
+    override suspend fun delete(id: String): Unit = synchronized(mutex) {
         downloads.remove(id)
         segments.remove(id)
     }
@@ -111,7 +111,7 @@ class InMemoryDownloadStore : DownloadStore {
         index: Int,
         downloadedBytes: Long,
         status: DownloadStatus,
-    ) = synchronized(mutex) {
+    ): Unit = synchronized(mutex) {
         segments[downloadId]?.get(index)?.let {
             segments[downloadId]!![index] = it.copy(downloadedBytes = downloadedBytes, status = status)
         }
@@ -120,7 +120,7 @@ class InMemoryDownloadStore : DownloadStore {
     override suspend fun totalSegmentBytes(downloadId: String): Long =
         synchronized(mutex) { segments[downloadId]?.values?.sumOf { it.downloadedBytes } ?: 0L }
 
-    override suspend fun deleteSegments(downloadId: String) = synchronized(mutex) { segments.remove(downloadId) }
+    override suspend fun deleteSegments(downloadId: String): Unit = synchronized(mutex) { segments.remove(downloadId) }
 }
 
 /** Temp-dir based [TaskStorage] for JVM tests. */
