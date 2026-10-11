@@ -43,6 +43,9 @@
     <string name="action_sign_in">Sign in</string>
     <string name="action_choose_folder">Choose folder</string>
     <string name="action_clear">Clear</string>
+    <string name="action_back">Back</string>
+    <string name="action_forward">Forward</string>
+    <string name="action_reload">Reload</string>
     <string name="action_save">Save</string>
     <string name="action_copy">Copy</string>
 

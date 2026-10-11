@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<checkstyle version="8.0">
-    <file name="/home/runner/work/Arc-Download-Manager/Arc-Download-Manager/app/src/androidTest/java/com/arc/downloadmanager/DownloadE2ETest.kt">
-        <error line="5" column="1" severity="error" message="Unused import" source="standard:no-unused-imports" />
-    </file>
-</checkstyle>

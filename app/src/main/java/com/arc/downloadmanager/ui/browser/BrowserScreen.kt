@@ -16,9 +16,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Close
@@ -280,13 +280,13 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
                         .padding(vertical = 4.dp),
             ) {
                 IconButton(onClick = { webViewRef?.goBack() }, enabled = webViewRef?.canGoBack() == true) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                 }
                 IconButton(onClick = { webViewRef?.goForward() }, enabled = webViewRef?.canGoForward() == true) {
-                    Icon(Icons.Filled.ArrowForward, contentDescription = "Forward")
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = stringResource(R.string.action_forward))
                 }
                 IconButton(onClick = { if (loading) webViewRef?.stopLoading() else webViewRef?.reload() }) {
-                    Icon(if (loading) Icons.Filled.Stop else Icons.Filled.Refresh, contentDescription = "Reload")
+                    Icon(if (loading) Icons.Filled.Stop else Icons.Filled.Refresh, contentDescription = stringResource(R.string.action_reload))
                 }
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = { showBookmarks = true }) {
