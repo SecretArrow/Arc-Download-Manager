@@ -48,10 +48,7 @@ jobs:
           script: |
             ./gradlew :app:connectedDebugAndroidTest --stacktrace
             mkdir -p screenshots
-            for f in home browser files settings add; do
-              adb shell "run-as com.arc.downloadmanager cat /data/data/com.arc.downloadmanager/files/screenshots/$f.png" > "screenshots/$f.png" || true
-              [ -s "screenshots/$f.png" ] || rm -f "screenshots/$f.png"
-            done
+            for f in home browser files settings add; do adb shell "run-as com.arc.downloadmanager cat /data/data/com.arc.downloadmanager/files/screenshots/$f.png" > "screenshots/$f.png" || true; [ -s "screenshots/$f.png" ] || rm -f "screenshots/$f.png"; done
             ls -la screenshots/ || true
 
       - name: Upload screenshots artifact
