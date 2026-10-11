@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import androidx.core.app.ServiceCompat
 import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.engine.DownloadEngine
@@ -24,6 +25,15 @@ import javax.inject.Inject
 /**
  * Foreground service keeping downloads alive while the app is backgrounded.
  * Shows aggregate progress and pause/resume/cancel actions.
+ *
+ * Android 15+ enforces a six-hour runtime budget per 24 hours for the dataSync
+ * foreground-service type (see [QuotaGuard]). This service handles the two failure
+ * modes without crashing:
+ *  1. [onTimeout] fires — all tasks are paused, a "tap to resume" notification is
+ *     posted, and the service stops within the few-seconds deadline.
+ *  2. [android.app.ForegroundServiceStartNotAllowedException] is thrown because the
+ *     budget is already exhausted — the start is swallowed, tasks stay paused, and the
+ *     user is asked to open the app (foreground resets the timer).
  */
 @AndroidEntryPoint
 class DownloadService : Service() {
@@ -39,12 +49,19 @@ class DownloadService : Service() {
     @Inject
     lateinit var settingsRepository: com.arc.downloadmanager.data.settings.SettingsRepository
 
+    @Inject
+    lateinit var quotaGuard: QuotaGuard
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val speedTracker = SpeedTracker()
     private val announcedTerminal = mutableSetOf<String>()
     private var startedInForeground = false
     private var observing = false
     private var notifyCompletion = true
+
+    /** Snapshot of tasks that are active or runnable, refreshed on every store emission. */
+    @Volatile
+    private var lastRunnableIds: Set<String> = emptySet()
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -59,8 +76,14 @@ class DownloadService : Service() {
                 engine.pauseAll()
             }
             ACTION_RESUME_ALL -> {
-                startInForegroundIfNeeded()
-                engine.resumeAll()
+                if (quotaGuard.isExhausted()) {
+                    // The 6 h dataSync budget is gone: do not queue tasks into a service
+                    // that cannot run. Opening the app resets the timer, so point there.
+                    notifications.postQuotaPaused()
+                } else {
+                    startInForegroundIfNeeded()
+                    engine.resumeAll()
+                }
             }
             ACTION_CANCEL_ALL -> {
                 startInForegroundIfNeeded()
@@ -75,12 +98,66 @@ class DownloadService : Service() {
     private fun startInForegroundIfNeeded() {
         if (startedInForeground) return
         val notification = notifications.aggregateNotification(0, 0, 0, 0, emptyList(), anyActive = false)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+            startedInForeground = true
+        } catch (rejected: IllegalStateException) {
+            // ForegroundServiceStartNotAllowedException (API 31+, subclass of ISE):
+            // "Time limit already exhausted for foreground service type dataSync".
+            onForegroundStartRejected()
+        } catch (rejected: SecurityException) {
+            onForegroundStartRejected()
         }
-        startedInForeground = true
+    }
+
+    /**
+     * Quota-exhausted / start-denied path: pause everything so no task waits on a service
+     * that will not run, tell the user how to resume, and leave the foreground state.
+     */
+    private fun onForegroundStartRejected() {
+        startedInForeground = false
+        quotaGuard.markExhausted()
+        quotaGuard.rememberQuotaPaused(lastRunnableIds)
+        engine.pauseAll()
+        notifications.cancelAggregate()
+        notifications.postQuotaPaused()
+        ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
+        stopSelf()
+    }
+
+    /**
+     * Called by the platform on Android 15+ when a dataSync service hits the six-hour
+     * budget. The service stops being foreground immediately and must call
+     * [stopSelf] within a few seconds — everything here is quick, synchronous work.
+     */
+    override fun onTimeout(
+        startId: Int,
+        fgsType: Int,
+    ) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM &&
+            fgsType == ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+        ) {
+            handleTimeout()
+        }
+    }
+
+    /** shortService variant (API 34); Arc does not use shortService but stays defensive. */
+    override fun onTimeout(startId: Int) {
+        handleTimeout()
+    }
+
+    private fun handleTimeout() {
+        quotaGuard.markExhausted()
+        quotaGuard.rememberQuotaPaused(lastRunnableIds)
+        engine.pauseAll()
+        notifications.cancelAggregate()
+        notifications.postQuotaPaused()
+        ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
+        stopSelf()
     }
 
     private fun observeOnce() {
@@ -91,6 +168,7 @@ class DownloadService : Service() {
         }
         scope.launch {
             store.observeAll().collectLatest { all ->
+                lastRunnableIds = all.filter { it.status.isActive || it.status.isRunningCandidate }.map { it.id }.toSet()
                 val active = all.filter { it.status.isActive }
                 val running = active.filter { it.status == DownloadStatus.DOWNLOADING || it.status == DownloadStatus.CONNECTING }
                 val downloaded = running.sumOf { it.downloadedBytes }
@@ -157,24 +235,62 @@ class DownloadService : Service() {
 
 /**
  * Observes the download queue and starts/stops the foreground service as tasks come and go.
+ * All service starts are guarded against the Android 15+ dataSync time-limit rejection.
  */
 class DownloadServiceController
     @Inject
     constructor(
         @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context,
         private val store: DownloadStore,
+        private val quotaGuard: QuotaGuard,
+        private val notifications: NotificationHelper,
+        private val engine: DownloadEngine,
     ) {
+        private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
+        @Volatile
+        private var lastActiveCount = 0
+
         fun startObserving() {
             if (started) return
             started = true
-            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
             scope.launch {
                 store.observeActiveCount().collectLatest { count ->
+                    lastActiveCount = count
                     if (count > 0) {
-                        DownloadService.start(context)
+                        safeStart()
                     }
                 }
             }
+        }
+
+        private fun safeStart() {
+            if (quotaGuard.skipStarts) return
+            try {
+                DownloadService.start(context)
+            } catch (rejected: IllegalStateException) {
+                // Includes ForegroundServiceStartNotAllowedException on API 31+.
+                onForegroundStartRejected()
+            } catch (rejected: SecurityException) {
+                onForegroundStartRejected()
+            }
+        }
+
+        private fun onForegroundStartRejected() {
+            quotaGuard.markExhausted()
+            notifications.postQuotaPaused()
+        }
+
+        /**
+         * Called from MainActivity.onStart. Bringing the app to the foreground resets the
+         * six-hour dataSync budget, so: clear the exhausted state, auto-resume downloads
+         * that were paused by the timeout, and restart the foreground service if needed.
+         */
+        fun onAppForeground() {
+            quotaGuard.clearOnForeground()
+            val quotaPaused = quotaGuard.consumeQuotaPausedIds()
+            quotaPaused.forEach { id -> engine.resume(id) }
+            if (lastActiveCount > 0 || quotaPaused.isNotEmpty()) safeStart()
         }
 
         companion object {

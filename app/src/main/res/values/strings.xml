@@ -172,6 +172,8 @@
     <string name="notif_cancel_all">Cancel all</string>
     <string name="notif_completed">Download completed</string>
     <string name="notif_failed">Download failed</string>
+    <string name="notif_quota_paused_title">Downloads paused</string>
+    <string name="notif_quota_paused_text">Android stopped background downloads after the daily limit. Open Arc to keep downloading.</string>
 
     <!-- Errors -->
     <string name="error_network">No network connection</string>

@@ -28,6 +28,12 @@ class ArcTileService : TileService() {
     @Inject
     lateinit var store: DownloadStore
 
+    @Inject
+    lateinit var quotaGuard: com.arc.downloadmanager.service.QuotaGuard
+
+    @Inject
+    lateinit var notifications: com.arc.downloadmanager.service.NotificationHelper
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     override fun onStartListening() {
@@ -39,9 +45,22 @@ class ArcTileService : TileService() {
             val anyActive = runCatching { store.observeAll().first().any { it.status.isActive } }.getOrDefault(false)
             if (anyActive) {
                 engine.pauseAll()
+            } else if (quotaGuard.isExhausted()) {
+                // The dataSync 6 h budget is gone; resuming now would queue tasks into a
+                // service that cannot start. Foreground resets the timer — ask for that.
+                notifications.postQuotaPaused()
             } else {
                 engine.resumeAll()
-                DownloadService.start(applicationContext)
+                try {
+                    DownloadService.start(applicationContext)
+                } catch (_: IllegalStateException) {
+                    // Quota rejected the start (subclass ForegroundServiceStartNotAllowedException).
+                    quotaGuard.markExhausted()
+                    notifications.postQuotaPaused()
+                } catch (_: SecurityException) {
+                    quotaGuard.markExhausted()
+                    notifications.postQuotaPaused()
+                }
             }
             render()
         }

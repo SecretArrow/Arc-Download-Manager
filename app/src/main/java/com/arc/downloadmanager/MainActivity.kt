@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.arc.downloadmanager.data.settings.SettingsRepository
 import com.arc.downloadmanager.data.settings.ThemeMode
+import com.arc.downloadmanager.service.DownloadServiceController
 import com.arc.downloadmanager.ui.theme.ArcTheme
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -41,6 +42,9 @@ class MainActivity : ComponentActivity() {
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
+    @Inject
+    lateinit var serviceController: DownloadServiceController
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -52,6 +56,14 @@ class MainActivity : ComponentActivity() {
                 com.arc.downloadmanager.ui.navigation.ArcApp()
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Entering the foreground resets Android's 6-hour dataSync service timer,
+        // so clear any exhausted-quota latch and auto-resume downloads that the
+        // platform paused when the previous budget ran out.
+        serviceController.onAppForeground()
     }
 
     private fun requestNotificationPermissionIfNeeded() {

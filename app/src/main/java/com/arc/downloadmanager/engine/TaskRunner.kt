@@ -36,7 +36,7 @@ sealed interface TaskOutcome {
     data class Failed(val error: DownloadError, val message: String?, val retryAfterSec: Long? = null) : TaskOutcome
 }
 
-enum class PauseReason { USER, NO_NETWORK, LOW_STORAGE }
+enum class PauseReason { USER, NO_NETWORK, LOW_STORAGE, QUOTA }
 
 /** Result of opening the initial HTTP stream for a task. */
 private sealed interface StreamOpen {
@@ -776,6 +776,10 @@ class TaskRunner
                                 PauseReason.USER -> DownloadStatus.PAUSED
                                 PauseReason.NO_NETWORK -> if (settings.autoResume) DownloadStatus.WAITING_NETWORK else DownloadStatus.PAUSED
                                 PauseReason.LOW_STORAGE -> DownloadStatus.WAITING_STORAGE
+                                // Android 15+ stopped the dataSync foreground service (6 h / 24 h quota).
+                                // Stay PAUSED so tasks do not auto-restart while the quota is exhausted;
+                                // they resume when the user opens the app (foreground resets the timer).
+                                PauseReason.QUOTA -> DownloadStatus.PAUSED
                             }
                         store.updateStatus(id, status, null, null)
                     }

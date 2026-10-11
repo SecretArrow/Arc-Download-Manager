@@ -40,6 +40,12 @@ Material Design 3.
   Cancel all actions.
 - Boot receiver + WorkManager recovery worker reconcile temp segment files with the database.
 - Handles Doze, battery restrictions and Android 13+ notification permission.
+- **Android 15+ 6-hour dataSync quota handled end-to-end**: the service implements
+  `Service.onTimeout()` (pauses the queue, notifies, stops within the deadline), every
+  foreground-service start is guarded against `ForegroundServiceStartNotAllowedException`,
+  downloads paused by the timeout auto-resume when the app is next opened (the platform resets
+  the timer on foreground), and Quick Settings / widget resume actions degrade gracefully
+  while the budget is exhausted.
 
 ### Integrated browser
 - Full WebView browser: address bar, tabs, bookmarks, history, desktop-site toggle, private mode,
@@ -136,6 +142,19 @@ Requirements: JDK 17, Android SDK 35.
 
 - Starting a `dataSync` foreground service directly from `BOOT_COMPLETED` is restricted by
   Android; interrupted downloads are requeued on boot and resume when the app is opened.
+- **Android 15+ stops `dataSync` foreground services after 6 hours of runtime in any 24-hour
+  window** (shared by all of an app's dataSync services; the budget only resets when the app is
+  brought to the foreground). When the budget runs out Arc pauses the queue, posts a
+  "Downloads paused" notification, and resumes automatically the next time you open the app —
+  resuming from a widget or Quick Settings tile while the budget is exhausted asks you to open
+  the app instead of failing silently. See the official
+  [foreground service timeouts](https://developer.android.com/develop/background-work/services/fgs/timeout)
+  documentation. To verify the behavior on a device:
+
+  ```bash
+  adb shell am compat enable FGS_INTRODUCE_TIME_LIMITS com.arc.downloadmanager
+  adb shell device_config put activity_manager data_sync_fgs_timeout_duration 60000  # 1 min for testing
+  ```
 - WebView `blob:` URLs and POST-based one-time-token flows cannot be replayed by a plain HTTP
   client; use the long-press "Download linked file" action after the page resolves the real URL.
 - Private browsing mode isolates history recording and clears session cookies on exit; full

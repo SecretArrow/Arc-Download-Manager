@@ -146,6 +146,33 @@ class NotificationHelper
             )
         }
 
+        /**
+         * Shown when Android stops background downloading because the dataSync
+         * foreground-service runtime budget (6 h per 24 h on Android 15+) is exhausted.
+         * Tapping opens the app, which resets the timer and auto-resumes the queue.
+         */
+        fun postQuotaPaused() {
+            if (!canNotify()) return
+            val contentIntent =
+                PendingIntent.getActivity(
+                    context,
+                    QUOTA_NOTIF_ID,
+                    Intent(context, MainActivity::class.java),
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                )
+            val text = context.getString(R.string.notif_quota_paused_text)
+            val notification =
+                NotificationCompat.Builder(context, CHANNEL_STATUS)
+                    .setSmallIcon(R.drawable.ic_notification)
+                    .setContentTitle(context.getString(R.string.notif_quota_paused_title))
+                    .setContentText(text)
+                    .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+                    .setAutoCancel(true)
+                    .setContentIntent(contentIntent)
+                    .build()
+            runCatching { notificationManager.notify(QUOTA_NOTIF_ID, notification) }
+        }
+
         fun postFailed(entity: DownloadEntity) {
             postStatus(
                 id = entity.id.hashCode(),
@@ -184,5 +211,6 @@ class NotificationHelper
             const val CHANNEL_DOWNLOADS = "downloads"
             const val CHANNEL_STATUS = "status"
             const val NOTIF_AGGREGATE_ID = 1001
+            const val QUOTA_NOTIF_ID = 1002
         }
     }
