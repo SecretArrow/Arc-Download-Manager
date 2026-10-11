@@ -1,15 +1,12 @@
 package com.arc.downloadmanager
 
-import android.graphics.Bitmap
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Before
@@ -17,13 +14,12 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
-import java.io.FileOutputStream
 
 /**
- * Navigates the main destinations and captures PNG screenshots to the app's internal files dir.
- * The E2E workflow pulls these via `adb run-as`, uploads them as artifacts and refreshes
- * the `screenshots/` folder referenced by the README. Navigation failures never fail the test —
- * a missing shot is better than a red pipeline.
+ * Navigates the main destinations and captures full-screen PNG screenshots (including dialogs)
+ * to the app's internal files dir. The E2E workflow pulls these via `adb run-as`, uploads them
+ * as artifacts and refreshes the `screenshots/` folder referenced by the README.
+ * Navigation failures never fail the test — a missing shot is better than a red pipeline.
  */
 @HiltAndroidTest
 @RunWith(AndroidJUnit4::class)
@@ -42,16 +38,14 @@ class ScreenshotCaptureTest {
     @Test
     fun captureMainScreens() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         val dir = File(context.filesDir, "screenshots")
         dir.deleteRecursively()
         dir.mkdirs()
 
         fun snap(name: String) {
             runCatching {
-                val bitmap = composeRule.onRoot().captureToImage().asAndroidBitmap()
-                FileOutputStream(File(dir, "$name.png")).use { out ->
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-                }
+                device.takeScreenshot(File(dir, "$name.png"), 1.0f, 100)
             }
         }
 

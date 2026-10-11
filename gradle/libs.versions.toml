@@ -20,6 +20,7 @@ appcompat = "1.7.0"
 junit = "4.13.2"
 androidxJunit = "1.2.1"
 espresso = "3.6.1"
+uiautomator = "2.3.0"
 testRunner = "1.6.2"
 testRules = "1.6.1"
 ktlint = "12.1.1"
@@ -64,6 +65,7 @@ androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version
 androidx-test-espresso = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }
 androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "testRunner" }
 androidx-test-rules = { group = "androidx.test", name = "rules", version.ref = "testRules" }
+androidx-test-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
