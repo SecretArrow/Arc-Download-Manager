@@ -11,6 +11,7 @@ import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.engine.DownloadEngine
 import com.arc.downloadmanager.engine.store.DownloadStore
 import com.arc.downloadmanager.util.SpeedTracker
+import com.arc.downloadmanager.widget.ArcWidgetProvider
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -53,9 +54,18 @@ class DownloadService : Service() {
         startId: Int,
     ): Int {
         when (intent?.action) {
-            ACTION_PAUSE_ALL -> engine.pauseAll()
-            ACTION_RESUME_ALL -> engine.resumeAll()
-            ACTION_CANCEL_ALL -> engine.cancelAll()
+            ACTION_PAUSE_ALL -> {
+                startInForegroundIfNeeded()
+                engine.pauseAll()
+            }
+            ACTION_RESUME_ALL -> {
+                startInForegroundIfNeeded()
+                engine.resumeAll()
+            }
+            ACTION_CANCEL_ALL -> {
+                startInForegroundIfNeeded()
+                engine.cancelAll()
+            }
             else -> startInForegroundIfNeeded()
         }
         observeOnce()
@@ -87,10 +97,12 @@ class DownloadService : Service() {
                 val total = running.sumOf { it.totalBytes.coerceAtLeast(0) }
                 val speed = running.sumOf { speedTracker.record(it.id, it.downloadedBytes) }
                 if (active.isEmpty()) {
+                    ArcWidgetProvider.push(applicationContext, all)
                     notifications.cancelAggregate()
                     stopSelf()
                 } else {
                     startInForegroundIfNeeded()
+                    ArcWidgetProvider.push(applicationContext, all)
                     notifications.postAggregate(
                         notifications.aggregateNotification(
                             activeCount = active.size,

@@ -3,6 +3,7 @@
 package com.arc.downloadmanager.ui.files
 
 import android.content.Intent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,6 +51,7 @@ import com.arc.downloadmanager.R
 import com.arc.downloadmanager.data.repository.FileCategory
 import com.arc.downloadmanager.data.repository.FileItem
 import com.arc.downloadmanager.ui.components.fileIcon
+import com.arc.downloadmanager.ui.theme.categoryAccent
 import com.arc.downloadmanager.util.Format
 
 @Composable
@@ -113,6 +115,14 @@ fun FilesScreen(viewModel: FilesViewModel = hiltViewModel()) {
                         selected = category == cat,
                         onClick = { viewModel.selectCategory(cat) },
                         label = { Text(stringResource(label)) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = fileIcon(cat),
+                                contentDescription = null,
+                                tint = categoryAccent(cat),
+                                modifier = Modifier.size(16.dp),
+                            )
+                        },
                     )
                 }
             }
@@ -174,12 +184,23 @@ private fun FileRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Icon(
-                imageVector = fileIcon(item.category),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(32.dp),
-            )
+            Box(
+                modifier =
+                    Modifier
+                        .size(40.dp)
+                        .background(
+                            categoryAccent(item.category).copy(alpha = 0.15f),
+                            MaterialTheme.shapes.small,
+                        ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = fileIcon(item.category),
+                    contentDescription = null,
+                    tint = categoryAccent(item.category),
+                    modifier = Modifier.size(24.dp),
+                )
+            }
             Column(Modifier.weight(1f)) {
                 Text(item.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(

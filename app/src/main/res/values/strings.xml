@@ -198,4 +198,11 @@
     <string name="eta_format">About %1$s left</string>
     <string name="permission_notif_rationale">Arc needs notification permission to show download progress and completion alerts.</string>
     <string name="segments_active">%1$d of %2$d connections</string>
+
+    <!-- Widget & Quick Settings tile -->
+    <string name="widget_status_idle">No active downloads</string>
+    <string name="widget_desc">Download progress with pause/resume controls</string>
+    <string name="tile_label">Arc Downloads</string>
+    <string name="tile_pause_all">Tap to pause all</string>
+    <string name="tile_resume_all">Tap to resume all</string>
 </resources>

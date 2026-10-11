@@ -15,7 +15,6 @@ import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.AudioFile
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.PauseCircle
@@ -27,6 +26,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,7 +35,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.data.repository.FileCategory
+import com.arc.downloadmanager.data.repository.FileRepository
 import com.arc.downloadmanager.domain.model.DownloadStatus
+import com.arc.downloadmanager.ui.theme.categoryAccent
 import com.arc.downloadmanager.util.Format
 
 /** Maps a status to a color-consistent icon + text pair (never color alone). */
@@ -88,6 +90,8 @@ fun DownloadRow(
     val status = entity.status
     val percent = Format.percent(entity.downloadedBytes, entity.totalBytes)
     val active = status == DownloadStatus.DOWNLOADING || status == DownloadStatus.CONNECTING
+    val category = remember(entity.filename) { FileRepository.categorize(entity.filename, null) }
+    val accent = categoryAccent(category)
     Column(
         modifier =
             Modifier
@@ -101,15 +105,15 @@ fun DownloadRow(
                     Modifier
                         .size(40.dp)
                         .background(
-                            MaterialTheme.colorScheme.primaryContainer,
+                            accent.copy(alpha = 0.16f),
                             MaterialTheme.shapes.small,
                         ),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Download,
+                    imageVector = fileIcon(category),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    tint = accent,
                 )
             }
             Column(Modifier.weight(1f)) {

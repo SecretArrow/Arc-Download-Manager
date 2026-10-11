@@ -36,21 +36,32 @@ class FileRepository
     constructor(
         @ApplicationContext private val context: Context,
     ) {
-        fun categorize(
-            name: String,
-            mime: String?,
-        ): FileCategory {
-            val ext = name.substringAfterLast('.', "").lowercase()
-            val m = mime?.substringBefore(';')?.lowercase() ?: ""
-            return when {
-                m.startsWith("image/") || ext in IMAGE_EXTS -> FileCategory.IMAGE
-                m.startsWith("video/") || ext in VIDEO_EXTS -> FileCategory.VIDEO
-                m.startsWith("audio/") || ext in AUDIO_EXTS -> FileCategory.AUDIO
-                ext in ARCHIVE_EXTS || m.contains("zip") || m.contains("tar") || m.contains("compressed") -> FileCategory.ARCHIVE
-                ext == "apk" || m == "application/vnd.android.package-archive" -> FileCategory.APP
-                m.startsWith("text/") || ext in DOC_EXTS || m.contains("pdf") || m.contains("document") ||
-                    m.contains("sheet") || m.contains("presentation") -> FileCategory.DOCUMENT
-                else -> FileCategory.OTHER
+        suspend fun totalBytesUsed(): Long = withContext(Dispatchers.IO) { listAll().sumOf { it.size } }
+
+        companion object {
+            private val IMAGE_EXTS = setOf("jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "heic")
+            private val VIDEO_EXTS = setOf("mp4", "mkv", "webm", "avi", "mov", "flv", "wmv", "m4v", "ts")
+            private val AUDIO_EXTS = setOf("mp3", "wav", "ogg", "flac", "m4a", "aac", "opus", "wma")
+            private val ARCHIVE_EXTS = setOf("zip", "rar", "7z", "tar", "gz", "bz2", "xz", "iso")
+            private val DOC_EXTS = setOf("pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv", "epub", "md")
+
+            /** Pure filename/MIME categorization, also usable without a repository instance. */
+            fun categorize(
+                name: String,
+                mime: String?,
+            ): FileCategory {
+                val ext = name.substringAfterLast('.', "").lowercase()
+                val m = mime?.substringBefore(';')?.lowercase() ?: ""
+                return when {
+                    m.startsWith("image/") || ext in IMAGE_EXTS -> FileCategory.IMAGE
+                    m.startsWith("video/") || ext in VIDEO_EXTS -> FileCategory.VIDEO
+                    m.startsWith("audio/") || ext in AUDIO_EXTS -> FileCategory.AUDIO
+                    ext in ARCHIVE_EXTS || m.contains("zip") || m.contains("tar") || m.contains("compressed") -> FileCategory.ARCHIVE
+                    ext == "apk" || m == "application/vnd.android.package-archive" -> FileCategory.APP
+                    m.startsWith("text/") || ext in DOC_EXTS || m.contains("pdf") || m.contains("document") ||
+                        m.contains("sheet") || m.contains("presentation") -> FileCategory.DOCUMENT
+                    else -> FileCategory.OTHER
+                }
             }
         }
 
@@ -187,14 +198,4 @@ class FileRepository
                     }
                 }.getOrDefault(false)
             }
-
-        suspend fun totalBytesUsed(): Long = withContext(Dispatchers.IO) { listAll().sumOf { it.size } }
-
-        companion object {
-            private val IMAGE_EXTS = setOf("jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "heic")
-            private val VIDEO_EXTS = setOf("mp4", "mkv", "webm", "avi", "mov", "flv", "wmv", "m4v", "ts")
-            private val AUDIO_EXTS = setOf("mp3", "wav", "ogg", "flac", "m4a", "aac", "opus", "wma")
-            private val ARCHIVE_EXTS = setOf("zip", "rar", "7z", "tar", "gz", "bz2", "xz", "iso")
-            private val DOC_EXTS = setOf("pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv", "epub", "md")
-        }
     }

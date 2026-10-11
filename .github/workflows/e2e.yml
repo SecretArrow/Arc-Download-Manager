@@ -11,6 +11,9 @@ concurrency:
   group: e2e-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
   instrumented-tests:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
@@ -42,7 +45,39 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: Nexus 5X
-          script: ./gradlew :app:connectedDebugAndroidTest --stacktrace
+          script: |
+            ./gradlew :app:connectedDebugAndroidTest --stacktrace
+            mkdir -p screenshots
+            for f in home browser files settings add; do
+              adb shell "run-as com.arc.downloadmanager cat /data/data/com.arc.downloadmanager/files/screenshots/$f.png" > "screenshots/$f.png" || true
+              [ -s "screenshots/$f.png" ] || rm -f "screenshots/$f.png"
+            done
+            ls -la screenshots/ || true
+
+      - name: Upload screenshots artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-screenshots
+          path: screenshots/
+          if-no-files-found: ignore
+
+      - name: Commit screenshots to main
+        if: success()
+        run: |
+          if [ -n "$(ls -A screenshots 2>/dev/null)" ]; then
+            git config user.name "SecretArrow"
+            git config user.email "SecretArrow@users.noreply.github.com"
+            git add screenshots
+            if git diff --cached --quiet; then
+              echo "Screenshots unchanged"
+            else
+              git commit -m "docs: refresh app screenshots [skip ci]"
+              git push
+            fi
+          else
+            echo "No screenshots captured"
+          fi
 
       - name: Upload instrumented test reports
         if: always()
