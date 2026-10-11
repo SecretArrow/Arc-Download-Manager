@@ -3,7 +3,7 @@ package com.arc.downloadmanager
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
-import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
@@ -52,9 +52,9 @@ class ScreenshotCaptureTest {
         fun tap(label: String) {
             runCatching {
                 composeRule.waitUntil(10_000) {
-                    composeRule.onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty()
+                    composeRule.onAllNodesWithText(label, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
                 }
-                composeRule.onAllNodesWithText(label).onFirst().performClick()
+                composeRule.onAllNodesWithText(label, useUnmergedTree = true).onFirst().performTouchInput { click() }
                 composeRule.waitForIdle()
                 Thread.sleep(800)
             }
@@ -74,19 +74,19 @@ class ScreenshotCaptureTest {
         snap("settings")
 
         tap(context.getString(R.string.nav_home))
-        val fabBefore = composeRule.onAllNodesWithText(context.getString(R.string.action_add_download)).fetchSemanticsNodes().size
+        val fabBefore = composeRule.onAllNodesWithText(context.getString(R.string.action_add_download), useUnmergedTree = true).fetchSemanticsNodes().size
         tap(context.getString(R.string.action_add_download))
         // Wait for the sheet's content to actually appear before capturing.
         var sheetErr: String? = null
         var sheetFound = false
         runCatching {
             composeRule.waitUntil(15_000) {
-                composeRule.onAllNodesWithText(context.getString(R.string.add_url_hint)).fetchSemanticsNodes().isNotEmpty()
+                composeRule.onAllNodesWithText(context.getString(R.string.add_url_hint), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
             }
             sheetFound = true
             Thread.sleep(600)
         }.onFailure { sheetErr = it.message?.take(300) }
-        val sheetAfter = composeRule.onAllNodesWithText(context.getString(R.string.add_url_hint)).fetchSemanticsNodes().size
+        val sheetAfter = composeRule.onAllNodesWithText(context.getString(R.string.add_url_hint), useUnmergedTree = true).fetchSemanticsNodes().size
         File(dir, "debug.txt").writeText("fabMatches=$fabBefore sheetFound=$sheetFound sheetMatchesAfter=$sheetAfter err=$sheetErr")
         snap("add")
     }
