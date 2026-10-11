@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -79,6 +80,10 @@ fun HomeScreen(
     val clipboard = LocalClipboardManager.current
 
     Scaffold(
+        // WindowInsets(0): insets are applied exactly once — status bar by the TopAppBar below,
+        // navigation bar by the NavigationBar that hosts this screen — and imePadding is not
+        // needed here because text input happens inside ModalBottomSheet, which handles it.
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             TopAppBar(
                 title = {
@@ -122,7 +127,7 @@ fun HomeScreen(
             item {
                 AggregateCard(
                     ui = ui,
-                    storageUsed = 0L,
+                    storageFree = ui.storageFree,
                     onOpenFiles = onOpenFiles,
                 )
             }
@@ -253,7 +258,7 @@ fun HomeScreen(
 @Composable
 private fun AggregateCard(
     ui: HomeUiState,
-    storageUsed: Long,
+    storageFree: Long,
     onOpenFiles: () -> Unit,
 ) {
     Card(
@@ -298,7 +303,7 @@ private fun AggregateCard(
                         if (ui.activeCount > 0) {
                             "${Format.bytes(ui.activeBytes)} / ${Format.bytes(ui.activeTotalBytes)}"
                         } else {
-                            "${ui.completedCount} completed"
+                            stringResource(R.string.home_completed_count, ui.completedCount)
                         },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -312,6 +317,14 @@ private fun AggregateCard(
                         color = MaterialTheme.colorScheme.primary,
                     )
                 }
+            }
+            if (storageFree > 0) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = stringResource(R.string.home_free_space, Format.bytes(storageFree)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
             }
         }
     }
@@ -357,11 +370,11 @@ private fun ViewModeSwitch(
             selected = selected == 0,
             onClick = { onSelect(0) },
             shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-        ) { Text("Compact") }
+        ) { Text(stringResource(R.string.view_compact)) }
         SegmentedButton(
             selected = selected == 1,
             onClick = { onSelect(1) },
             shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-        ) { Text("Detailed") }
+        ) { Text(stringResource(R.string.view_detailed)) }
     }
 }

@@ -9,6 +9,7 @@ import com.arc.downloadmanager.data.repository.DownloadRepository
 import com.arc.downloadmanager.data.settings.OverwritePolicy
 import com.arc.downloadmanager.data.settings.SettingsRepository
 import com.arc.downloadmanager.domain.model.DownloadRequest
+import com.arc.downloadmanager.engine.StorageManager
 import com.arc.downloadmanager.util.SpeedTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -27,6 +28,7 @@ class HomeViewModel
     constructor(
         private val repository: DownloadRepository,
         private val settingsRepository: SettingsRepository,
+        private val storageManager: StorageManager,
     ) : ViewModel() {
         private val speedTracker = SpeedTracker()
 
@@ -66,6 +68,7 @@ class HomeViewModel
                             .sortedByDescending { it.completedAt ?: 0 }
                             .take(5),
                     totalSpeed = active.sumOf { speedTracker.record(it.id, it.downloadedBytes) },
+                    storageFree = storageManager.freeBytes(),
                 )
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
@@ -133,6 +136,7 @@ data class HomeUiState(
     val attention: List<DownloadEntity> = emptyList(),
     val recentCompleted: List<DownloadEntity> = emptyList(),
     val totalSpeed: Long = 0L,
+    val storageFree: Long = 0L,
 ) {
     val activeBytes: Long
         get() = downloads.filter { it.status.isActive }.sumOf { it.downloadedBytes }

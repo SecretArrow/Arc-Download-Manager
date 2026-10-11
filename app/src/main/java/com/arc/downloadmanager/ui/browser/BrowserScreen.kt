@@ -12,9 +12,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -102,11 +105,19 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
+        // WindowInsets(0): the browser has no TopAppBar, so the status-bar inset is applied
+        // explicitly via statusBarsPadding() below; the navigation-bar inset is consumed by the
+        // NavigationBar hosting this tab.
+        contentWindowInsets = WindowInsets(0.dp),
     ) { padding ->
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(padding),
+                .padding(padding)
+                .statusBarsPadding()
+                // Lift the whole browser above the keyboard while typing in the address bar,
+                // so the URL field and bottom controls stay reachable (adjustResize + edge-to-edge).
+                .imePadding(),
         ) {
             // Address bar row
             Row(
@@ -118,7 +129,7 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
             ) {
                 IconButton(onClick = { showTabs = true }) {
                     BadgedBox(badge = { Badge { Text(tabs.size.toString()) } }) {
-                        Icon(Icons.Filled.Tab, contentDescription = stringResource(R.string.browser_new_tab))
+                        Icon(Icons.Filled.Tab, contentDescription = stringResource(R.string.browser_tabs))
                     }
                 }
                 OutlinedTextField(
@@ -139,7 +150,7 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
                 }
                 Box {
                     IconButton(onClick = { menuOpen = true }) {
-                        Icon(Icons.Filled.MoreVert, contentDescription = null)
+                        Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.browser_menu))
                     }
                     BrowserMenu(
                         expanded = menuOpen,
@@ -194,10 +205,15 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
                 }
             }
             if (loading) {
-                LinearProgressIndicator(
-                    progress = { progress / 100f },
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                if (progress > 0) {
+                    LinearProgressIndicator(
+                        progress = { progress / 100f },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                } else {
+                    // Page request started but no progress reported yet: show indeterminate.
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                }
             }
             // WebView
             Box(Modifier.weight(1f)) {

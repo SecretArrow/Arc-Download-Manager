@@ -72,6 +72,10 @@
     <string name="home_attention_empty">All downloads are running smoothly.</string>
     <string name="home_no_downloads">No downloads yet. Add one to get started.</string>
     <string name="home_storage_used">%1$s used • %2$s free</string>
+    <string name="home_completed_count">%1$d completed</string>
+    <string name="home_free_space">%1$s free on device</string>
+    <string name="view_compact">Compact</string>
+    <string name="view_detailed">Detailed</string>
 
     <!-- Files -->
     <string name="files_category_all">All</string>
@@ -100,6 +104,8 @@
 
     <!-- Browser -->
     <string name="browser_address_hint">Search or enter address</string>
+    <string name="browser_menu">More options</string>
+    <string name="browser_tabs">Tabs</string>
     <string name="browser_download_started">Download sent to Arc: %1$s</string>
     <string name="browser_new_tab">New tab</string>
     <string name="browser_close_tab">Close tab</string>

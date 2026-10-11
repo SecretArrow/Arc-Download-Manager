@@ -132,6 +132,16 @@ class TaskRunner
                 )
             store.update(updated)
 
+            // Pre-flight storage safety: staging + final copy transiently need up to 2x the file
+            // size on disk. Pause instead of crashing mid-write when space is insufficient.
+            if (totalBytes > 0) {
+                val alreadyOnDisk = if (opened.resumableUsed) entity.downloadedBytes else 0L
+                if (!storage.hasFreeSpace(2L * totalBytes - alreadyOnDisk)) {
+                    opened.response.close()
+                    return TaskOutcome.Paused(PauseReason.LOW_STORAGE)
+                }
+            }
+
             if (totalBytes == 0L) {
                 opened.response.close()
                 return finalizeDownload(updated, emptyStagingFile(updated), settings)
@@ -219,7 +229,9 @@ class TaskRunner
                                 store.updateProgress(entity.id, written, totalBytes)
                                 if (now - lastSpaceCheck >= SPACE_CHECK_INTERVAL_MS) {
                                     lastSpaceCheck = now
-                                    val remaining = if (totalBytes > 0) totalBytes - written else 64L * 1024L * 1024L
+                                    // Staging + final copy can transiently require 2x the file size.
+                                    val remaining =
+                                        if (totalBytes > 0) 2L * totalBytes - written else 64L * 1024L * 1024L
                                     if (!storage.hasFreeSpace(remaining)) {
                                         store.updateProgress(entity.id, written, totalBytes)
                                         return TaskOutcome.Paused(PauseReason.LOW_STORAGE)
@@ -324,6 +336,9 @@ class TaskRunner
                 if (staged.length() != totalBytes) {
                     TaskOutcome.Failed(DownloadError.MERGE_FAILED, "Merged size ${staged.length()} != $totalBytes")
                 } else {
+                    // Free the part files immediately: peak disk usage halves before the
+                    // finalization copy into MediaStore/SAF.
+                    parts.forEach { it.delete() }
                     TaskOutcome.Completed
                 }
             } catch (e: java.io.IOException) {
@@ -478,7 +493,15 @@ class TaskRunner
                                 lastFlush = now
                                 store.updateSegmentProgress(entity.id, segment.index, written, DownloadStatus.DOWNLOADING)
                                 if (!networkMonitor.isOnline.value) return WriteResult.NoNetwork
-                                if (!storage.hasFreeSpace(1L * 1024L * 1024L)) return WriteResult.LowStorage
+                                // Aggregate-aware check: remaining bytes across all segments plus
+                                // the staging+final copy headroom (2x total when known).
+                                val remainingAll =
+                                    if (entity.totalBytes > 0) {
+                                        entity.totalBytes * 2 - store.totalSegmentBytes(entity.id)
+                                    } else {
+                                        64L * 1024L * 1024L
+                                    }
+                                if (!storage.hasFreeSpace(remainingAll)) return WriteResult.LowStorage
                             }
                         }
                     }

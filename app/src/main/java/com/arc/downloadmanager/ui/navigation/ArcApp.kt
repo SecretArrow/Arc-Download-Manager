@@ -2,6 +2,7 @@ package com.arc.downloadmanager.ui.navigation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -27,6 +28,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -116,11 +118,14 @@ fun ArcApp() {
     }
 
     if (compact) {
-        Scaffold(bottomBar = bottomBar) { padding ->
+        // WindowInsets(0): the NavigationBar applies the navigation-bar inset itself and each
+        // screen's Scaffold/TopAppBar applies the status-bar inset, so system insets are
+        // consumed exactly once (no double padding, no content under system bars).
+        Scaffold(bottomBar = bottomBar, contentWindowInsets = WindowInsets(0.dp)) { padding ->
             ArcNavHost(navController, Modifier.padding(padding))
         }
     } else {
-        Scaffold { padding ->
+        Scaffold(contentWindowInsets = WindowInsets(0.dp)) { padding ->
             Row(Modifier.fillMaxSize()) {
                 rail()
                 ArcNavHost(navController, Modifier.padding(padding))

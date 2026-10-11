@@ -24,6 +24,12 @@ Material Design 3.
 - **Reliable pause/resume** backed by Room — survives process death, network loss and app restarts.
 - Automatic retry with exponential backoff + jitter, `Retry-After` awareness and adaptive
   parallelism when servers rate-limit (HTTP 429/503).
+- **Large-file safe**: the whole pipeline is streaming — bounded 128 KiB network buffers, a
+  streamed multi-part merge with a 512 KiB copy buffer, and streaming SHA-256 — with 64-bit byte
+  math everywhere, so files of any size (multi-GB) never load into RAM and never crash from OOM.
+- **Storage safety**: pre-flight free-space check (2× file-size headroom for staging + final copy),
+  live free-space monitoring that auto-pauses into a "waiting for storage" state, part files
+  deleted immediately after merge, and orphaned temp cleanup on boot.
 - Range/ETag validation: resumed downloads verify `Content-Range` and use `If-Range`, so a changed
   file is detected and restarted instead of corrupted.
 - SHA-256 checksum verification (user-supplied or computed after completion).
@@ -46,6 +52,9 @@ Material Design 3.
 ### Files & UI
 - Material 3 UI with dynamic color, dark/light themes, compact/detailed list modes, and an
   adaptive layout (NavigationBar on phones, NavigationRail on tablets).
+- **True edge-to-edge**: content is inset exactly once against the Android status bar (top) and
+  the gesture-navigation bar (bottom) on every screen — nothing collides with system UI, and
+  input screens (browser address bar, add-download sheet) lift above the keyboard via IME insets.
 - Per-category accent colors — images, video, audio, documents, archives and apps each get a
   distinct icon + hue in the download list and file library (color always paired with an icon).
 - Branded launcher experience: adaptive icon with **monochrome (themed) layer** for Android 13+
