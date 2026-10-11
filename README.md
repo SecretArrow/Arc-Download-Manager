@@ -63,13 +63,13 @@ Material Design 3.
 Captured automatically by the E2E pipeline (instrumented test on an API 30 emulator pulls them
 from the device and commits them back to this repository on every green run).
 
-| Home | Browser | Files |
-|---|---|---|
-| ![Home](screenshots/home.png) | ![Browser](screenshots/browser.png) | ![Files](screenshots/files.png) |
-
-| Settings | Add download |
+| Home | Browser |
 |---|---|
-| ![Settings](screenshots/settings.png) | ![Add](screenshots/add.png) |
+| ![Home](screenshots/home.png) | ![Browser](screenshots/browser.png) |
+
+| Files | Settings |
+|---|---|
+| ![Files](screenshots/files.png) | ![Settings](screenshots/settings.png) |
 
 ## Tech stack
 

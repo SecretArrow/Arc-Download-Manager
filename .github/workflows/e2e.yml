@@ -50,9 +50,7 @@ jobs:
             ./gradlew :app:installDebug :app:installDebugAndroidTest
             adb shell am instrument -w -e class com.arc.downloadmanager.ScreenshotCaptureTest com.arc.downloadmanager.test/com.arc.downloadmanager.HiltTestRunner || true
             mkdir -p screenshots
-            for f in home browser files settings add debug.txt; do adb shell "run-as com.arc.downloadmanager cat /data/data/com.arc.downloadmanager/files/screenshots/$f" > "screenshots/$f" 2>/dev/null || true; [ -s "screenshots/$f" ] || rm -f "screenshots/$f"; done
-            cat screenshots/debug.txt 2>/dev/null || echo "no debug.txt"
-            rm -f screenshots/debug.txt
+            for f in home browser files settings; do adb shell "run-as com.arc.downloadmanager cat /data/data/com.arc.downloadmanager/files/screenshots/$f.png" > "screenshots/$f.png" || true; [ -s "screenshots/$f.png" ] || rm -f "screenshots/$f.png"; done
             adb uninstall com.arc.downloadmanager.test || true
             adb uninstall com.arc.downloadmanager || true
             ls -la screenshots/ || true

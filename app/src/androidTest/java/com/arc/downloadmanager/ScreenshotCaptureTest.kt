@@ -17,9 +17,14 @@ import org.junit.runner.RunWith
 import java.io.File
 
 /**
- * Navigates the main destinations and captures full-screen PNG screenshots (including dialogs)
- * to the app's internal files dir. The E2E workflow pulls these via `adb run-as`, uploads them
- * as artifacts and refreshes the `screenshots/` folder referenced by the README.
+ * Navigates the main destinations and captures full-screen PNG screenshots to the app's internal
+ * files dir. The E2E workflow pulls these via `adb run-as`, uploads them as artifacts and
+ * refreshes the `screenshots/` folder referenced by the README.
+ * Notes:
+ *  - Taps use the unmerged semantics tree + touch injection (M3 ExtendedFAB text is absent from
+ *    the merged tree).
+ *  - ModalBottomSheet dialog windows are not composited into UiAutomation captures on the API 30
+ *    emulator, so dialog screens are intentionally not captured.
  * Navigation failures never fail the test — a missing shot is better than a red pipeline.
  */
 @HiltAndroidTest
@@ -73,22 +78,5 @@ class ScreenshotCaptureTest {
 
         tap(context.getString(R.string.nav_settings))
         snap("settings")
-
-        tap(context.getString(R.string.nav_home))
-        val fabBefore = composeRule.onAllNodesWithText(context.getString(R.string.action_add_download), useUnmergedTree = true).fetchSemanticsNodes().size
-        tap(context.getString(R.string.action_add_download))
-        // Wait for the sheet's content to actually appear before capturing.
-        var sheetErr: String? = null
-        var sheetFound = false
-        runCatching {
-            composeRule.waitUntil(15_000) {
-                composeRule.onAllNodesWithText(context.getString(R.string.add_url_hint), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
-            }
-            sheetFound = true
-            Thread.sleep(600)
-        }.onFailure { sheetErr = it.message?.take(300) }
-        val sheetAfter = composeRule.onAllNodesWithText(context.getString(R.string.add_url_hint), useUnmergedTree = true).fetchSemanticsNodes().size
-        File(dir, "debug.txt").writeText("fabMatches=$fabBefore sheetFound=$sheetFound sheetMatchesAfter=$sheetAfter err=$sheetErr")
-        snap("add")
     }
 }
