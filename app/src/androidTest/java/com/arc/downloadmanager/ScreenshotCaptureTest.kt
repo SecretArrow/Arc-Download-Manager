@@ -2,7 +2,7 @@ package com.arc.downloadmanager
 
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -54,7 +54,7 @@ class ScreenshotCaptureTest {
                 composeRule.waitUntil(10_000) {
                     composeRule.onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty()
                 }
-                composeRule.onNodeWithText(label).performClick()
+                composeRule.onAllNodesWithText(label).onFirst().performClick()
                 composeRule.waitForIdle()
                 Thread.sleep(800)
             }
@@ -75,6 +75,13 @@ class ScreenshotCaptureTest {
 
         tap(context.getString(R.string.nav_home))
         tap(context.getString(R.string.action_add_download))
+        // Wait for the sheet's content to actually appear before capturing.
+        runCatching {
+            composeRule.waitUntil(15_000) {
+                composeRule.onAllNodesWithText(context.getString(R.string.add_url_hint)).fetchSemanticsNodes().isNotEmpty()
+            }
+            Thread.sleep(600)
+        }
         snap("add")
     }
 }
