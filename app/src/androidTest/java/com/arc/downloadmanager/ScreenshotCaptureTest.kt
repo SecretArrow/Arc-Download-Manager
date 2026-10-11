@@ -74,14 +74,20 @@ class ScreenshotCaptureTest {
         snap("settings")
 
         tap(context.getString(R.string.nav_home))
+        val fabBefore = composeRule.onAllNodesWithText(context.getString(R.string.action_add_download)).fetchSemanticsNodes().size
         tap(context.getString(R.string.action_add_download))
         // Wait for the sheet's content to actually appear before capturing.
+        var sheetErr: String? = null
+        var sheetFound = false
         runCatching {
             composeRule.waitUntil(15_000) {
                 composeRule.onAllNodesWithText(context.getString(R.string.add_url_hint)).fetchSemanticsNodes().isNotEmpty()
             }
+            sheetFound = true
             Thread.sleep(600)
-        }
+        }.onFailure { sheetErr = it.message?.take(300) }
+        val sheetAfter = composeRule.onAllNodesWithText(context.getString(R.string.add_url_hint)).fetchSemanticsNodes().size
+        println("SNAP-DEBUG: fabMatches=$fabBefore sheetFound=$sheetFound sheetMatchesAfter=$sheetAfter err=$sheetErr")
         snap("add")
     }
 }
