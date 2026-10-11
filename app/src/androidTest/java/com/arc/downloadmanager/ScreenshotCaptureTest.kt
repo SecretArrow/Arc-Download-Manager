@@ -87,7 +87,7 @@ class ScreenshotCaptureTest {
             Thread.sleep(600)
         }.onFailure { sheetErr = it.message?.take(300) }
         val sheetAfter = composeRule.onAllNodesWithText(context.getString(R.string.add_url_hint)).fetchSemanticsNodes().size
-        println("SNAP-DEBUG: fabMatches=$fabBefore sheetFound=$sheetFound sheetMatchesAfter=$sheetAfter err=$sheetErr")
+        File(dir, "debug.txt").writeText("fabMatches=$fabBefore sheetFound=$sheetFound sheetMatchesAfter=$sheetAfter err=$sheetErr")
         snap("add")
     }
 }
