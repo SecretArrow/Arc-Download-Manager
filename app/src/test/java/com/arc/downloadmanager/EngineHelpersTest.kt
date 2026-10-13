@@ -196,7 +196,11 @@ class CookieScopePolicyTest {
     fun `validates supported urls`() {
         assertTrue(CookieScopePolicy.isSupportedUrl("https://example.com/x"))
         assertTrue(CookieScopePolicy.isSupportedUrl("http://example.com/x"))
-        assertFalse(CookieScopePolicy.isSupportedUrl("ftp://example.com"))
+        // Multi-protocol engine: ftp/ftps/sftp/content are now first-class schemes.
+        assertTrue(CookieScopePolicy.isSupportedUrl("ftp://example.com/file.zip"))
+        assertTrue(CookieScopePolicy.isSupportedUrl("sftp://example.com/file.zip"))
+        assertTrue(CookieScopePolicy.isSupportedUrl("content://downloads/all/1"))
+        assertFalse(CookieScopePolicy.isSupportedUrl("magnet:?xt=urn:btih:abc"))
         assertFalse(CookieScopePolicy.isSupportedUrl("not a url"))
     }
 

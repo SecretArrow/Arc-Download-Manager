@@ -333,7 +333,9 @@ class GitHubReleaseFlowTest {
         // java.net.URI rejects spaces/unicode; OkHttp HttpUrl does not.
         assertTrue(CookieScopePolicy.isSupportedUrl("https://github.com/owner/repo/releases/download/v1.4.0/My App (1).apk"))
         assertTrue(CookieScopePolicy.isSupportedUrl(" https://github.com/owner/repo/releases/latest "))
-        assertFalse(CookieScopePolicy.isSupportedUrl("ftp://github.com/file.apk"))
+        // ftp is a supported scheme since the multi-protocol engine; magnet stays rejected.
+        assertTrue(CookieScopePolicy.isSupportedUrl("ftp://github.com/file.apk"))
+        assertFalse(CookieScopePolicy.isSupportedUrl("magnet:?xt=urn:btih:abc"))
         assertFalse(CookieScopePolicy.isSupportedUrl("not a url"))
     }
 }
