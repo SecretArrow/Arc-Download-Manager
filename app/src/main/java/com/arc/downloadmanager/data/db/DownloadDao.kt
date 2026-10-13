@@ -28,7 +28,9 @@ interface DownloadDao {
     @Query("SELECT * FROM downloads WHERE url = :url AND status != 'CANCELED' ORDER BY createdAt DESC")
     suspend fun getByUrl(url: String): List<DownloadEntity>
 
-    @Query("SELECT * FROM downloads WHERE status IN ('QUEUED','WAITING_NETWORK','WAITING_STORAGE') AND archivedAt IS NULL ORDER BY priority DESC, createdAt ASC")
+    @Query(
+        "SELECT * FROM downloads WHERE status IN ('QUEUED','WAITING_NETWORK','WAITING_STORAGE') AND archivedAt IS NULL ORDER BY priority DESC, createdAt ASC",
+    )
     suspend fun pending(): List<DownloadEntity>
 
     @Query("SELECT * FROM downloads WHERE status IN ('CONNECTING','DOWNLOADING','PAUSING','MERGING','VERIFYING') AND archivedAt IS NULL")
