@@ -22,6 +22,12 @@ class InMemoryDownloadStore : DownloadStore {
 
     override fun observeAll(): Flow<List<DownloadEntity>> = MutableStateFlow(0).map { synchronized(mutex) { downloads.values.toList() } }
 
+    override fun observeVisible(): Flow<List<DownloadEntity>> =
+        MutableStateFlow(0).map { synchronized(mutex) { downloads.values.filter { it.archivedAt == null } } }
+
+    override fun observeArchived(): Flow<List<DownloadEntity>> =
+        MutableStateFlow(0).map { synchronized(mutex) { downloads.values.filter { it.archivedAt != null } } }
+
     override fun observeById(id: String): Flow<DownloadEntity?> = MutableStateFlow(0).map { synchronized(mutex) { downloads[id] } }
 
     override suspend fun getById(id: String): DownloadEntity? = synchronized(mutex) { downloads[id] }
@@ -30,11 +36,14 @@ class InMemoryDownloadStore : DownloadStore {
 
     override suspend fun getByUrl(url: String): List<DownloadEntity> = synchronized(mutex) { downloads.values.filter { it.url == url } }
 
-    override suspend fun pending(): List<DownloadEntity> = synchronized(mutex) { downloads.values.filter { it.status.isRunningCandidate } }
+    override suspend fun pending(): List<DownloadEntity> =
+        synchronized(mutex) { downloads.values.filter { it.status.isRunningCandidate && it.archivedAt == null } }
 
-    override suspend fun running(): List<DownloadEntity> = synchronized(mutex) { downloads.values.filter { it.status.isActive } }
+    override suspend fun running(): List<DownloadEntity> =
+        synchronized(mutex) { downloads.values.filter { it.status.isActive && it.archivedAt == null } }
 
-    override suspend fun interrupted(): List<DownloadEntity> = synchronized(mutex) { downloads.values.filter { it.status.isActive } }
+    override suspend fun interrupted(): List<DownloadEntity> =
+        synchronized(mutex) { downloads.values.filter { it.status.isActive && it.archivedAt == null } }
 
     override fun observeActiveCount(): Flow<Int> = MutableStateFlow(0).map { synchronized(mutex) { downloads.values.count { it.status.isActive } } }
 
@@ -99,6 +108,43 @@ class InMemoryDownloadStore : DownloadStore {
         synchronized(mutex) {
             downloads.remove(id)
             segments.remove(id)
+        }
+
+    override suspend fun deleteMany(ids: List<String>): Unit =
+        synchronized(mutex) {
+            ids.forEach { id ->
+                downloads.remove(id)
+                segments.remove(id)
+            }
+        }
+
+    override suspend fun clearFinished(): Int =
+        synchronized(mutex) {
+            val doomed =
+                downloads.values.filter {
+                    (it.status == DownloadStatus.COMPLETED || it.status == DownloadStatus.CANCELED) && it.archivedAt == null
+                }
+            doomed.forEach { downloads.remove(it.id) }
+            doomed.size
+        }
+
+    override suspend fun setArchived(
+        ids: List<String>,
+        archivedAt: Long?,
+    ): Unit =
+        synchronized(mutex) {
+            ids.forEach { id ->
+                downloads[id]?.let { downloads[id] = it.copy(archivedAt = archivedAt) }
+            }
+        }
+
+    override suspend fun updateMeta(
+        id: String,
+        url: String,
+        filename: String,
+    ): Unit =
+        synchronized(mutex) {
+            downloads[id]?.let { downloads[id] = it.copy(url = url, filename = filename) }
         }
 
     override suspend fun totalDownloadedBytes(): Long = synchronized(mutex) { downloads.values.sumOf { it.downloadedBytes } }

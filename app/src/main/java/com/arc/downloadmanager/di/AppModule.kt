@@ -22,13 +22,21 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
+    /** v1 -> v2: task archiving (new nullable archivedAt column). Data-preserving. */
+    private val MIGRATION_1_2 =
+        object : androidx.room.migration.Migration(1, 2) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE downloads ADD COLUMN archivedAt INTEGER DEFAULT NULL")
+            }
+        }
+
     @Provides
     @Singleton
     fun provideDatabase(
         @ApplicationContext context: Context,
     ): ArcDatabase =
         Room.databaseBuilder(context, ArcDatabase::class.java, "arc_downloads.db")
-            .fallbackToDestructiveMigration()
+            .addMigrations(MIGRATION_1_2)
             .build()
 
     @Provides

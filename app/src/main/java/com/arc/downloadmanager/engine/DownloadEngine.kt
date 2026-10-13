@@ -175,6 +175,102 @@ class DownloadEngine
             }
         }
 
+        /**
+         * Archives (or restores) tasks in bulk. Archiving an active task pauses it first;
+         * archived tasks never auto-resume and stay hidden from the queue until restored.
+         */
+        fun archive(
+            ids: List<String>,
+            archived: Boolean,
+        ) {
+            if (ids.isEmpty()) return
+            scope.launch {
+                if (archived) {
+                    ids.forEach { id ->
+                        val control = controls[id]
+                        if (control != null) {
+                            control.pauseRequested = true
+                            store.updateStatus(id, DownloadStatus.PAUSED)
+                        }
+                    }
+                }
+                store.setArchived(ids, if (archived) System.currentTimeMillis() else null)
+            }
+        }
+
+        /**
+         * Replaces mutable task metadata (URL and/or filename). Rejected while the task is
+         * active or completed; when the URL changes, all partial data is discarded so the
+         * next start is consistent with the new source.
+         */
+        suspend fun setTaskMeta(
+            id: String,
+            url: String,
+            filename: String,
+        ): Boolean {
+            // A winding-down coroutine may still write part files; edits are only safe once
+            // the runner has fully stopped (statuses above already imply no live control).
+            if (running.containsKey(id)) return false
+            val entity = store.getById(id) ?: return false
+            when (
+                val verdict =
+                    TaskEditPolicy.evaluate(
+                        status = entity.status,
+                        oldUrl = entity.url,
+                        newUrl = url.trim(),
+                        newFilename = filename.trim(),
+                    )
+            ) {
+                is TaskEditPolicy.Verdict.Rejected -> return false
+                is TaskEditPolicy.Verdict.Allowed -> {
+                    val newUrl = url.trim()
+                    val newFilename = FilenameDetector.sanitize(filename.trim())
+                    store.updateMeta(id, newUrl, newFilename)
+                    if (verdict.resetProgress) {
+                        storage.cleanup(id)
+                        store.deleteSegments(id)
+                        val current = store.getById(id) ?: return true
+                        store.update(
+                            current.copy(
+                                downloadedBytes = 0L,
+                                resumable = false,
+                                acceptRanges = false,
+                                eTag = null,
+                                lastModified = null,
+                                finalUrl = null,
+                                errorCode = null,
+                                errorMessage = null,
+                            ),
+                        )
+                        store.updateProgress(id, 0L, current.totalBytes)
+                    }
+                    return true
+                }
+            }
+        }
+
+        /** Bulk delete of any tasks, optionally removing their finalized files too. */
+        suspend fun deleteMany(
+            ids: List<String>,
+            deleteFiles: Boolean,
+        ) {
+            ids.forEach { id -> delete(id, deleteFiles) }
+        }
+
+        /** Removes all visible finished (COMPLETED/CANCELED) tasks; returns the removed count. */
+        suspend fun clearFinished(): Int {
+            val doomed =
+                store.getAllNow().filter {
+                    (it.status == DownloadStatus.COMPLETED || it.status == DownloadStatus.CANCELED) && it.archivedAt == null
+                }
+            doomed.forEach { entity ->
+                storage.cleanup(entity.id)
+                store.deleteSegments(entity.id)
+                store.delete(entity.id)
+            }
+            return doomed.size
+        }
+
         /** Cancels every active and pending task. */
         fun cancelAll() {
             scope.launch {
@@ -188,12 +284,15 @@ class DownloadEngine
             scope.launch {
                 store.getAllNow()
                     .filter {
-                        it.status == DownloadStatus.PAUSED ||
-                            it.status == DownloadStatus.FAILED ||
-                            it.status == DownloadStatus.AUTH_REQUIRED ||
-                            it.status == DownloadStatus.CANCELED ||
-                            it.status == DownloadStatus.WAITING_NETWORK ||
-                            it.status == DownloadStatus.WAITING_STORAGE
+                        it.archivedAt == null &&
+                            (
+                                it.status == DownloadStatus.PAUSED ||
+                                    it.status == DownloadStatus.FAILED ||
+                                    it.status == DownloadStatus.AUTH_REQUIRED ||
+                                    it.status == DownloadStatus.CANCELED ||
+                                    it.status == DownloadStatus.WAITING_NETWORK ||
+                                    it.status == DownloadStatus.WAITING_STORAGE
+                            )
                     }
                     .forEach { resume(it.id) }
             }
@@ -342,6 +441,7 @@ class DownloadEngine
         private suspend fun wakeWaitingTasks() {
             val now = System.currentTimeMillis()
             store.getAllNow().forEach { entity ->
+                if (entity.archivedAt != null) return@forEach
                 if (entity.status == DownloadStatus.WAITING_NETWORK || entity.status == DownloadStatus.WAITING_STORAGE) {
                     val notBefore = retryNotBefore[entity.id] ?: 0L
                     if (now >= notBefore) {

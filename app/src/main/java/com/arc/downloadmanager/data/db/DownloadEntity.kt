@@ -38,4 +38,6 @@ data class DownloadEntity(
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val completedAt: Long? = null,
+    /** Non-null when the task is archived (hidden from the main queue, never auto-resumed). */
+    val archivedAt: Long? = null,
 )

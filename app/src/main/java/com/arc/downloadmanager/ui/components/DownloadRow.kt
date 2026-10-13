@@ -3,8 +3,9 @@ package com.arc.downloadmanager.ui.components
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.AudioFile
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Image
@@ -25,6 +27,7 @@ import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.PauseCircle
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -96,7 +99,11 @@ fun fileIcon(category: FileCategory): ImageVector =
         else -> Icons.Filled.Description
     }
 
-/** One row in the download list: a rounded tonal card with an animated progress bar. */
+/**
+ * One row in the download list: a rounded tonal card with an animated progress bar.
+ * Supports single-selection mode (long-press to enter) and an optional archive action.
+ */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DownloadRow(
     entity: DownloadEntity,
@@ -106,6 +113,10 @@ fun DownloadRow(
     onCancel: () -> Unit,
     onRetry: () -> Unit,
     speedBps: Long = 0,
+    selected: Boolean = false,
+    inSelectionMode: Boolean = false,
+    onLongPress: () -> Unit = {},
+    onArchive: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val status = entity.status
@@ -119,14 +130,19 @@ fun DownloadRow(
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = if (compact) 3.dp else 5.dp),
         shape = RoundedCornerShape(18.dp),
-        color = if (compact) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerLow,
-        tonalElevation = if (compact) 0.dp else 1.dp,
+        color =
+            when {
+                selected -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                compact -> Color.Transparent
+                else -> MaterialTheme.colorScheme.surfaceContainerLow
+            },
+        tonalElevation = if (compact && !selected) 0.dp else 1.dp,
     ) {
         Column(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = onClick)
+                    .combinedClickable(onClick = onClick, onLongClick = onLongPress)
                     .padding(horizontal = 14.dp, vertical = if (compact) 9.dp else 12.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -138,12 +154,26 @@ fun DownloadRow(
                             .background(categoryGradient(accent)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        imageVector = fileIcon(category),
-                        contentDescription = null,
-                        tint = accent,
-                        modifier = Modifier.size(22.dp),
-                    )
+                    if (inSelectionMode) {
+                        Icon(
+                            imageVector = Icons.Filled.CheckCircle,
+                            contentDescription = null,
+                            tint =
+                                if (selected) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
+                                },
+                            modifier = Modifier.size(24.dp),
+                        )
+                    } else {
+                        Icon(
+                            imageVector = fileIcon(category),
+                            contentDescription = null,
+                            tint = accent,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
                 }
                 Column(Modifier.weight(1f)) {
                     Text(
@@ -190,6 +220,22 @@ fun DownloadRow(
                 Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     StatusPill(status)
                     Row {
+                        if (onArchive != null && !inSelectionMode) {
+                            IconButton(onClick = onArchive) {
+                                Icon(
+                                    if (entity.archivedAt == null) Icons.Filled.Archive else Icons.Filled.Unarchive,
+                                    contentDescription =
+                                        androidx.compose.ui.res.stringResource(
+                                            if (entity.archivedAt == null) {
+                                                com.arc.downloadmanager.R.string.action_archive
+                                            } else {
+                                                com.arc.downloadmanager.R.string.action_unarchive
+                                            },
+                                        ),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
                         when {
                             active || status == DownloadStatus.PAUSING ->
                                 IconButton(onClick = onPauseResume) {

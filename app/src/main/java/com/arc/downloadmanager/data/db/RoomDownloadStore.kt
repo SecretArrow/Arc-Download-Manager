@@ -17,6 +17,10 @@ class RoomDownloadStore
 
         override fun observeAll(): Flow<List<DownloadEntity>> = downloadDao.observeAll()
 
+        override fun observeVisible(): Flow<List<DownloadEntity>> = downloadDao.observeVisible()
+
+        override fun observeArchived(): Flow<List<DownloadEntity>> = downloadDao.observeArchived()
+
         override fun observeById(id: String): Flow<DownloadEntity?> = downloadDao.observeById(id)
 
         override suspend fun getById(id: String): DownloadEntity? = downloadDao.getById(id)
@@ -60,6 +64,25 @@ class RoomDownloadStore
         ) = downloadDao.updateFinalUri(id, uri)
 
         override suspend fun delete(id: String) = downloadDao.delete(id)
+
+        override suspend fun deleteMany(ids: List<String>) {
+            if (ids.isNotEmpty()) downloadDao.deleteMany(ids)
+        }
+
+        override suspend fun clearFinished(): Int = downloadDao.clearFinished()
+
+        override suspend fun setArchived(
+            ids: List<String>,
+            archivedAt: Long?,
+        ) {
+            if (ids.isNotEmpty()) downloadDao.setArchived(ids, archivedAt)
+        }
+
+        override suspend fun updateMeta(
+            id: String,
+            url: String,
+            filename: String,
+        ) = downloadDao.updateMeta(id, url, filename)
 
         override suspend fun totalDownloadedBytes(): Long = downloadDao.totalDownloadedBytes()
 

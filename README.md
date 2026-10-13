@@ -37,6 +37,9 @@ URL you type, and private-server links (FTP/FTPS/SFTP) accept credentials inline
   (plus Paused, Failed, Canceled, Waiting-for-network, Waiting-for-storage, Auth-required).
 - **Multi-segment downloads**: large files are split into up to 16 parallel byte-range connections
   and merged into one verified file. Auto mode picks the best count based on server support.
+- **Live progress everywhere**: multi-segment byte counts are aggregated into the task row on a
+  500 ms cadence, so the list, detail screen, hero card, notification and widget all update in
+  real time — live per-task speed, smoothed ETA and total throughput included.
 - **Reliable pause/resume** backed by Room — survives process death, network loss and app restarts.
 - Automatic retry with exponential backoff + jitter, `Retry-After` awareness and adaptive
   parallelism when servers rate-limit (HTTP 429/503).
@@ -78,6 +81,14 @@ URL you type, and private-server links (FTP/FTPS/SFTP) accept credentials inline
 ### Files & UI
 - Material 3 UI with dynamic color, dark/light themes, compact/detailed list modes, and an
   adaptive layout (NavigationBar on phones, NavigationRail on tablets).
+- **Full task management**: edit a task's URL and filename (validated per protocol; URL changes
+  discard partial progress safely), delete tasks with an optional "also delete the downloaded
+  file" step, and **archive** finished or paused tasks out of the queue — archived tasks never
+  auto-resume and stay out of widget stats until restored.
+- **Bulk actions**: long-press to enter selection mode, then select-all, archive/restore and
+  delete (with optional file cleanup) in one go, plus one-tap "Clear finished".
+- **Search, filters and sorting**: instant search over filenames and URLs, status filter chips
+  (All / Running / Done / Failed / Archive) with live counts, and sorting by date, name or size.
 - **True edge-to-edge**: content is inset exactly once against the Android status bar (top) and
   the gesture-navigation bar (bottom) on every screen — nothing collides with system UI, and
   input screens (browser address bar, add-download sheet) lift above the keyboard via IME insets.

@@ -2,6 +2,12 @@
 
 package com.arc.downloadmanager.ui.home
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -23,30 +29,42 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.LibraryAdd
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SelectAll
+import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -55,6 +73,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -64,6 +83,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -79,6 +99,7 @@ import com.arc.downloadmanager.ui.components.DownloadRow
 import com.arc.downloadmanager.ui.downloads.AddDownloadSheet
 import com.arc.downloadmanager.ui.theme.ArcBrandGradient
 import com.arc.downloadmanager.util.Format
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
@@ -92,7 +113,12 @@ fun HomeScreen(
     val pendingDuplicate by viewModel.pendingDuplicate.collectAsStateWithLifecycle()
     var showAdd by rememberSaveable { mutableStateOf(false) }
     var viewMode by rememberSaveable { mutableIntStateOf(1) } // 0 compact, 1 detailed
+    var showSearch by rememberSaveable { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showSortMenu by remember { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
     val clipboard = LocalClipboardManager.current
 
     Scaffold(
@@ -101,36 +127,64 @@ fun HomeScreen(
         // needed here because text input happens inside ModalBottomSheet, which handles it.
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_logo),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(26.dp),
-                        )
-                        Spacer(Modifier.width(10.dp))
-                        Text(stringResource(R.string.app_name))
-                    }
-                },
-                actions = {
-                    IconButton(onClick = viewModel::pauseAll) {
-                        Icon(Icons.Filled.Pause, contentDescription = stringResource(R.string.notif_pause_all))
-                    }
-                    IconButton(onClick = viewModel::resumeAll) {
-                        Icon(Icons.Filled.PlayArrow, contentDescription = stringResource(R.string.notif_resume_all))
-                    }
-                },
-            )
+            if (ui.inSelectionMode) {
+                SelectionTopBar(
+                    count = ui.selection.size,
+                    onClose = viewModel::clearSelection,
+                    onSelectAll = viewModel::selectAllVisible,
+                    onArchive = {
+                        if (ui.filter == HomeFilter.ARCHIVED) viewModel.restoreSelected() else viewModel.archiveSelected()
+                    },
+                    onDelete = { showDeleteDialog = true },
+                    archivedView = ui.filter == HomeFilter.ARCHIVED,
+                )
+            } else {
+                TopAppBar(
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_logo),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(26.dp),
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Text(stringResource(R.string.app_name))
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = {
+                            showSearch = !showSearch
+                            if (!showSearch) viewModel.setQuery("")
+                        }) {
+                            Icon(
+                                if (showSearch) Icons.Filled.Close else Icons.Filled.Search,
+                                contentDescription = stringResource(R.string.search_hint),
+                            )
+                        }
+                        IconButton(onClick = viewModel::pauseAll) {
+                            Icon(Icons.Filled.Pause, contentDescription = stringResource(R.string.notif_pause_all))
+                        }
+                        IconButton(onClick = viewModel::resumeAll) {
+                            Icon(Icons.Filled.PlayArrow, contentDescription = stringResource(R.string.notif_resume_all))
+                        }
+                    },
+                )
+            }
         },
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { showAdd = true },
-                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                text = { Text(stringResource(R.string.action_add_download)) },
-            )
+            AnimatedVisibility(
+                visible = !ui.inSelectionMode,
+                enter = fadeIn() + slideInVertically { it },
+                exit = fadeOut() + slideOutVertically { it },
+            ) {
+                ExtendedFloatingActionButton(
+                    onClick = { showAdd = true },
+                    icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                    text = { Text(stringResource(R.string.action_add_download)) },
+                )
+            }
         },
     ) { padding ->
         LazyColumn(
@@ -141,30 +195,66 @@ fun HomeScreen(
             contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 96.dp),
         ) {
             item {
-                HeroCard(
-                    ui = ui,
-                    storageFree = ui.storageFree,
-                    onOpenFiles = onOpenFiles,
-                )
-            }
-            item {
-                QuickActions(
-                    onAdd = { showAdd = true },
-                    onPaste = {
-                        clipboard.getText()?.toString()?.let { pasted ->
-                            if (CookieScopePolicy.isSupportedUrl(pasted.trim())) {
-                                viewModel.add(DownloadRequest(url = pasted.trim()))
-                                showAdd = false
-                            } else {
-                                showAdd = true
-                            }
+                AnimatedVisibility(visible = !ui.inSelectionMode) {
+                    Column {
+                        HeroCard(
+                            ui = ui,
+                            storageFree = ui.storageFree,
+                            onOpenFiles = onOpenFiles,
+                        )
+                        AnimatedVisibility(visible = showSearch) {
+                            SearchField(
+                                value = ui.query,
+                                onValueChange = viewModel::setQuery,
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                            )
                         }
-                    },
-                    onBatch = { showAdd = true },
-                    onBrowser = onOpenBrowser,
-                )
+                        FilterRow(
+                            ui = ui,
+                            onSelectFilter = viewModel::setFilter,
+                            onOpenSortMenu = { showSortMenu = true },
+                            sortMenuVisible = showSortMenu,
+                            onDismissSortMenu = { showSortMenu = false },
+                            onSelectSort = {
+                                viewModel.setSort(it)
+                                showSortMenu = false
+                            },
+                        )
+                    }
+                }
             }
-            if (ui.attention.isNotEmpty()) {
+            if (!ui.inSelectionMode) {
+                item {
+                    QuickActions(
+                        onAdd = { showAdd = true },
+                        onPaste = {
+                            clipboard.getText()?.toString()?.let { pasted ->
+                                if (CookieScopePolicy.isSupportedUrl(pasted.trim())) {
+                                    viewModel.add(DownloadRequest(url = pasted.trim()))
+                                    showAdd = false
+                                } else {
+                                    showAdd = true
+                                }
+                            }
+                        },
+                        onBatch = { showAdd = true },
+                        onBrowser = onOpenBrowser,
+                        onClearFinished =
+                            if (ui.completedCount > 0) {
+                                {
+                                    viewModel.clearFinished { count ->
+                                        scope.launch {
+                                            snackbar.showSnackbar(context.getString(R.string.clear_finished_done, count))
+                                        }
+                                    }
+                                }
+                            } else {
+                                null
+                            },
+                    )
+                }
+            }
+            if (ui.filter == HomeFilter.ALL && ui.attention.isNotEmpty()) {
                 item {
                     SectionHeader(stringResource(R.string.home_needs_attention), isError = true)
                 }
@@ -172,53 +262,83 @@ fun HomeScreen(
                     DownloadRow(
                         entity = entity,
                         compact = true,
-                        onClick = { onOpenDetail(entity.id) },
+                        onClick = { rowClick(viewModel, entity.id, onOpenDetail) },
                         onPauseResume = { viewModel.resume(entity.id) },
                         onCancel = { viewModel.cancel(entity.id) },
                         onRetry = { viewModel.retry(entity.id) },
+                        speedBps = ui.speeds[entity.id] ?: 0L,
+                        selected = entity.id in ui.selection,
+                        inSelectionMode = ui.inSelectionMode,
+                        onLongPress = { viewModel.toggleSelected(entity.id) },
                         modifier = Modifier.animateItem(),
                     )
                 }
             }
-            item {
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = stringResource(R.string.home_active_downloads),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.weight(1f),
-                    )
-                    ViewModeSwitch(viewMode) { viewMode = it }
-                }
-            }
-            if (ui.downloads.isEmpty()) {
+            if (ui.visibleDownloads.isEmpty()) {
                 item {
-                    EmptyDownloads(
-                        onAdd = { showAdd = true },
-                        onBrowser = onOpenBrowser,
-                    )
+                    if (ui.filter == HomeFilter.ARCHIVED) {
+                        EmptyState(
+                            icon = Icons.Filled.Archive,
+                            title = stringResource(R.string.archived_empty_title),
+                            subtitle = stringResource(R.string.archived_empty_subtitle),
+                        )
+                    } else if (ui.downloads.isEmpty()) {
+                        EmptyDownloads(
+                            onAdd = { showAdd = true },
+                            onBrowser = onOpenBrowser,
+                        )
+                    } else {
+                        EmptyState(
+                            icon = Icons.Filled.Search,
+                            title = stringResource(R.string.no_results_title),
+                            subtitle = stringResource(R.string.no_results_subtitle),
+                        )
+                    }
                 }
             } else {
-                items(ui.downloads, key = { it.id }) { entity ->
+                item {
+                    Row(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text =
+                                stringResource(
+                                    if (ui.filter == HomeFilter.ARCHIVED) R.string.home_archived_downloads else R.string.home_active_downloads,
+                                ),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (!ui.inSelectionMode) {
+                            ViewModeSwitch(viewMode) { viewMode = it }
+                        }
+                    }
+                }
+                items(ui.visibleDownloads, key = { it.id }) { entity ->
                     DownloadRow(
                         entity = entity,
                         compact = viewMode == 0,
-                        onClick = { onOpenDetail(entity.id) },
+                        onClick = { rowClick(viewModel, entity.id, onOpenDetail) },
                         onPauseResume = {
                             if (entity.status.isActive) viewModel.pause(entity.id) else viewModel.resume(entity.id)
                         },
                         onCancel = { viewModel.cancel(entity.id) },
                         onRetry = { viewModel.retry(entity.id) },
+                        speedBps = ui.speeds[entity.id] ?: 0L,
+                        selected = entity.id in ui.selection,
+                        inSelectionMode = ui.inSelectionMode,
+                        onLongPress = { viewModel.toggleSelected(entity.id) },
+                        onArchive = {
+                            if (ui.filter == HomeFilter.ARCHIVED) viewModel.restore(entity.id) else viewModel.archive(entity.id)
+                        },
                         modifier = Modifier.animateItem(),
                     )
                 }
             }
-            if (ui.recentCompleted.isNotEmpty()) {
+            if (!ui.inSelectionMode && ui.filter == HomeFilter.ALL && ui.recentCompleted.isNotEmpty()) {
                 item { SectionHeader(stringResource(R.string.home_recent_files)) }
                 items(ui.recentCompleted, key = { "recent-${it.id}" }) { entity ->
                     DownloadRow(
@@ -228,6 +348,8 @@ fun HomeScreen(
                         onPauseResume = {},
                         onCancel = {},
                         onRetry = {},
+                        selected = false,
+                        inSelectionMode = false,
                         modifier = Modifier.animateItem(),
                     )
                 }
@@ -243,6 +365,16 @@ fun HomeScreen(
                 viewModel.addBatch(requests) { result ->
                     callback(result.started, result.invalid)
                 }
+            },
+        )
+    }
+
+    if (showDeleteDialog) {
+        DeleteSelectionDialog(
+            onDismiss = { showDeleteDialog = false },
+            onConfirm = { deleteFiles ->
+                viewModel.deleteSelected(deleteFiles)
+                showDeleteDialog = false
             },
         )
     }
@@ -271,6 +403,260 @@ fun HomeScreen(
     }
 }
 
+/** Click handler shared by rows: toggle selection in selection mode, open detail otherwise. */
+private fun rowClick(
+    viewModel: HomeViewModel,
+    id: String,
+    onOpenDetail: (String) -> Unit,
+) {
+    if (viewModel.selection.value.isNotEmpty()) {
+        viewModel.toggleSelected(id)
+    } else {
+        onOpenDetail(id)
+    }
+}
+
+@Composable
+private fun SelectionTopBar(
+    count: Int,
+    onClose: () -> Unit,
+    onSelectAll: () -> Unit,
+    onArchive: () -> Unit,
+    onDelete: () -> Unit,
+    archivedView: Boolean,
+) {
+    Surface(color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onClose) {
+                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.action_clear_selection))
+            }
+            Text(
+                text = stringResource(R.string.selection_count, count),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.weight(1f),
+            )
+            IconButton(onClick = onSelectAll) {
+                Icon(Icons.Filled.SelectAll, contentDescription = stringResource(R.string.action_select_all))
+            }
+            IconButton(onClick = onArchive) {
+                Icon(
+                    if (archivedView) Icons.Filled.Unarchive else Icons.Filled.Archive,
+                    contentDescription =
+                        stringResource(if (archivedView) R.string.action_unarchive else R.string.action_archive),
+                )
+            }
+            IconButton(onClick = onDelete) {
+                Icon(
+                    Icons.Filled.Delete,
+                    contentDescription = stringResource(R.string.action_delete),
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SearchField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val keyboard = LocalSoftwareKeyboardController.current
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(stringResource(R.string.search_hint)) },
+        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+        trailingIcon = {
+            if (value.isNotEmpty()) {
+                IconButton(onClick = { onValueChange("") }) {
+                    Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.action_clear))
+                }
+            }
+        },
+        singleLine = true,
+        shape = RoundedCornerShape(16.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+    )
+}
+
+@Composable
+private fun FilterRow(
+    ui: HomeUiState,
+    onSelectFilter: (HomeFilter) -> Unit,
+    onOpenSortMenu: () -> Unit,
+    sortMenuVisible: Boolean,
+    onDismissSortMenu: () -> Unit,
+    onSelectSort: (HomeSort) -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        FilterChip(
+            selected = ui.filter == HomeFilter.ALL,
+            onClick = { onSelectFilter(HomeFilter.ALL) },
+            label = { Text(stringResource(R.string.filter_all)) },
+        )
+        FilterChip(
+            selected = ui.filter == HomeFilter.RUNNING,
+            onClick = { onSelectFilter(HomeFilter.RUNNING) },
+            label = { Text(stringResource(R.string.filter_running, ui.runningCount)) },
+        )
+        FilterChip(
+            selected = ui.filter == HomeFilter.COMPLETED,
+            onClick = { onSelectFilter(HomeFilter.COMPLETED) },
+            label = { Text(stringResource(R.string.filter_completed, ui.completedCount)) },
+        )
+        FilterChip(
+            selected = ui.filter == HomeFilter.FAILED,
+            onClick = { onSelectFilter(HomeFilter.FAILED) },
+            label = { Text(stringResource(R.string.filter_failed, ui.failedCount)) },
+        )
+        FilterChip(
+            selected = ui.filter == HomeFilter.ARCHIVED,
+            onClick = { onSelectFilter(HomeFilter.ARCHIVED) },
+            label = { Text(stringResource(R.string.filter_archived, ui.archivedCount)) },
+        )
+        Box {
+            IconButton(onClick = onOpenSortMenu, modifier = Modifier.size(36.dp)) {
+                Icon(
+                    Icons.Filled.Sort,
+                    contentDescription = stringResource(R.string.sort_by),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            DropdownMenu(expanded = sortMenuVisible, onDismissRequest = onDismissSortMenu) {
+                SortMenuItem(HomeSort.DATE_NEWEST, ui.sort, onSelectSort)
+                SortMenuItem(HomeSort.DATE_OLDEST, ui.sort, onSelectSort)
+                SortMenuItem(HomeSort.NAME, ui.sort, onSelectSort)
+                SortMenuItem(HomeSort.SIZE, ui.sort, onSelectSort)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SortMenuItem(
+    sort: HomeSort,
+    current: HomeSort,
+    onSelect: (HomeSort) -> Unit,
+) {
+    DropdownMenuItem(
+        text = {
+            Text(
+                text = stringResource(sortLabelRes(sort)),
+                fontWeight = if (sort == current) FontWeight.Bold else FontWeight.Normal,
+            )
+        },
+        onClick = { onSelect(sort) },
+    )
+}
+
+private fun sortLabelRes(sort: HomeSort): Int =
+    when (sort) {
+        HomeSort.DATE_NEWEST -> R.string.sort_date_newest
+        HomeSort.DATE_OLDEST -> R.string.sort_date_oldest
+        HomeSort.NAME -> R.string.sort_name
+        HomeSort.SIZE -> R.string.sort_size
+    }
+
+@Composable
+private fun EmptyState(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+) {
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp, vertical = 28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(30.dp),
+            )
+        }
+        Spacer(Modifier.height(14.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun DeleteSelectionDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (Boolean) -> Unit,
+) {
+    var alsoDeleteFile by rememberSaveable { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.delete_selection_title)) },
+        text = {
+            Column {
+                Text(stringResource(R.string.delete_selection_message))
+                Spacer(Modifier.height(8.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    androidx.compose.material3.Checkbox(
+                        checked = alsoDeleteFile,
+                        onCheckedChange = { alsoDeleteFile = it },
+                    )
+                    Text(stringResource(R.string.delete_also_file))
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(alsoDeleteFile) }) {
+                Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) }
+        },
+    )
+}
+
 /** Brand-gradient hero: live queue summary, aggregate progress ring and storage. */
 @Composable
 private fun HeroCard(
@@ -280,7 +666,7 @@ private fun HeroCard(
 ) {
     val activeBytes = ui.activeBytes.toFloat()
     val progressTarget = if (ui.activeTotalBytes > 0) (activeBytes / ui.activeTotalBytes).coerceIn(0f, 1f) else 0f
-    val animatedProgress by androidx.compose.animation.core.animateFloatAsState(
+    val animatedProgress by animateFloatAsState(
         targetValue = progressTarget,
         animationSpec =
             androidx.compose.animation.core.SpringSpec(
@@ -288,7 +674,6 @@ private fun HeroCard(
             ),
         label = "heroProgress",
     )
-    val ctx = androidx.compose.ui.platform.LocalContext.current
     Box(
         modifier =
             Modifier
@@ -311,7 +696,7 @@ private fun HeroCard(
                         text =
                             listOfNotNull(
                                 stringResource(R.string.hero_active_count, ui.activeCount),
-                                stringResource(R.string.hero_queued_count, ui.queuedCount),
+                                stringResource(R.string.hero_queued_count, ui.runningCount),
                                 stringResource(R.string.hero_failed_count, ui.failedCount).takeIf { ui.failedCount > 0 },
                             ).joinToString("  \u00B7  "),
                         style = MaterialTheme.typography.bodySmall,
@@ -338,7 +723,7 @@ private fun HeroCard(
             Spacer(Modifier.height(14.dp))
             if (ui.activeCount > 0) {
                 Text(
-                    text = Format.speed(ctx, ui.totalSpeed),
+                    text = Format.speed(androidx.compose.ui.platform.LocalContext.current, ui.totalSpeed),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
@@ -405,6 +790,7 @@ private fun QuickActions(
     onPaste: () -> Unit,
     onBatch: () -> Unit,
     onBrowser: () -> Unit,
+    onClearFinished: (() -> Unit)?,
 ) {
     Row(
         modifier =
@@ -429,6 +815,13 @@ private fun QuickActions(
             label = { Text(stringResource(R.string.action_open_browser)) },
             leadingIcon = { Icon(Icons.Filled.Public, contentDescription = null, modifier = Modifier.size(17.dp)) },
         )
+        if (onClearFinished != null) {
+            AssistChip(
+                onClick = onClearFinished,
+                label = { Text(stringResource(R.string.action_clear_finished)) },
+                leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(17.dp)) },
+            )
+        }
     }
 }
 

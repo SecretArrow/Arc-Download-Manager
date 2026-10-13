@@ -48,6 +48,9 @@ class SpeedTracker(
         histories.remove(id)
     }
 
+    /** IDs currently tracked (used to drop history for finished/removed tasks). */
+    fun ids(): Set<String> = histories.keys.toSet()
+
     fun reset() {
         histories.clear()
     }

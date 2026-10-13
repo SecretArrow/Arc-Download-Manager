@@ -227,4 +227,46 @@
     <string name="tile_label">Arc Downloads</string>
     <string name="tile_pause_all">Tap to pause all</string>
     <string name="tile_resume_all">Tap to resume all</string>
+
+    <!-- Task management: edit / delete / archive / selection -->
+    <string name="action_edit">Edit</string>
+    <string name="action_archive">Archive</string>
+    <string name="action_unarchive">Unarchive</string>
+    <string name="action_select_all">Select all</string>
+    <string name="action_clear_selection">Clear selection</string>
+    <string name="action_clear_finished">Clear finished</string>
+    <string name="edit_task_title">Edit task</string>
+    <string name="edit_url_label">Download URL</string>
+    <string name="edit_filename_label">File name</string>
+    <string name="edit_invalid_url">Enter a supported download link (http, https, ftp, ftps, sftp)</string>
+    <string name="edit_invalid_filename">File name cannot be empty</string>
+    <string name="edit_hint">Changing the URL discards partial progress for this task.</string>
+    <string name="edit_rejected">This task can\u2019t be edited right now. Pause it first (completed tasks can\u2019t be edited).</string>
+    <string name="delete_task_title">Delete task</string>
+    <string name="delete_task_message">Remove \u201C%s\u201D from the list?</string>
+    <string name="delete_selection_title">Delete selected tasks</string>
+    <string name="delete_selection_message">Remove the selected tasks from the list?</string>
+    <string name="delete_also_file">Also delete the downloaded file</string>
+    <string name="selection_count">%1$d selected</string>
+    <string name="clear_finished_done">%1$d finished tasks cleared</string>
+
+    <!-- Search / filter / sort -->
+    <string name="search_hint">Search tasks and links</string>
+    <string name="filter_all">All</string>
+    <string name="filter_running">Running (%1$d)</string>
+    <string name="filter_completed">Done (%1$d)</string>
+    <string name="filter_failed">Failed (%1$d)</string>
+    <string name="filter_archived">Archive (%1$d)</string>
+    <string name="sort_by">Sort</string>
+    <string name="sort_date_newest">Newest first</string>
+    <string name="sort_date_oldest">Oldest first</string>
+    <string name="sort_name">Name (A\u2013Z)</string>
+    <string name="sort_size">Largest first</string>
+
+    <!-- Empty states -->
+    <string name="home_archived_downloads">Archived</string>
+    <string name="archived_empty_title">Nothing archived</string>
+    <string name="archived_empty_subtitle">Archive finished tasks to keep your queue tidy \u2014 they never auto-resume.</string>
+    <string name="no_results_title">No matching tasks</string>
+    <string name="no_results_subtitle">Try a different search or filter.</string>
 </resources>

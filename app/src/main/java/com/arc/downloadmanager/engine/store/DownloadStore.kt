@@ -12,6 +12,12 @@ import kotlinx.coroutines.flow.Flow
 interface DownloadStore {
     fun observeAll(): Flow<List<DownloadEntity>>
 
+    /** Non-archived tasks, newest first — the main UI list. */
+    fun observeVisible(): Flow<List<DownloadEntity>>
+
+    /** Archived tasks, most recently archived first. */
+    fun observeArchived(): Flow<List<DownloadEntity>>
+
     fun observeById(id: String): Flow<DownloadEntity?>
 
     suspend fun getById(id: String): DownloadEntity?
@@ -55,6 +61,25 @@ interface DownloadStore {
     )
 
     suspend fun delete(id: String)
+
+    /** Bulk delete regardless of status. */
+    suspend fun deleteMany(ids: List<String>)
+
+    /** Deletes visible COMPLETED and CANCELED tasks; returns how many rows were removed. */
+    suspend fun clearFinished(): Int
+
+    /** Archives (archivedAt = timestamp) or restores (archivedAt = null) tasks in bulk. */
+    suspend fun setArchived(
+        ids: List<String>,
+        archivedAt: Long?,
+    )
+
+    /** Replaces the mutable task metadata (URL + display filename). */
+    suspend fun updateMeta(
+        id: String,
+        url: String,
+        filename: String,
+    )
 
     suspend fun totalDownloadedBytes(): Long
 

@@ -7,6 +7,7 @@ import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.data.db.SegmentEntity
 import com.arc.downloadmanager.data.repository.DownloadRepository
 import com.arc.downloadmanager.engine.store.DownloadStore
+import com.arc.downloadmanager.util.SpeedTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
@@ -26,6 +27,7 @@ class DownloadDetailViewModel
         store: DownloadStore,
     ) : ViewModel() {
         private val id: String = savedStateHandle.get<String>("id") ?: ""
+        private val speedTracker = SpeedTracker()
 
         val detail: StateFlow<DetailUiState> =
             combine(
@@ -38,9 +40,18 @@ class DownloadDetailViewModel
                     }
                 },
             ) { entity, segments, _ ->
+                // Live smoothed speed while the task moves; drops history when terminal.
+                val speed =
+                    if (entity != null && entity.status.isActive) {
+                        speedTracker.record(entity.id, entity.downloadedBytes)
+                    } else {
+                        speedTracker.forget(entity?.id ?: "")
+                        0L
+                    }
                 DetailUiState(
                     entity = entity,
                     segments = segments,
+                    speedBps = speed,
                 )
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DetailUiState())
 
@@ -54,10 +65,27 @@ class DownloadDetailViewModel
 
         fun restart() = repository.restart(id)
 
-        fun delete(onDone: () -> Unit) {
+        fun archive() = repository.archive(listOf(id), archived = true)
+
+        fun restore() = repository.archive(listOf(id), archived = false)
+
+        fun delete(
+            deleteFile: Boolean,
+            onDone: () -> Unit,
+        ) {
             viewModelScope.launch {
-                repository.delete(id, deleteFile = false)
+                repository.delete(id, deleteFile = deleteFile)
                 onDone()
+            }
+        }
+
+        fun saveEdit(
+            url: String,
+            filename: String,
+            onResult: (Boolean) -> Unit,
+        ) {
+            viewModelScope.launch {
+                onResult(repository.setTaskMeta(id, url, filename))
             }
         }
     }
@@ -65,4 +93,6 @@ class DownloadDetailViewModel
 data class DetailUiState(
     val entity: DownloadEntity? = null,
     val segments: List<SegmentEntity> = emptyList(),
+    /** Live smoothed speed in bytes/sec (0 when not downloading). */
+    val speedBps: Long = 0L,
 )

@@ -108,6 +108,10 @@ class DownloadRepository
 
         fun observeAll() = store.observeAll()
 
+        fun observeVisible() = store.observeVisible()
+
+        fun observeArchived() = store.observeArchived()
+
         fun observeById(id: String) = store.observeById(id)
 
         fun observeSegments(id: String) = store.observeSegments(id)
@@ -158,6 +162,24 @@ class DownloadRepository
             id: String,
             deleteFile: Boolean,
         ) = engine.delete(id, deleteFile)
+
+        suspend fun deleteMany(
+            ids: List<String>,
+            deleteFiles: Boolean,
+        ) = engine.deleteMany(ids, deleteFiles)
+
+        suspend fun clearFinished(): Int = engine.clearFinished()
+
+        fun archive(
+            ids: List<String>,
+            archived: Boolean,
+        ) = engine.archive(ids, archived)
+
+        suspend fun setTaskMeta(
+            id: String,
+            url: String,
+            filename: String,
+        ): Boolean = engine.setTaskMeta(id, url, filename)
 
         suspend fun defaultSettings(): EngineSettings = settingsRepository.snapshot()
     }

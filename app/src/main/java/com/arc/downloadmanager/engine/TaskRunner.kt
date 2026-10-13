@@ -14,6 +14,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import java.io.File
@@ -540,11 +542,25 @@ class TaskRunner
             val limiter = BandwidthLimiter(connectedLimit(settings))
             val results =
                 coroutineScope {
-                    segments.map { seg ->
-                        async(Dispatchers.IO) {
-                            downloadSegment(entity, seg, settings, control, limiter)
+                    // Live aggregate progress: each segment only updates its own row, so the
+                    // downloads-table aggregate would otherwise stay frozen until every segment
+                    // finished. Publish the segment-bytes sum on a fixed cadence so the UI,
+                    // notifications and speed estimates update in real time.
+                    val aggregator =
+                        launch {
+                            while (true) {
+                                delay(AGGREGATE_PROGRESS_INTERVAL_MS)
+                                store.updateProgress(entity.id, store.totalSegmentBytes(entity.id), totalBytes)
+                            }
                         }
-                    }.awaitAll()
+                    val results =
+                        segments.map { seg ->
+                            async(Dispatchers.IO) {
+                                downloadSegment(entity, seg, settings, control, limiter)
+                            }
+                        }.awaitAll()
+                    aggregator.cancel()
+                    results
                 }
 
             // Aggregate progress one last time.
@@ -1169,6 +1185,7 @@ class TaskRunner
         companion object {
             private const val BUFFER_SIZE = 128 * 1024
             private const val FLUSH_INTERVAL_MS = 500L
+            private const val AGGREGATE_PROGRESS_INTERVAL_MS = 500L
             private const val SPACE_CHECK_INTERVAL_MS = 2_000L
             private const val MAX_REDIRECTS = 10
             const val DEFAULT_USER_AGENT: String =

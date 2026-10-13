@@ -17,15 +17,20 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Unarchive
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,9 +39,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -59,6 +70,9 @@ fun DownloadDetailScreen(
     val state by viewModel.detail.collectAsStateWithLifecycle()
     val entity = state.entity
     val context = LocalContext.current
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var editSavedToast by remember { mutableStateOf(false) }
 
     Scaffold(
         // WindowInsets(0): status bar inset is applied by the TopAppBar; the navigation-bar
@@ -73,7 +87,7 @@ fun DownloadDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.delete(onDone = onBack) }) {
+                    IconButton(onClick = { showDeleteDialog = true }) {
                         Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.action_delete))
                     }
                 },
@@ -98,10 +112,71 @@ fun DownloadDetailScreen(
                     .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            ProgressCard(entity, state.segments)
-            ActionRow(entity, viewModel, context)
+            ProgressCard(entity, state.segments, state.speedBps)
+            ActionRow(entity, viewModel, context, onEdit = { showEditDialog = true })
             InfoSection(entity)
         }
+    }
+
+    if (showDeleteDialog && entity != null) {
+        var alsoDeleteFile by rememberSaveable { mutableStateOf(false) }
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text(stringResource(R.string.delete_task_title)) },
+            text = {
+                Column {
+                    Text(stringResource(R.string.delete_task_message, entity.filename))
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Checkbox(
+                            checked = alsoDeleteFile,
+                            onCheckedChange = { alsoDeleteFile = it },
+                        )
+                        Text(stringResource(R.string.delete_also_file))
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    viewModel.delete(deleteFile = alsoDeleteFile, onDone = onBack)
+                }) {
+                    Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            },
+        )
+    }
+
+    if (showEditDialog && entity != null) {
+        EditDownloadSheet(
+            entity = entity,
+            onDismiss = { showEditDialog = false },
+            onSave = { url, filename ->
+                showEditDialog = false
+                viewModel.saveEdit(url, filename) { saved -> editSavedToast = !saved }
+            },
+        )
+    }
+
+    if (editSavedToast) {
+        AlertDialog(
+            onDismissRequest = { editSavedToast = false },
+            title = { Text(stringResource(R.string.edit_task_title)) },
+            text = { Text(stringResource(R.string.edit_rejected)) },
+            confirmButton = {
+                TextButton(onClick = { editSavedToast = false }) {
+                    Text(stringResource(android.R.string.ok))
+                }
+            },
+        )
     }
 }
 
@@ -109,7 +184,9 @@ fun DownloadDetailScreen(
 private fun ProgressCard(
     entity: DownloadEntity,
     segments: List<com.arc.downloadmanager.data.db.SegmentEntity>,
+    speedBps: Long,
 ) {
+    val ctx = LocalContext.current
     val percent = Format.percent(entity.downloadedBytes, entity.totalBytes)
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -130,6 +207,15 @@ private fun ProgressCard(
                     statusColor(entity.status).takeIf { it != androidx.compose.ui.graphics.Color.Unspecified }
                         ?: MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (entity.status.isActive && speedBps > 0) {
+                val eta = Format.eta(ctx, (entity.totalBytes - entity.downloadedBytes).coerceAtLeast(0), speedBps)
+                Text(
+                    text = listOfNotNull(Format.speed(ctx, speedBps), eta).joinToString("  •  "),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                )
+            }
             if (segments.isNotEmpty()) {
                 Text(
                     text =
@@ -169,6 +255,7 @@ private fun ActionRow(
     entity: DownloadEntity,
     viewModel: DownloadDetailViewModel,
     context: android.content.Context,
+    onEdit: () -> Unit,
 ) {
     val active = entity.status.isActive
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -189,6 +276,26 @@ private fun ActionRow(
         }
         OutlinedButton(onClick = viewModel::restart) {
             Icon(Icons.Filled.RestartAlt, contentDescription = null)
+        }
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (entity.status != com.arc.downloadmanager.domain.model.DownloadStatus.COMPLETED) {
+            OutlinedButton(onClick = onEdit) {
+                Icon(Icons.Filled.Edit, contentDescription = null)
+                Text(stringResource(R.string.action_edit), Modifier.padding(start = 4.dp))
+            }
+        }
+        OutlinedButton(
+            onClick = { if (entity.archivedAt == null) viewModel.archive() else viewModel.restore() },
+        ) {
+            Icon(
+                if (entity.archivedAt == null) Icons.Filled.Archive else Icons.Filled.Unarchive,
+                contentDescription = null,
+            )
+            Text(
+                stringResource(if (entity.archivedAt == null) R.string.action_archive else R.string.action_unarchive),
+                Modifier.padding(start = 4.dp),
+            )
         }
     }
     if (entity.status == DownloadStatus.COMPLETED) {

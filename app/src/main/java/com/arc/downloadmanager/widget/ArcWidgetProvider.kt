@@ -38,7 +38,7 @@ class ArcWidgetProvider : AppWidgetProvider() {
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                push(context, store.observeAll().first())
+                push(context, store.observeAll().first().filter { it.archivedAt == null })
             } catch (_: Exception) {
                 // Widget refresh is best-effort; never crash the host process.
             } finally {

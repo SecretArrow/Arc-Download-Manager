@@ -10,6 +10,12 @@ interface DownloadDao {
     @Query("SELECT * FROM downloads ORDER BY createdAt DESC")
     fun observeAll(): Flow<List<DownloadEntity>>
 
+    @Query("SELECT * FROM downloads WHERE archivedAt IS NULL ORDER BY createdAt DESC")
+    fun observeVisible(): Flow<List<DownloadEntity>>
+
+    @Query("SELECT * FROM downloads WHERE archivedAt IS NOT NULL ORDER BY archivedAt DESC")
+    fun observeArchived(): Flow<List<DownloadEntity>>
+
     @Query("SELECT * FROM downloads WHERE id = :id")
     fun observeById(id: String): Flow<DownloadEntity?>
 
@@ -22,16 +28,16 @@ interface DownloadDao {
     @Query("SELECT * FROM downloads WHERE url = :url AND status != 'CANCELED' ORDER BY createdAt DESC")
     suspend fun getByUrl(url: String): List<DownloadEntity>
 
-    @Query("SELECT * FROM downloads WHERE status IN ('QUEUED','WAITING_NETWORK','WAITING_STORAGE') ORDER BY priority DESC, createdAt ASC")
+    @Query("SELECT * FROM downloads WHERE status IN ('QUEUED','WAITING_NETWORK','WAITING_STORAGE') AND archivedAt IS NULL ORDER BY priority DESC, createdAt ASC")
     suspend fun pending(): List<DownloadEntity>
 
-    @Query("SELECT * FROM downloads WHERE status IN ('CONNECTING','DOWNLOADING','PAUSING','MERGING','VERIFYING')")
+    @Query("SELECT * FROM downloads WHERE status IN ('CONNECTING','DOWNLOADING','PAUSING','MERGING','VERIFYING') AND archivedAt IS NULL")
     suspend fun interrupted(): List<DownloadEntity>
 
-    @Query("SELECT * FROM downloads WHERE status IN ('CONNECTING','DOWNLOADING','PAUSING','MERGING','VERIFYING')")
+    @Query("SELECT * FROM downloads WHERE status IN ('CONNECTING','DOWNLOADING','PAUSING','MERGING','VERIFYING') AND archivedAt IS NULL")
     fun observeInterrupted(): Flow<List<DownloadEntity>>
 
-    @Query("SELECT * FROM downloads WHERE status IN ('CONNECTING','DOWNLOADING','MERGING','VERIFYING')")
+    @Query("SELECT * FROM downloads WHERE status IN ('CONNECTING','DOWNLOADING','MERGING','VERIFYING') AND archivedAt IS NULL")
     suspend fun running(): List<DownloadEntity>
 
     @Query("SELECT COUNT(*) FROM downloads WHERE status IN ('CONNECTING','DOWNLOADING','PAUSING','MERGING','VERIFYING')")
@@ -83,8 +89,26 @@ interface DownloadDao {
     @Query("DELETE FROM downloads WHERE id = :id")
     suspend fun delete(id: String)
 
-    @Query("DELETE FROM downloads WHERE status IN ('CANCELED','FAILED') AND id IN (:ids)")
-    suspend fun deleteByIds(ids: List<String>)
+    @Query("DELETE FROM downloads WHERE id IN (:ids)")
+    suspend fun deleteMany(ids: List<String>)
+
+    @Query("DELETE FROM downloads WHERE status IN ('COMPLETED','CANCELED') AND archivedAt IS NULL")
+    suspend fun clearFinished(): Int
+
+    @Query("UPDATE downloads SET archivedAt = :archivedAt, updatedAt = :now WHERE id IN (:ids)")
+    suspend fun setArchived(
+        ids: List<String>,
+        archivedAt: Long?,
+        now: Long = System.currentTimeMillis(),
+    )
+
+    @Query("UPDATE downloads SET url = :url, filename = :filename, updatedAt = :now WHERE id = :id")
+    suspend fun updateMeta(
+        id: String,
+        url: String,
+        filename: String,
+        now: Long = System.currentTimeMillis(),
+    )
 
     @Query("SELECT COALESCE(SUM(downloadedBytes),0) FROM downloads")
     suspend fun totalDownloadedBytes(): Long
