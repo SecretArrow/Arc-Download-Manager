@@ -1,6 +1,7 @@
 package com.arc.downloadmanager.engine
 
 import android.net.Uri
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import java.net.URI
 
 /**
@@ -52,6 +53,10 @@ object CookieScopePolicy {
 
     /** True when the string looks like a downloadable URL (http/https only). */
     fun isSupportedUrl(url: String): Boolean {
+        // OkHttp's HttpUrl is deliberately lenient (spaces, unicode, missing encoding) which
+        // java.net.URI is not; pasted links frequently contain stray characters.
+        val okHttpScheme = url.trim().toHttpUrlOrNull()?.scheme?.lowercase()
+        if (okHttpScheme != null) return okHttpScheme == "http" || okHttpScheme == "https"
         val scheme = runCatching { URI(url.trim()).scheme?.lowercase() }.getOrNull() ?: return false
         return scheme == "http" || scheme == "https"
     }

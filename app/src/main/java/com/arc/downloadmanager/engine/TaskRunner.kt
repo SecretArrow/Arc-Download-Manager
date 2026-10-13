@@ -355,6 +355,8 @@ class TaskRunner
         ): SegmentResult {
             var downloaded = segment.downloadedBytes
             var attempt = 0
+            var refreshedUrl = false
+            var current = entity
             val maxAttempts = (settings.retryAttempts + 1).coerceAtLeast(1)
             while (attempt < maxAttempts) {
                 if (control.cancelRequested) return SegmentResult.Canceled
@@ -371,7 +373,7 @@ class TaskRunner
                 val ifRange = if (downloaded > 0) entity.eTag else null
                 val response =
                     try {
-                        executeRequest(entity, start, segment.endByte, ifRange, settings)
+                        executeRequest(current, start, segment.endByte, ifRange, settings)
                     } catch (e: java.io.IOException) {
                         attempt++
                         if (attempt >= maxAttempts) return SegmentResult.Failed(DownloadError.IO_ERROR, e.message)
@@ -385,7 +387,7 @@ class TaskRunner
                             if (range == null || range.first != start) {
                                 return SegmentResult.Failed(DownloadError.SEGMENT_MISMATCH, "Server returned unexpected range")
                             }
-                            val written = writeSegmentBody(entity, segment, resp, downloaded, control, limiter)
+                            val written = writeSegmentBody(current, segment, resp, downloaded, control, limiter)
                             return when {
                                 written == WriteResult.Canceled -> SegmentResult.Canceled
                                 written == WriteResult.Paused -> SegmentResult.Paused(PauseReason.USER)
@@ -407,14 +409,31 @@ class TaskRunner
                                 SegmentResult.Failed(DownloadError.RANGE_NOT_SUPPORTED, "Server ignored range request")
                             }
                         }
-                        resp.code == 401 || resp.code == 403 -> SegmentResult.AuthRequired
+                        // 401/403/404/410 on a signed CDN URL (GitHub release assets are signed
+                        // and expire) usually means the URL went stale, not that auth is needed.
+                        // Re-resolve the ORIGINAL url (fresh redirect chain) once and retry.
+                        resp.code == 401 || resp.code == 403 || resp.code == 404 || resp.code == 410 -> {
+                            if (!refreshedUrl) {
+                                refreshedUrl = true
+                                val fresh = refreshFinalUrl(entity, settings)
+                                if (fresh != null && fresh != (entity.finalUrl ?: entity.url)) {
+                                    current = entity.copy(finalUrl = fresh)
+                                    store.update(store.getById(entity.id)?.copy(finalUrl = fresh) ?: current)
+                                    return@use // retry loop with the freshly signed URL
+                                }
+                            }
+                            return if (resp.code == 401 || resp.code == 403) {
+                                SegmentResult.AuthRequired
+                            } else {
+                                SegmentResult.Failed(DownloadError.EXPIRED_LINK, "HTTP ${resp.code}")
+                            }
+                        }
                         resp.code == 429 || resp.code == 503 ->
                             SegmentResult.Failed(
                                 DownloadError.RATE_LIMITED,
                                 "HTTP ${resp.code}",
                                 resp.header("Retry-After")?.toLongOrNull(),
                             )
-                        resp.code == 404 || resp.code == 410 -> SegmentResult.Failed(DownloadError.EXPIRED_LINK, "HTTP ${resp.code}")
                         resp.code == 416 -> SegmentResult.Failed(DownloadError.SEGMENT_MISMATCH, "HTTP 416 invalid range")
                         resp.code in 500..599 -> SegmentResult.Failed(DownloadError.SERVER_ERROR, "HTTP ${resp.code}")
                         else -> SegmentResult.Failed(DownloadError.SERVER_ERROR, "HTTP ${resp.code}")
@@ -424,6 +443,43 @@ class TaskRunner
                 if (attempt < maxAttempts) kotlinx.coroutines.delay(backoff.delayFor(attempt))
             }
             return SegmentResult.Failed(DownloadError.SERVER_ERROR, "Exhausted retries for segment ${segment.index}")
+        }
+
+        /**
+         * Re-follows the redirect chain from the original URL without keeping the body, yielding
+         * a freshly signed final URL (used when a CDN-signed link such as GitHub release assets
+         * expires mid-download). Returns null when the chain cannot be resolved.
+         */
+        private suspend fun refreshFinalUrl(
+            entity: DownloadEntity,
+            settings: EngineSettings,
+        ): String? {
+            var url = entity.url
+            var hops = 0
+            while (hops < MAX_REDIRECTS) {
+                val request = buildRequest(entity, url, 0, -1, null)
+                val response =
+                    try {
+                        httpClientFor(entity, settings).newCall(request).execute()
+                    } catch (_: java.io.IOException) {
+                        return null
+                    }
+                when {
+                    response.code in 300..399 -> {
+                        val location = response.header("Location")
+                        response.close()
+                        val next = location?.let { resolveRedirect(url, it) } ?: return null
+                        if (!CookieScopePolicy.isSupportedUrl(next)) return null
+                        url = next
+                        hops++
+                    }
+                    else -> {
+                        response.close()
+                        return url
+                    }
+                }
+            }
+            return null
         }
 
         private sealed interface WriteResult {
@@ -573,6 +629,18 @@ class TaskRunner
                         )
                     }
                     response.code == 200 -> {
+                        val contentType = response.header("Content-Type")
+                        val disposition = FilenameDetector.fromDisposition(response.header("Content-Disposition"))
+                        // Fail fast when the URL points at a web page instead of a file (e.g. a
+                        // GitHub release PAGE link): text/html body, no attachment name and no
+                        // file-like extension. Saving it would produce a useless junk file.
+                        if (contentType?.substringBefore(';')?.trim()?.equals("text/html", ignoreCase = true) == true &&
+                            disposition == null &&
+                            !FilenameDetector.urlHasFileExtension(url)
+                        ) {
+                            response.close()
+                            return StreamOpen.Failure(DownloadError.PAGE_NOT_FILE, "URL returned a web page, not a downloadable file")
+                        }
                         val ignoredRange = requestedStart > 0
                         return StreamOpen.Opened(
                             response = response,
@@ -584,8 +652,8 @@ class TaskRunner
                             serverAcceptsRanges = RangeSupportDetector.supports(response.headers.toMultimap(), 200),
                             eTag = response.header("ETag"),
                             lastModified = response.header("Last-Modified"),
-                            mimeType = response.header("Content-Type"),
-                            dispositionFilename = FilenameDetector.fromDisposition(response.header("Content-Disposition")),
+                            mimeType = contentType,
+                            dispositionFilename = disposition,
                         )
                     }
                     response.code == 401 || response.code == 403 -> {
@@ -663,7 +731,11 @@ class TaskRunner
             entity: DownloadEntity,
             url: String,
         ): String? {
-            if (!entity.requiresSession && entity.cookies.isNullOrBlank()) return null
+            if (entity.cookies.isNullOrBlank() && !entity.requiresSession) return null
+            // Cookies captured for the original URL must never leak to a cross-site redirect
+            // target (e.g. github.com session cookies must not be sent to
+            // release-assets.githubusercontent.com). Scope check uses the ORIGINAL url.
+            if (!CookieScopePolicy.evaluate(entity.url, url).allowCookies) return null
             val live = runCatching { cookieProvider.cookiesFor(url) }.getOrNull()
             return live ?: entity.cookies
         }

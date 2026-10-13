@@ -252,7 +252,7 @@ private fun InfoSection(entity: DownloadEntity) {
             InfoRow(stringResource(R.string.details_retries), entity.retryCount.toString())
             entity.expectedSha256?.let { InfoRow(stringResource(R.string.details_checksum), entity.checksumSha256 ?: "—") }
             entity.errorCode?.let { code ->
-                InfoRow(stringResource(R.string.details_error), "$code: ${entity.errorMessage ?: ""}")
+                InfoRow(stringResource(R.string.details_error), friendlyError(code, entity.errorMessage))
             }
             InfoRow("Added", Format.date(entity.createdAt))
             entity.completedAt?.let { InfoRow("Completed", Format.date(it)) }
@@ -284,3 +284,29 @@ private fun InfoRow(
         )
     }
 }
+
+/** Maps a stable [com.arc.downloadmanager.engine.DownloadError] code to a localized, actionable message. */
+@Composable
+private fun friendlyError(
+    code: String,
+    detail: String?,
+): String =
+    when (code) {
+        com.arc.downloadmanager.engine.DownloadError.INVALID_URL.name -> stringResource(R.string.error_invalid_url)
+        com.arc.downloadmanager.engine.DownloadError.NETWORK_UNAVAILABLE.name -> stringResource(R.string.error_network)
+        com.arc.downloadmanager.engine.DownloadError.AUTH_REQUIRED.name -> stringResource(R.string.error_auth)
+        com.arc.downloadmanager.engine.DownloadError.FORBIDDEN.name -> stringResource(R.string.error_forbidden)
+        com.arc.downloadmanager.engine.DownloadError.EXPIRED_LINK.name -> stringResource(R.string.error_expired)
+        com.arc.downloadmanager.engine.DownloadError.RANGE_NOT_SUPPORTED.name -> stringResource(R.string.error_no_range)
+        com.arc.downloadmanager.engine.DownloadError.RESOURCE_CHANGED.name -> stringResource(R.string.error_resource_changed)
+        com.arc.downloadmanager.engine.DownloadError.RATE_LIMITED.name -> stringResource(R.string.error_rate_limited)
+        com.arc.downloadmanager.engine.DownloadError.INSUFFICIENT_STORAGE.name -> stringResource(R.string.error_storage)
+        com.arc.downloadmanager.engine.DownloadError.PERMISSION_DENIED.name -> stringResource(R.string.error_permission)
+        com.arc.downloadmanager.engine.DownloadError.FILE_EXISTS.name -> stringResource(R.string.error_exists)
+        com.arc.downloadmanager.engine.DownloadError.SEGMENT_MISMATCH.name -> stringResource(R.string.error_segment_mismatch)
+        com.arc.downloadmanager.engine.DownloadError.MERGE_FAILED.name -> stringResource(R.string.error_merge)
+        com.arc.downloadmanager.engine.DownloadError.CHECKSUM_MISMATCH.name -> stringResource(R.string.error_checksum)
+        com.arc.downloadmanager.engine.DownloadError.PAGE_NOT_FILE.name -> stringResource(R.string.error_page_not_file)
+        com.arc.downloadmanager.engine.DownloadError.CANCELED.name -> stringResource(R.string.error_canceled)
+        else -> stringResource(R.string.error_unknown, detail ?: code)
+    }

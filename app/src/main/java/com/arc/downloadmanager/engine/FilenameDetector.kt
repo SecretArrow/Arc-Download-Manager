@@ -72,6 +72,30 @@ object FilenameDetector {
         return clean.ifBlank { null }
     }
 
+    /**
+     * True when the URL path ends in a plausible file extension (e.g. .../app-release.apk).
+     * Used to distinguish real file links from web-page links (a GitHub release PAGE such as
+     * /releases/tag/v1.4.0 ends in what looks like an extension but is a version token).
+     */
+    fun urlHasFileExtension(url: String): Boolean {
+        val name = fromUrl(url) ?: return false
+        val ext = name.substringAfterLast('.', "").lowercase(Locale.US)
+        return ext.isNotEmpty() && ext in KNOWN_FILE_EXTENSIONS
+    }
+
+    private val KNOWN_FILE_EXTENSIONS =
+        setOf(
+            "apk", "aab", "zip", "rar", "7z", "tar", "gz", "tgz", "bz2", "xz", "zst",
+            "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "csv", "txt", "rtf",
+            "mp3", "wav", "flac", "ogg", "m4a", "aac", "opus", "wma",
+            "mp4", "mkv", "webm", "avi", "mov", "flv", "wmv", "m4v", "ts",
+            "jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "heic", "avif", "ico", "tiff",
+            "exe", "msi", "dmg", "pkg", "deb", "rpm", "appimage", "iso", "img",
+            "bin", "dat", "jar", "ttf", "otf", "woff", "woff2", "epub", "mobi",
+            "srt", "ass", "json", "xml", "yaml", "yml", "md", "log", "patch", "diff", "sql",
+            "html", "htm",
+        )
+
     /** Picks the best filename, appending a guessed extension when the mime type is known. */
     fun detect(
         url: String,

@@ -197,6 +197,8 @@ class BrowserViewModel
                         userAgent = userAgent,
                         cookies = cookies,
                         source = DownloadSource.BROWSER,
+                        contentDisposition = contentDisposition,
+                        mimeType = mimeType,
                     )
                 downloadRepository.add(request, policyOverride = com.arc.downloadmanager.data.settings.OverwritePolicy.RENAME)
                 _downloadEvents.value = url

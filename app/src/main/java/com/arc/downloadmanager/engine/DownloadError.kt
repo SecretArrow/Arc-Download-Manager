@@ -17,6 +17,7 @@ enum class DownloadError(val isRecoverable: Boolean) {
     SEGMENT_MISMATCH(true),
     MERGE_FAILED(true),
     CHECKSUM_MISMATCH(false),
+    PAGE_NOT_FILE(false),
     IO_ERROR(true),
     CANCELED(false),
     UNKNOWN(true),

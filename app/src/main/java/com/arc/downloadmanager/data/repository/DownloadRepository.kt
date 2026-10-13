@@ -65,7 +65,9 @@ class DownloadRepository
             }
 
             val id = java.util.UUID.randomUUID().toString()
-            val filename = FilenameDetector.detect(url, null, null, fallbackSeed = System.currentTimeMillis())
+            val filename =
+                request.filename
+                    ?: FilenameDetector.detect(url, request.contentDisposition, request.mimeType, fallbackSeed = System.currentTimeMillis())
             val entity =
                 DownloadEntity(
                     id = id,

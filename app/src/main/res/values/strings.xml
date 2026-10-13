@@ -191,6 +191,7 @@
     <string name="error_merge">Failed to merge downloaded segments</string>
     <string name="error_checksum">Checksum mismatch. The file may be corrupted.</string>
     <string name="error_invalid_url">The URL is not valid</string>
+    <string name="error_page_not_file">This link is a web page, not a downloadable file. On GitHub release pages, tap the exact asset file link.</string>
     <string name="error_canceled">Download canceled</string>
     <string name="error_unknown">Unexpected error: %1$s</string>
 

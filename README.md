@@ -34,6 +34,10 @@ Material Design 3.
   file is detected and restarted instead of corrupted.
 - SHA-256 checksum verification (user-supplied or computed after completion).
 - Real bytes-based progress, live speed and ETA, throttled DB writes to save battery.
+- **Signed CDN links handled end-to-end** (e.g. GitHub release assets): the redirect chain is
+  re-resolved automatically when the signed link expires mid-download; session cookies are never
+  forwarded to the cross-host asset CDN; pasting a release *page* URL fails fast with a clear
+  message instead of saving a junk HTML file; pasted URLs tolerate stray spaces/unicode.
 
 ### Background execution
 - Foreground service (`dataSync`) with aggregate progress notification and Pause all / Resume all /

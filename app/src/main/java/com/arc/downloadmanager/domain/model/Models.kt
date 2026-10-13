@@ -68,6 +68,10 @@ data class DownloadRequest(
     val cookies: String? = null,
     val checksum: String? = null,
     val source: DownloadSource = DownloadSource.MANUAL,
+    /** Content-Disposition reported by WebView's DownloadListener, if any. */
+    val contentDisposition: String? = null,
+    /** MIME type reported by WebView's DownloadListener, if any. */
+    val mimeType: String? = null,
 )
 
 /** Aggregated counters shown on Home. */
