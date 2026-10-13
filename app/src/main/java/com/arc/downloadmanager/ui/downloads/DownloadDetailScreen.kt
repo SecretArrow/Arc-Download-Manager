@@ -254,8 +254,8 @@ private fun InfoSection(entity: DownloadEntity) {
             entity.errorCode?.let { code ->
                 InfoRow(stringResource(R.string.details_error), friendlyError(code, entity.errorMessage))
             }
-            InfoRow("Added", Format.date(entity.createdAt))
-            entity.completedAt?.let { InfoRow("Completed", Format.date(it)) }
+            InfoRow(stringResource(R.string.details_added), Format.date(entity.createdAt))
+            entity.completedAt?.let { InfoRow(stringResource(R.string.details_completed_at), Format.date(it)) }
             InfoRow(
                 stringResource(R.string.settings_default_destination),
                 entity.finalUri?.let { com.arc.downloadmanager.engine.CookieScopePolicy.redact(it) } ?: "—",
@@ -307,6 +307,7 @@ private fun friendlyError(
         com.arc.downloadmanager.engine.DownloadError.MERGE_FAILED.name -> stringResource(R.string.error_merge)
         com.arc.downloadmanager.engine.DownloadError.CHECKSUM_MISMATCH.name -> stringResource(R.string.error_checksum)
         com.arc.downloadmanager.engine.DownloadError.PAGE_NOT_FILE.name -> stringResource(R.string.error_page_not_file)
+        com.arc.downloadmanager.engine.DownloadError.PROTOCOL_UNSUPPORTED.name -> stringResource(R.string.error_protocol_unsupported)
         com.arc.downloadmanager.engine.DownloadError.CANCELED.name -> stringResource(R.string.error_canceled)
         else -> stringResource(R.string.error_unknown, detail ?: code)
     }

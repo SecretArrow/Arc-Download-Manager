@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentPaste
@@ -29,6 +31,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -80,6 +83,8 @@ fun AddDownloadSheet(
     var batchText by rememberSaveable { mutableStateOf("") }
     var batchMessage by rememberSaveable { mutableStateOf("") }
     var error by rememberSaveable { mutableStateOf(false) }
+    val scheme = remember(url) { com.arc.downloadmanager.engine.Protocols.schemeOf(url) }
+    val urlSupported = remember(url) { com.arc.downloadmanager.engine.CookieScopePolicy.isSupportedUrl(url) }
 
     val folderPicker =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
@@ -129,7 +134,17 @@ fun AddDownloadSheet(
                     },
                     label = { Text(stringResource(R.string.add_url_hint)) },
                     isError = error,
-                    supportingText = { if (error) Text(stringResource(R.string.add_empty_url)) },
+                    supportingText = {
+                        when {
+                            error && url.isBlank() -> Text(stringResource(R.string.add_empty_url))
+                            error -> Text(stringResource(R.string.add_url_unsupported))
+                            scheme != null && !urlSupported -> Text(stringResource(R.string.add_url_unsupported))
+                            scheme == com.arc.downloadmanager.engine.Protocols.FTP ||
+                                scheme == com.arc.downloadmanager.engine.Protocols.FTPS ||
+                                scheme == com.arc.downloadmanager.engine.Protocols.SFTP ->
+                                Text(stringResource(R.string.add_remote_credentials_hint))
+                        }
+                    },
                     singleLine = true,
                     trailingIcon = {
                         IconButton(onClick = {
@@ -140,6 +155,7 @@ fun AddDownloadSheet(
                     },
                     modifier = Modifier.fillMaxWidth(),
                 )
+                ProtocolBadges(scheme, urlSupported)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = destination ?: "",
@@ -239,6 +255,65 @@ fun AddDownloadSheet(
                 ) {
                     Text(stringResource(R.string.action_start_all))
                 }
+            }
+        }
+    }
+}
+
+/** Shows which protocol the typed URL uses; highlights it, flags unknown schemes. */
+@Composable
+private fun ProtocolBadges(
+    scheme: String?,
+    urlSupported: Boolean,
+) {
+    val protocols =
+        listOf(
+            com.arc.downloadmanager.engine.Protocols.HTTPS,
+            com.arc.downloadmanager.engine.Protocols.HTTP,
+            com.arc.downloadmanager.engine.Protocols.FTP,
+            com.arc.downloadmanager.engine.Protocols.FTPS,
+            com.arc.downloadmanager.engine.Protocols.SFTP,
+        )
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier.horizontalScroll(rememberScrollState()),
+    ) {
+        protocols.forEach { proto ->
+            val selected = scheme != null && proto.equals(scheme, ignoreCase = true)
+            Surface(
+                shape = RoundedCornerShape(50),
+                color =
+                    if (selected) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
+                    },
+            ) {
+                Text(
+                    text = proto.uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color =
+                        if (selected) {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                )
+            }
+        }
+        if (scheme != null && !urlSupported) {
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = MaterialTheme.colorScheme.errorContainer,
+            ) {
+                Text(
+                    text = scheme.uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                )
             }
         }
     }

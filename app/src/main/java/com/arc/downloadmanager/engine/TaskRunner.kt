@@ -5,6 +5,11 @@ import com.arc.downloadmanager.data.db.SegmentEntity
 import com.arc.downloadmanager.data.settings.EngineSettings
 import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.engine.store.DownloadStore
+import com.arc.downloadmanager.engine.transport.ContentStreams
+import com.arc.downloadmanager.engine.transport.FtpAuthException
+import com.arc.downloadmanager.engine.transport.FtpTransport
+import com.arc.downloadmanager.engine.transport.SftpAuthException
+import com.arc.downloadmanager.engine.transport.SftpTransport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -15,6 +20,13 @@ import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
+
+/** Protocol-agnostic stream source for the shared transfer loop. */
+private class TransferSource(
+    val resumableUsed: Boolean,
+    val stream: () -> java.io.InputStream,
+    val close: () -> Unit,
+)
 
 /** In-memory control channel used to pause or cancel a running task promptly. */
 class TaskControl {
@@ -72,8 +84,11 @@ class TaskRunner
         private val storage: TaskStorage,
         private val networkMonitor: ConnectivityView,
         private val cookieProvider: CookieProvider,
+        private val contentStreams: ContentStreams? = null,
     ) {
         private val backoff = BackoffPolicy()
+        private val ftpTransport = FtpTransport()
+        private val sftpTransport = SftpTransport()
 
         suspend fun run(
             id: String,
@@ -95,8 +110,35 @@ class TaskRunner
         ): TaskOutcome {
             val entity = store.getById(id) ?: return TaskOutcome.Canceled
             if (control.cancelRequested) return TaskOutcome.Canceled
-
             store.updateStatus(id, DownloadStatus.CONNECTING)
+            return when (Protocols.schemeOf(entity.url)) {
+                Protocols.FTP, Protocols.FTPS -> executeFtp(entity, settings, control)
+                Protocols.SFTP -> executeSftp(entity, settings, control)
+                Protocols.CONTENT -> executeContent(entity, settings, control)
+                else -> {
+                    // magnet:, ed2k:, rtmp: ... fail with an actionable, friendly message.
+                    if (!Protocols.isHttpUrl(entity.url)) {
+                        val scheme = Protocols.schemeOf(entity.url)
+                        TaskOutcome.Failed(
+                            DownloadError.PROTOCOL_UNSUPPORTED,
+                            if (scheme != null) "Protocol '$scheme:' is not supported" else "Not a downloadable URL",
+                        )
+                    } else {
+                        executeHttp(id, settings, control, segmentCapFor)
+                    }
+                }
+            }
+        }
+
+        private suspend fun executeHttp(
+            id: String,
+            settings: EngineSettings,
+            control: TaskControl,
+            segmentCapFor: (String) -> Int,
+        ): TaskOutcome {
+            val entity = store.getById(id) ?: return TaskOutcome.Canceled
+            if (control.cancelRequested) return TaskOutcome.Canceled
+
             val open = openStream(entity, control, requestedStart = if (entity.resumable) entity.downloadedBytes else 0L, settings = settings)
             when (open) {
                 is StreamOpen.AuthRequired -> return TaskOutcome.Failed(DownloadError.AUTH_REQUIRED, "Authentication required")
@@ -155,24 +197,53 @@ class TaskRunner
                     usedMulti = true
                     runMultiSegment(updated, totalBytes, segmentsWanted, settings, control)
                 } else {
-                    runSingleStream(updated, opened, startOffset, totalBytes, settings, control)
+                    runTransfer(
+                        entity = updated,
+                        source =
+                            TransferSource(
+                                resumableUsed = opened.resumableUsed,
+                                stream = {
+                                    val body = opened.response.body
+                                        ?: throw java.io.IOException("Empty response body")
+                                    body.byteStream()
+                                },
+                                close = { opened.response.close() },
+                            ),
+                        startOffset = startOffset,
+                        totalBytes = totalBytes,
+                        settings = settings,
+                        control = control,
+                    )
                 }
             if (outcome != TaskOutcome.Completed) return outcome
+            if (usedMulti) {
+                // Multi-segment path already merged the parts into the staging file.
+                val fresh = store.getById(id) ?: return TaskOutcome.Canceled
+                val merged = storage.stagingFile(fresh.id, fresh.filename)
+                if (fresh.totalBytes > 0 && merged.length() != fresh.totalBytes) {
+                    return TaskOutcome.Failed(DownloadError.IO_ERROR, "Size mismatch: ${merged.length()} of ${fresh.totalBytes}")
+                }
+                return finalizeDownload(fresh, merged, settings)
+            }
+            return promoteAndFinalize(id, settings)
+        }
 
+        /** Promotes the single-stream part file to staging and runs verification + finalization. */
+        private suspend fun promoteAndFinalize(
+            id: String,
+            settings: EngineSettings,
+        ): TaskOutcome {
             val fresh = store.getById(id) ?: return TaskOutcome.Canceled
             val staged = storage.stagingFile(fresh.id, fresh.filename)
-            if (!usedMulti) {
-                // Single stream writes to part_0; promote it to the staging file for finalization.
-                val part = storage.partFile(fresh.id, 0)
-                if (!part.exists()) {
-                    return TaskOutcome.Failed(DownloadError.IO_ERROR, "Downloaded data missing on disk")
-                }
-                staged.parentFile?.mkdirs()
-                if (staged.exists()) staged.delete()
-                if (!part.renameTo(staged)) {
-                    part.copyTo(staged, overwrite = true)
-                    part.delete()
-                }
+            val part = storage.partFile(fresh.id, 0)
+            if (!part.exists()) {
+                return TaskOutcome.Failed(DownloadError.IO_ERROR, "Downloaded data missing on disk")
+            }
+            staged.parentFile?.mkdirs()
+            if (staged.exists()) staged.delete()
+            if (!part.renameTo(staged)) {
+                part.copyTo(staged, overwrite = true)
+                part.delete()
             }
             if (fresh.totalBytes > 0 && staged.length() != fresh.totalBytes) {
                 return TaskOutcome.Failed(DownloadError.IO_ERROR, "Size mismatch: ${staged.length()} of ${fresh.totalBytes}")
@@ -180,18 +251,178 @@ class TaskRunner
             return finalizeDownload(fresh, staged, settings)
         }
 
-        // region Single stream
+        // region Non-HTTP protocols (FTP/FTPS, SFTP, content://)
 
-        private suspend fun runSingleStream(
+        /** Shared pre-transfer metadata update for protocol transports. */
+        private suspend fun prepareRemoteEntity(
             entity: DownloadEntity,
-            opened: StreamOpen.Opened,
+            size: Long,
+            filenameHint: String?,
+            acceptsRanges: Boolean,
+        ): DownloadEntity {
+            val totalBytes = if (size >= 0) size else -1L
+            val bestName = filenameHint?.let { FilenameDetector.sanitize(it) }?.takeIf { it.isNotBlank() } ?: entity.filename
+            val updated =
+                entity.copy(
+                    finalUrl = entity.url,
+                    filename = bestName,
+                    totalBytes = totalBytes,
+                    acceptRanges = acceptsRanges,
+                    resumable = acceptsRanges,
+                )
+            store.update(updated)
+            return updated
+        }
+
+        private suspend fun executeFtp(
+            entity: DownloadEntity,
+            settings: EngineSettings,
+            control: TaskControl,
+        ): TaskOutcome {
+            val connectMs = settings.connectTimeoutSec * 1000
+            val readMs = settings.readTimeoutSec * 1000
+            val session =
+                try {
+                    ftpTransport.connect(entity.url, connectMs, readMs)
+                } catch (e: FtpAuthException) {
+                    return TaskOutcome.Failed(DownloadError.AUTH_REQUIRED, e.message)
+                } catch (e: java.io.IOException) {
+                    return TaskOutcome.Failed(DownloadError.SERVER_ERROR, e.message)
+                }
+            session.use { ftp ->
+                val startOffset =
+                    if (entity.resumable && entity.downloadedBytes > 0 && ftp.restSupported) entity.downloadedBytes else 0L
+                if (startOffset == 0L && entity.downloadedBytes > 0) resetPartialData(entity.id)
+                val updated = prepareRemoteEntity(entity, ftp.size, ftp.filenameHint, ftp.restSupported)
+                val totalBytes = updated.totalBytes
+                if (totalBytes > 0 && !storage.hasFreeSpace(2L * totalBytes - startOffset)) {
+                    return TaskOutcome.Paused(PauseReason.LOW_STORAGE)
+                }
+                if (totalBytes == 0L) {
+                    return finalizeDownload(updated, emptyStagingFile(updated), settings)
+                }
+                val outcome =
+                    runTransfer(
+                        entity = updated,
+                        source =
+                            TransferSource(
+                                resumableUsed = startOffset > 0,
+                                stream = { ftp.openStreamAt(startOffset) },
+                                close = { ftp.close() },
+                            ),
+                        startOffset = startOffset,
+                        totalBytes = totalBytes,
+                        settings = settings,
+                        control = control,
+                    )
+                return if (outcome == TaskOutcome.Completed) promoteAndFinalize(entity.id, settings) else outcome
+            }
+        }
+
+        private suspend fun executeSftp(
+            entity: DownloadEntity,
+            settings: EngineSettings,
+            control: TaskControl,
+        ): TaskOutcome {
+            val connectMs = settings.connectTimeoutSec * 1000
+            val readMs = settings.readTimeoutSec * 1000
+            val session =
+                try {
+                    sftpTransport.connect(entity.url, connectMs, readMs)
+                } catch (e: SftpAuthException) {
+                    return TaskOutcome.Failed(DownloadError.AUTH_REQUIRED, e.message)
+                } catch (e: java.io.IOException) {
+                    return TaskOutcome.Failed(DownloadError.SERVER_ERROR, e.message)
+                }
+            session.use { sftp ->
+                val startOffset =
+                    if (entity.resumable && entity.downloadedBytes > 0 && sftp.size >= 0 && entity.downloadedBytes < sftp.size) {
+                        entity.downloadedBytes
+                    } else {
+                        0L
+                    }
+                if (startOffset == 0L && entity.downloadedBytes > 0) resetPartialData(entity.id)
+                val updated = prepareRemoteEntity(entity, sftp.size, sftp.filenameHint, acceptsRanges = true)
+                val totalBytes = updated.totalBytes
+                if (totalBytes > 0 && !storage.hasFreeSpace(2L * totalBytes - startOffset)) {
+                    return TaskOutcome.Paused(PauseReason.LOW_STORAGE)
+                }
+                if (totalBytes == 0L) {
+                    return finalizeDownload(updated, emptyStagingFile(updated), settings)
+                }
+                val outcome =
+                    runTransfer(
+                        entity = updated,
+                        source =
+                            TransferSource(
+                                resumableUsed = startOffset > 0,
+                                stream = { sftp.openStreamAt(startOffset) },
+                                close = { sftp.close() },
+                            ),
+                        startOffset = startOffset,
+                        totalBytes = totalBytes,
+                        settings = settings,
+                        control = control,
+                    )
+                return if (outcome == TaskOutcome.Completed) promoteAndFinalize(entity.id, settings) else outcome
+            }
+        }
+
+        private suspend fun executeContent(
+            entity: DownloadEntity,
+            settings: EngineSettings,
+            control: TaskControl,
+        ): TaskOutcome {
+            val streams =
+                contentStreams ?: return TaskOutcome.Failed(DownloadError.PROTOCOL_UNSUPPORTED, "content:// unavailable")
+            val uri = CookieScopePolicy.safeUri(entity.url)
+                ?: return TaskOutcome.Failed(DownloadError.INVALID_URL, "Malformed content URI")
+            if (entity.downloadedBytes > 0) resetPartialData(entity.id)
+            val size = streams.size(uri)
+            val updated = prepareRemoteEntity(entity, size, null, acceptsRanges = false)
+            val totalBytes = updated.totalBytes
+            if (totalBytes > 0 && !storage.hasFreeSpace(2L * totalBytes)) {
+                return TaskOutcome.Paused(PauseReason.LOW_STORAGE)
+            }
+            if (totalBytes == 0L) {
+                return finalizeDownload(updated, emptyStagingFile(updated), settings)
+            }
+            val outcome =
+                runTransfer(
+                    entity = updated,
+                    source =
+                        TransferSource(
+                            resumableUsed = false,
+                            stream = { streams.open(uri) ?: throw java.io.IOException("Cannot open $uri") },
+                            close = {},
+                        ),
+                    startOffset = 0L,
+                    totalBytes = totalBytes,
+                    settings = settings,
+                    control = control,
+                )
+            return if (outcome == TaskOutcome.Completed) promoteAndFinalize(entity.id, settings) else outcome
+        }
+
+        // endregion
+
+        // region Shared transfer loop
+
+        /**
+         * Copies a remote stream into part_0 with pause/cancel handling, bandwidth limiting,
+         * periodic progress + storage/network checks. Shared by HTTP single-stream and all
+         * non-HTTP protocol transports.
+         */
+        private suspend fun runTransfer(
+            entity: DownloadEntity,
+            source: TransferSource,
             startOffset: Long,
             totalBytes: Long,
             settings: EngineSettings,
             control: TaskControl,
         ): TaskOutcome {
             val tempFile = storage.partFile(entity.id, 0)
-            var append = opened.resumableUsed && startOffset > 0
+            var append = source.resumableUsed && startOffset > 0
             if (append && tempFile.length() != startOffset) {
                 // Partial data on disk does not match the offset we resumed from: restart safely.
                 if (tempFile.length() > startOffset) {
@@ -207,10 +438,9 @@ class TaskRunner
             var written = if (append) startOffset else 0L
             var lastFlush = System.currentTimeMillis()
             var lastSpaceCheck = lastFlush
-            val body = opened.response.body ?: return TaskOutcome.Failed(DownloadError.SERVER_ERROR, "Empty body")
             try {
                 FileOutputStream(tempFile, append).use { out ->
-                    body.byteStream().use { input ->
+                    source.stream().use { input ->
                         val buffer = ByteArray(BUFFER_SIZE)
                         while (true) {
                             if (control.cancelRequested) return TaskOutcome.Canceled
@@ -253,7 +483,7 @@ class TaskRunner
             } catch (e: java.io.IOException) {
                 return TaskOutcome.Failed(DownloadError.IO_ERROR, e.message)
             } finally {
-                opened.response.close()
+                source.close()
             }
         }
 
@@ -469,7 +699,7 @@ class TaskRunner
                         val location = response.header("Location")
                         response.close()
                         val next = location?.let { resolveRedirect(url, it) } ?: return null
-                        if (!CookieScopePolicy.isSupportedUrl(next)) return null
+                        if (!CookieScopePolicy.isHttpUrl(next)) return null
                         url = next
                         hops++
                     }
@@ -602,8 +832,8 @@ class TaskRunner
                         val next =
                             location?.let { resolveRedirect(url, it) }
                                 ?: return StreamOpen.Failure(DownloadError.EXPIRED_LINK, "Redirect without Location")
-                        if (!CookieScopePolicy.isSupportedUrl(next)) {
-                            return StreamOpen.Failure(DownloadError.INVALID_URL, "Redirect to unsupported scheme")
+                        if (!CookieScopePolicy.isHttpUrl(next)) {
+                            return StreamOpen.Failure(DownloadError.PROTOCOL_UNSUPPORTED, "Redirect to unsupported scheme")
                         }
                         url = next
                         hops++

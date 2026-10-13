@@ -1,5 +1,6 @@
 package com.arc.downloadmanager.ui.theme
 
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import com.arc.downloadmanager.data.repository.FileCategory
 
@@ -17,3 +18,9 @@ fun categoryAccent(category: FileCategory): Color =
         FileCategory.APP -> Color(0xFF43A047)
         FileCategory.OTHER -> Color(0xFF607D8B)
     }
+
+/** Soft diagonal gradient built from a category accent, for icon tiles and headers. */
+fun categoryGradient(accent: Color): Brush =
+    Brush.linearGradient(
+        colors = listOf(accent.copy(alpha = 0.22f), accent.copy(alpha = 0.08f)),
+    )

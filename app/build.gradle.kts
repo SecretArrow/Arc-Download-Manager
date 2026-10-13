@@ -17,8 +17,8 @@ android {
         applicationId = "com.arc.downloadmanager"
         minSdk = 26
         targetSdk = 35
-        versionCode = 6
-        versionName = "1.4.1"
+        versionCode = 7
+        versionName = "1.5.0"
 
         testInstrumentationRunner = "com.arc.downloadmanager.HiltTestRunner"
         vectorDrawables {
@@ -143,6 +143,10 @@ dependencies {
     // Network
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
+
+    // Extra protocols: FTP/FTPS (Apache Commons Net) and SFTP (JSch)
+    implementation(libs.commons.net)
+    implementation(libs.jsch)
 
     // Files / media
     implementation(libs.androidx.documentfile)

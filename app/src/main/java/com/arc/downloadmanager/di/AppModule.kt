@@ -66,6 +66,12 @@ abstract class BindingsModule {
     @Binds
     @Singleton
     abstract fun bindConnectivityView(impl: com.arc.downloadmanager.engine.NetworkMonitor): ConnectivityView
+
+    @Binds
+    @Singleton
+    abstract fun bindContentStreams(
+        impl: com.arc.downloadmanager.engine.transport.AndroidContentStreams,
+    ): com.arc.downloadmanager.engine.transport.ContentStreams
 }
 
 @Module

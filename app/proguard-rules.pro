@@ -16,3 +16,11 @@
 
 # WebView JS bridge attribute (no bridge is exposed, kept for clarity)
 -keepattributes JavascriptInterface
+
+# FTP/FTPS (Apache Commons Net)
+-dontwarn org.apache.commons.net.**
+-keep class org.apache.commons.net.** { *; }
+
+# SFTP (JSch) - crypto classes are loaded reflectively via Class.forName
+-keep class com.jcraft.jsch.** { *; }
+-dontwarn com.jcraft.jsch.**

@@ -2,7 +2,9 @@ package com.arc.downloadmanager.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -10,11 +12,13 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import com.arc.downloadmanager.data.settings.ThemeMode
 
 private val ArcBlue = Color(0xFF1A6BFF)
 private val ArcBlueDark = Color(0xFF9DBCFF)
 private val ArcTeal = Color(0xFF00B8A9)
+private val ArcViolet = Color(0xFF7C4DFF)
 
 private val LightColors =
     lightColorScheme(
@@ -27,12 +31,17 @@ private val LightColors =
         secondaryContainer = Color(0xFFDAE2F9),
         onSecondaryContainer = Color(0xFF131C2B),
         tertiary = ArcTeal,
-        background = Color(0xFFF9F9FF),
+        tertiaryContainer = Color(0xFFB7F2EA),
+        onTertiaryContainer = Color(0xFF00201C),
+        background = Color(0xFFF8FAFF),
         onBackground = Color(0xFF191C20),
-        surface = Color(0xFFF9F9FF),
+        surface = Color(0xFFF8FAFF),
         onSurface = Color(0xFF191C20),
-        surfaceVariant = Color(0xFFE0E2EC),
+        surfaceVariant = Color(0xFFE1E6F2),
         onSurfaceVariant = Color(0xFF44474E),
+        surfaceContainer = Color(0xFFF2F4FB),
+        surfaceContainerLow = Color(0xFFF8FAFF),
+        outlineVariant = Color(0xFFC3C7D4),
         error = Color(0xFFBA1A1A),
         errorContainer = Color(0xFFFFDAD6),
         onErrorContainer = Color(0xFF410002),
@@ -49,16 +58,35 @@ private val DarkColors =
         secondaryContainer = Color(0xFF3F4759),
         onSecondaryContainer = Color(0xFFDAE2F9),
         tertiary = Color(0xFF4CDACC),
-        background = Color(0xFF111318),
-        onBackground = Color(0xFFE2E2E9),
-        surface = Color(0xFF111318),
-        onSurface = Color(0xFFE2E2E9),
-        surfaceVariant = Color(0xFF44474E),
+        tertiaryContainer = Color(0xFF005048),
+        onTertiaryContainer = Color(0xFFB7F2EA),
+        background = Color(0xFF0F1119),
+        onBackground = Color(0xFFE3E6F0),
+        surface = Color(0xFF0F1119),
+        onSurface = Color(0xFFE3E6F0),
+        surfaceVariant = Color(0xFF3F4452),
         onSurfaceVariant = Color(0xFFC4C6D0),
+        surfaceContainer = Color(0xFF171A24),
+        surfaceContainerLow = Color(0xFF13151E),
+        outlineVariant = Color(0xFF3F4452),
         error = Color(0xFFFFB4AB),
         errorContainer = Color(0xFF93000A),
         onErrorContainer = Color(0xFFFFDAD6),
     )
+
+/** Softer, rounder geometry than the M3 defaults for a friendlier feel. */
+private val ArcShapes =
+    Shapes(
+        extraSmall = RoundedCornerShape(8.dp),
+        small = RoundedCornerShape(10.dp),
+        medium = RoundedCornerShape(14.dp),
+        large = RoundedCornerShape(20.dp),
+        extraLarge = RoundedCornerShape(28.dp),
+    )
+
+/** Brand gradient used by hero surfaces (works on light and dark themes). */
+val ArcBrandGradient =
+    listOf(ArcBlue, ArcViolet)
 
 @Composable
 fun ArcTheme(
@@ -84,6 +112,7 @@ fun ArcTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = ArcTypography,
+        shapes = ArcShapes,
         content = content,
     )
 }

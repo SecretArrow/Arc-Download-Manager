@@ -2,6 +2,9 @@
 
 package com.arc.downloadmanager.ui.home
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,21 +19,26 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.LibraryAdd
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
@@ -50,9 +58,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -62,6 +76,7 @@ import com.arc.downloadmanager.domain.model.DownloadRequest
 import com.arc.downloadmanager.engine.CookieScopePolicy
 import com.arc.downloadmanager.ui.components.DownloadRow
 import com.arc.downloadmanager.ui.downloads.AddDownloadSheet
+import com.arc.downloadmanager.ui.theme.ArcBrandGradient
 import com.arc.downloadmanager.util.Format
 
 @Composable
@@ -125,7 +140,7 @@ fun HomeScreen(
             contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 96.dp),
         ) {
             item {
-                AggregateCard(
+                HeroCard(
                     ui = ui,
                     storageFree = ui.storageFree,
                     onOpenFiles = onOpenFiles,
@@ -150,16 +165,17 @@ fun HomeScreen(
             }
             if (ui.attention.isNotEmpty()) {
                 item {
-                    SectionHeader(stringResource(R.string.home_needs_attention))
+                    SectionHeader(stringResource(R.string.home_needs_attention), isError = true)
                 }
                 items(ui.attention, key = { "attn-${it.id}" }) { entity ->
                     DownloadRow(
                         entity = entity,
-                        compact = settings.compactRows,
+                        compact = true,
                         onClick = { onOpenDetail(entity.id) },
                         onPauseResume = { viewModel.resume(entity.id) },
                         onCancel = { viewModel.cancel(entity.id) },
                         onRetry = { viewModel.retry(entity.id) },
+                        modifier = Modifier.animateItem(),
                     )
                 }
             }
@@ -181,12 +197,10 @@ fun HomeScreen(
             }
             if (ui.downloads.isEmpty()) {
                 item {
-                    Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                        Text(
-                            stringResource(R.string.home_no_downloads),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    EmptyDownloads(
+                        onAdd = { showAdd = true },
+                        onBrowser = onOpenBrowser,
+                    )
                 }
             } else {
                 items(ui.downloads, key = { it.id }) { entity ->
@@ -199,8 +213,8 @@ fun HomeScreen(
                         },
                         onCancel = { viewModel.cancel(entity.id) },
                         onRetry = { viewModel.retry(entity.id) },
+                        modifier = Modifier.animateItem(),
                     )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                 }
             }
             if (ui.recentCompleted.isNotEmpty()) {
@@ -213,6 +227,7 @@ fun HomeScreen(
                         onPauseResume = {},
                         onCancel = {},
                         onRetry = {},
+                        modifier = Modifier.animateItem(),
                     )
                 }
             }
@@ -255,76 +270,128 @@ fun HomeScreen(
     }
 }
 
+/** Brand-gradient hero: live queue summary, aggregate progress ring and storage. */
 @Composable
-private fun AggregateCard(
+private fun HeroCard(
     ui: HomeUiState,
     storageFree: Long,
     onOpenFiles: () -> Unit,
 ) {
-    Card(
+    val activeBytes = ui.activeBytes.toFloat()
+    val progressTarget = if (ui.activeTotalBytes > 0) (activeBytes / ui.activeTotalBytes).coerceIn(0f, 1f) else 0f
+    val animatedProgress by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = progressTarget,
+        animationSpec = androidx.compose.animation.core.SpringSpec(
+            stiffness = androidx.compose.animation.core.Spring.StiffnessLow,
+        ),
+        label = "heroProgress",
+    )
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    Box(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                .padding(16.dp)
+                .clip(RoundedCornerShape(26.dp))
+                .background(Brush.linearGradient(ArcBrandGradient))
+                .padding(20.dp),
     ) {
-        Column(Modifier.padding(16.dp)) {
-            Text(
-                text =
-                    stringResource(
-                        R.string.home_queue_count,
-                        ui.activeCount,
-                        ui.queuedCount,
-                        ui.failedCount,
-                    ),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-            Spacer(Modifier.height(8.dp))
-            if (ui.activeTotalBytes > 0) {
-                val progress = (ui.activeBytes.toFloat() / ui.activeTotalBytes).coerceIn(0f, 1f)
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                )
-                Spacer(Modifier.height(6.dp))
-            } else if (ui.activeCount > 0) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
-                )
-                Spacer(Modifier.height(6.dp))
-            }
+        Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text =
-                        if (ui.activeCount > 0) {
-                            "${Format.bytes(ui.activeBytes)} / ${Format.bytes(ui.activeTotalBytes)}"
-                        } else {
-                            stringResource(R.string.home_completed_count, ui.completedCount)
-                        },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.weight(1f),
-                )
-                if (ui.totalSpeed > 0) {
-                    val ctx = androidx.compose.ui.platform.LocalContext.current
+                Column(Modifier.weight(1f)) {
                     Text(
-                        text = Format.speed(ctx, ui.totalSpeed),
+                        text = stringResource(if (ui.activeCount > 0) R.string.hero_downloading else R.string.hero_idle),
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White,
+                    )
+                    Text(
+                        text =
+                            listOfNotNull(
+                                stringResource(R.string.hero_active_count, ui.activeCount),
+                                stringResource(R.string.hero_queued_count, ui.queuedCount),
+                                stringResource(R.string.hero_failed_count, ui.failedCount).takeIf { ui.failedCount > 0 },
+                            ).joinToString("  \u00B7  "),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.78f),
+                    )
+                }
+                Box(contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(
+                        progress = { animatedProgress },
+                        modifier = Modifier.size(56.dp),
+                        color = Color.White,
+                        trackColor = Color.White.copy(alpha = 0.22f),
+                        strokeWidth = 5.dp,
+                        strokeCap = StrokeCap.Round,
+                    )
+                    Text(
+                        text = if (progressTarget > 0f) "${(progressTarget * 100).toInt()}%" else "",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                    )
+                }
+            }
+            Spacer(Modifier.height(14.dp))
+            if (ui.activeCount > 0) {
+                Text(
+                    text = Format.speed(ctx, ui.totalSpeed),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "${Format.bytes(ui.activeBytes)} / ${Format.bytes(ui.activeTotalBytes)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.85f),
+                )
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Filled.CheckCircle,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.9f),
+                        modifier = Modifier.size(22.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.home_completed_count, ui.completedCount),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
                     )
                 }
             }
             if (storageFree > 0) {
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = stringResource(R.string.home_free_space, Format.bytes(storageFree)),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
+                Spacer(Modifier.height(14.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier =
+                        Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(Color.White.copy(alpha = 0.14f))
+                            .clickable(
+                                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                                indication = null,
+                                onClick = onOpenFiles,
+                            )
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                ) {
+                    Icon(
+                        Icons.Filled.Storage,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.home_free_space, Format.bytes(storageFree)),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color.White,
+                    )
+                }
             }
         }
     }
@@ -341,22 +408,99 @@ private fun QuickActions(
         modifier =
             Modifier
                 .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        AssistChip(onClick = onPaste, label = { Text(stringResource(R.string.action_paste_url)) })
-        AssistChip(onClick = onBatch, label = { Text(stringResource(R.string.action_batch_download)) })
-        AssistChip(onClick = onBrowser, label = { Text(stringResource(R.string.action_open_browser)) })
+        AssistChip(
+            onClick = onPaste,
+            label = { Text(stringResource(R.string.action_paste_url)) },
+            leadingIcon = { Icon(Icons.Filled.ContentPaste, contentDescription = null, modifier = Modifier.size(17.dp)) },
+        )
+        AssistChip(
+            onClick = onBatch,
+            label = { Text(stringResource(R.string.action_batch_download)) },
+            leadingIcon = { Icon(Icons.Filled.LibraryAdd, contentDescription = null, modifier = Modifier.size(17.dp)) },
+        )
+        AssistChip(
+            onClick = onBrowser,
+            label = { Text(stringResource(R.string.action_open_browser)) },
+            leadingIcon = { Icon(Icons.Filled.Public, contentDescription = null, modifier = Modifier.size(17.dp)) },
+        )
     }
 }
 
 @Composable
-private fun SectionHeader(title: String) {
+private fun EmptyDownloads(
+    onAdd: () -> Unit,
+    onBrowser: () -> Unit,
+) {
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp, vertical = 28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                Icons.Filled.Download,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(30.dp),
+            )
+        }
+        Spacer(Modifier.height(14.dp))
+        Text(
+            text = stringResource(R.string.empty_state_title),
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = stringResource(R.string.empty_state_subtitle),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(16.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilledTonalButton(onClick = onAdd) {
+                Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(17.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.action_add_download))
+            }
+            OutlinedButton(onClick = onBrowser) {
+                Icon(Icons.Filled.Public, contentDescription = null, modifier = Modifier.size(17.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.action_open_browser))
+            }
+        }
+    }
+}
+
+@Composable
+private fun SectionHeader(
+    title: String,
+    isError: Boolean = false,
+) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleMedium,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        color = MaterialTheme.colorScheme.error,
+        color =
+            if (isError) {
+                MaterialTheme.colorScheme.error
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
     )
 }
 

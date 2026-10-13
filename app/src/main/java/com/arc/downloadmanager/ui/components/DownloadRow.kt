@@ -1,5 +1,8 @@
 package com.arc.downloadmanager.ui.components
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.SpringSpec
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -7,8 +10,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Archive
@@ -24,12 +29,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -38,6 +47,7 @@ import com.arc.downloadmanager.data.repository.FileCategory
 import com.arc.downloadmanager.data.repository.FileRepository
 import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.ui.theme.categoryAccent
+import com.arc.downloadmanager.ui.theme.categoryGradient
 import com.arc.downloadmanager.util.Format
 
 /** Maps a status to a color-consistent icon + text pair (never color alone). */
@@ -66,6 +76,16 @@ fun statusColor(status: DownloadStatus): Color =
         else -> Color.Unspecified
     }
 
+/** Pill accent for a status: hard color when defined, otherwise theme-driven. */
+@Composable
+fun statusAccent(status: DownloadStatus): Color =
+    statusColor(status).takeIf { it != Color.Unspecified }
+        ?: if (status == DownloadStatus.QUEUED || status == DownloadStatus.CONNECTING) {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        } else {
+            MaterialTheme.colorScheme.primary
+        }
+
 fun fileIcon(category: FileCategory): ImageVector =
     when (category) {
         FileCategory.IMAGE -> Icons.Filled.Image
@@ -76,7 +96,7 @@ fun fileIcon(category: FileCategory): ImageVector =
         else -> Icons.Filled.Description
     }
 
-/** One row in the download list (compact or detailed). */
+/** One row in the download list: a rounded tonal card with an animated progress bar. */
 @Composable
 fun DownloadRow(
     entity: DownloadEntity,
@@ -86,148 +106,186 @@ fun DownloadRow(
     onCancel: () -> Unit,
     onRetry: () -> Unit,
     speedBps: Long = 0,
+    modifier: Modifier = Modifier,
 ) {
     val status = entity.status
     val percent = Format.percent(entity.downloadedBytes, entity.totalBytes)
     val active = status == DownloadStatus.DOWNLOADING || status == DownloadStatus.CONNECTING
     val category = remember(entity.filename) { FileRepository.categorize(entity.filename, null) }
     val accent = categoryAccent(category)
-    Column(
+    Surface(
         modifier =
-            Modifier
+            modifier
                 .fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(horizontal = 16.dp, vertical = if (compact) 8.dp else 12.dp),
+                .padding(horizontal = 12.dp, vertical = if (compact) 3.dp else 5.dp),
+        shape = RoundedCornerShape(18.dp),
+        color = if (compact) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = if (compact) 0.dp else 1.dp,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Box(
-                modifier =
-                    Modifier
-                        .size(40.dp)
-                        .background(
-                            accent.copy(alpha = 0.16f),
-                            MaterialTheme.shapes.small,
-                        ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = fileIcon(category),
-                    contentDescription = null,
-                    tint = accent,
-                )
-            }
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = entity.filename,
-                    style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text =
-                        buildString {
-                            append(Format.bytes(entity.downloadedBytes))
-                            if (entity.totalBytes > 0) {
-                                append(" / ")
-                                append(Format.bytes(entity.totalBytes))
-                                if (percent >= 0) append("  •  $percent%")
-                            }
-                        },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                if (!compact && active) {
-                    val ctx = androidx.compose.ui.platform.LocalContext.current
-                    Text(
-                        text =
-                            listOfNotNull(
-                                com.arc.downloadmanager.util.Format.speed(ctx, speedBps),
-                                com.arc.downloadmanager.util.Format.eta(ctx, entity.totalBytes - entity.downloadedBytes, speedBps),
-                            ).joinToString("  •  "),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onClick)
+                    .padding(horizontal = 14.dp, vertical = if (compact) 9.dp else 12.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(
+                    modifier =
+                        Modifier
+                            .size(42.dp)
+                            .clip(RoundedCornerShape(13.dp))
+                            .background(categoryGradient(accent)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = fileIcon(category),
+                        contentDescription = null,
+                        tint = accent,
+                        modifier = Modifier.size(22.dp),
                     )
                 }
-                if (status == DownloadStatus.FAILED || status == DownloadStatus.AUTH_REQUIRED) {
+                Column(Modifier.weight(1f)) {
                     Text(
-                        text = entity.errorMessage ?: "",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                        maxLines = 2,
+                        text = entity.filename,
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                }
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = androidx.compose.ui.res.stringResource(statusLabelRes(status)),
-                    style = MaterialTheme.typography.labelMedium,
-                    color =
-                        statusColor(status).takeIf { it != Color.Unspecified }
-                            ?: MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Row {
-                    when {
-                        active || status == DownloadStatus.PAUSING ->
-                            IconButton(onClick = onPauseResume) {
-                                Icon(
-                                    Icons.Filled.PauseCircle,
-                                    contentDescription = androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_pause),
-                                )
-                            }
-                        status == DownloadStatus.PAUSED || status == DownloadStatus.WAITING_NETWORK ||
-                            status == DownloadStatus.WAITING_STORAGE ->
-                            IconButton(onClick = onPauseResume) {
-                                Icon(
-                                    Icons.Filled.PlayCircle,
-                                    contentDescription = androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_resume),
-                                )
-                            }
-                        status.isTerminal || status == DownloadStatus.AUTH_REQUIRED ->
-                            IconButton(onClick = onRetry) {
-                                Icon(
-                                    Icons.Filled.Refresh,
-                                    contentDescription = androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_retry),
-                                )
-                            }
+                    Text(
+                        text =
+                            buildString {
+                                append(Format.bytes(entity.downloadedBytes))
+                                if (entity.totalBytes > 0) {
+                                    append(" / ")
+                                    append(Format.bytes(entity.totalBytes))
+                                    if (percent >= 0) append("  \u00B7  $percent%")
+                                }
+                            },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (!compact && active) {
+                        val ctx = androidx.compose.ui.platform.LocalContext.current
+                        Text(
+                            text =
+                                listOfNotNull(
+                                    com.arc.downloadmanager.util.Format.speed(ctx, speedBps),
+                                    com.arc.downloadmanager.util.Format.eta(ctx, entity.totalBytes - entity.downloadedBytes, speedBps),
+                                ).joinToString("  \u00B7  "),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
                     }
-                    if (!status.isTerminal || status == DownloadStatus.CANCELED) {
-                        IconButton(onClick = onCancel) {
-                            Icon(
-                                Icons.Filled.Close,
-                                contentDescription = androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_cancel),
-                            )
+                    if (status == DownloadStatus.FAILED || status == DownloadStatus.AUTH_REQUIRED) {
+                        Text(
+                            text = entity.errorMessage ?: "",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+                Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    StatusPill(status)
+                    Row {
+                        when {
+                            active || status == DownloadStatus.PAUSING ->
+                                IconButton(onClick = onPauseResume) {
+                                    Icon(
+                                        Icons.Filled.PauseCircle,
+                                        contentDescription = androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_pause),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            status == DownloadStatus.PAUSED || status == DownloadStatus.WAITING_NETWORK ||
+                                status == DownloadStatus.WAITING_STORAGE ->
+                                IconButton(onClick = onPauseResume) {
+                                    Icon(
+                                        Icons.Filled.PlayCircle,
+                                        contentDescription = androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_resume),
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                            status.isTerminal || status == DownloadStatus.AUTH_REQUIRED ->
+                                IconButton(onClick = onRetry) {
+                                    Icon(
+                                        Icons.Filled.Refresh,
+                                        contentDescription = androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_retry),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                        }
+                        if (!status.isTerminal || status == DownloadStatus.CANCELED) {
+                            IconButton(onClick = onCancel) {
+                                Icon(
+                                    Icons.Filled.Close,
+                                    contentDescription = androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_cancel),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
-        if (percent >= 0 || active) {
-            if (percent >= 0) {
-                LinearProgressIndicator(
-                    progress = { percent / 100f },
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(top = 6.dp),
-                    color =
-                        if (status == DownloadStatus.AUTH_REQUIRED || status == DownloadStatus.FAILED) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.primary
-                        },
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            if (percent >= 0 || active) {
+                val target = if (percent >= 0) percent / 100f else 0f
+                val animated by animateFloatAsState(
+                    targetValue = target.coerceIn(0f, 1f),
+                    animationSpec = SpringSpec(stiffness = Spring.StiffnessLow, dampingRatio = Spring.DampingRatioNoBouncy),
+                    label = "rowProgress",
                 )
-            } else {
-                LinearProgressIndicator(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(top = 6.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                )
+                val progressColor =
+                    when {
+                        status == DownloadStatus.AUTH_REQUIRED || status == DownloadStatus.FAILED -> MaterialTheme.colorScheme.error
+                        status == DownloadStatus.COMPLETED -> accent
+                        else -> accent
+                    }
+                if (percent >= 0) {
+                    LinearProgressIndicator(
+                        progress = { animated },
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                        color = progressColor,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                        strokeCap = StrokeCap.Round,
+                    )
+                } else {
+                    LinearProgressIndicator(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                        color = progressColor,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                        strokeCap = StrokeCap.Round,
+                    )
+                }
             }
         }
+    }
+}
+
+/** Small rounded status chip with a tinted container. */
+@Composable
+private fun StatusPill(status: DownloadStatus) {
+    val accent = statusAccent(status)
+    Surface(
+        color = accent.copy(alpha = 0.13f),
+        shape = RoundedCornerShape(50),
+    ) {
+        Text(
+            text = androidx.compose.ui.res.stringResource(statusLabelRes(status)),
+            style = MaterialTheme.typography.labelSmall,
+            color = accent,
+            modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
+        )
     }
 }

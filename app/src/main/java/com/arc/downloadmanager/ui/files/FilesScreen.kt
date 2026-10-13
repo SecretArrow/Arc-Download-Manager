@@ -191,7 +191,7 @@ private fun FileRow(
                     Modifier
                         .size(40.dp)
                         .background(
-                            categoryAccent(item.category).copy(alpha = 0.15f),
+                            com.arc.downloadmanager.ui.theme.categoryGradient(categoryAccent(item.category)),
                             MaterialTheme.shapes.small,
                         ),
                 contentAlignment = Alignment.Center,

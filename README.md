@@ -16,6 +16,22 @@ Material Design 3.
 
 ## Features
 
+### All internet protocols
+Arc downloads over **HTTPS, HTTP, FTP, FTPS and SFTP** out of the box, plus `content://` URIs:
+
+| Protocol | Transport | Highlights |
+|----------|-----------|------------|
+| HTTPS / HTTP | OkHttp | HTTP/2 on TLS, up to 16 parallel range segments, redirect chains, signed-CDN refresh, cookie scoping |
+| FTP | Apache Commons Net | Passive mode, binary transfer, `REST`-based resume, anonymous or `ftp://user:pass@host` credentials |
+| FTPS (explicit TLS) | Apache Commons Net | `AUTH TLS` + encrypted data channel (`PROT P`), self-signed home/NAS servers accepted |
+| SFTP | JSch (mwiede fork) | Modern SSH key exchange (works with current OpenSSH), `user:pass@host` credentials, resume via local offset skip |
+| content:// | ContentResolver | Copies any local content-provider document into your library |
+
+Magnet / BitTorrent and other niche schemes fail fast with a clear "protocol not supported"
+message instead of a cryptic error. The Add-download sheet shows a live protocol badge for the
+URL you type, and private-server links (FTP/FTPS/SFTP) accept credentials inline
+(`sftp://user:pass@host/path`).
+
 ### Download engine
 - Persistent state machine: Queued → Connecting → Downloading → Merging → Verifying → Completed
   (plus Paused, Failed, Canceled, Waiting-for-network, Waiting-for-storage, Auth-required).
