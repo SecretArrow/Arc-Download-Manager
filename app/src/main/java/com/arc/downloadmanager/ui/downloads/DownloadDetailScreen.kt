@@ -114,7 +114,7 @@ fun DownloadDetailScreen(
         ) {
             ProgressCard(entity, state.segments, state.speedBps)
             ActionRow(entity, viewModel, context, onEdit = { showEditDialog = true })
-            InfoSection(entity)
+            InfoSection(entity, state.torrent)
         }
     }
 
@@ -344,7 +344,10 @@ private fun ActionRow(
 }
 
 @Composable
-private fun InfoSection(entity: DownloadEntity) {
+private fun InfoSection(
+    entity: DownloadEntity,
+    torrent: com.arc.downloadmanager.engine.torrent.TorrentSnapshot? = null,
+) {
     val ctx = LocalContext.current
     val elapsedMs = ((entity.completedAt ?: System.currentTimeMillis()) - entity.createdAt).coerceAtLeast(1)
     val avgSpeed = entity.downloadedBytes * 1000 / elapsedMs
@@ -352,6 +355,26 @@ private fun InfoSection(entity: DownloadEntity) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             InfoRow(stringResource(R.string.details_source), com.arc.downloadmanager.engine.CookieScopePolicy.hostOf(entity.finalUrl ?: entity.url))
             InfoRow(stringResource(R.string.details_speed_avg), Format.speed(ctx, avgSpeed))
+            torrent?.let {
+                InfoRow(
+                    stringResource(R.string.details_torrent_state),
+                    when (it.state) {
+                        com.arc.downloadmanager.engine.torrent.TorrentRunState.FETCHING_METADATA ->
+                            stringResource(R.string.torrent_state_metadata)
+                        com.arc.downloadmanager.engine.torrent.TorrentRunState.CHECKING ->
+                            stringResource(R.string.torrent_state_checking)
+                        com.arc.downloadmanager.engine.torrent.TorrentRunState.DOWNLOADING ->
+                            stringResource(R.string.torrent_state_downloading)
+                        com.arc.downloadmanager.engine.torrent.TorrentRunState.FINISHED ->
+                            stringResource(R.string.torrent_state_finished)
+                        com.arc.downloadmanager.engine.torrent.TorrentRunState.ERROR ->
+                            it.errorMessage ?: stringResource(R.string.error_torrent_failed)
+                        com.arc.downloadmanager.engine.torrent.TorrentRunState.UNKNOWN ->
+                            stringResource(R.string.torrent_state_unknown)
+                    },
+                )
+                InfoRow(stringResource(R.string.details_torrent_peers), stringResource(R.string.torrent_peers_value, it.numPeers, it.numSeeds))
+            }
             InfoRow(
                 stringResource(R.string.details_resume_supported),
                 if (entity.resumable) stringResource(R.string.details_resume_supported) else stringResource(R.string.details_resume_unsupported),
@@ -415,6 +438,8 @@ private fun friendlyError(
         com.arc.downloadmanager.engine.DownloadError.CHECKSUM_MISMATCH.name -> stringResource(R.string.error_checksum)
         com.arc.downloadmanager.engine.DownloadError.PAGE_NOT_FILE.name -> stringResource(R.string.error_page_not_file)
         com.arc.downloadmanager.engine.DownloadError.PROTOCOL_UNSUPPORTED.name -> stringResource(R.string.error_protocol_unsupported)
+        com.arc.downloadmanager.engine.DownloadError.TORRENT_METADATA_TIMEOUT.name -> stringResource(R.string.error_torrent_metadata_timeout)
+        com.arc.downloadmanager.engine.DownloadError.TORRENT_FAILED.name -> stringResource(R.string.error_torrent_failed)
         com.arc.downloadmanager.engine.DownloadError.CANCELED.name -> stringResource(R.string.error_canceled)
         else -> stringResource(R.string.error_unknown, detail ?: code)
     }

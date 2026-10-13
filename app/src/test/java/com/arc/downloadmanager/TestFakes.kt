@@ -188,6 +188,8 @@ class FakeTaskStorage(private val root: File) : TaskStorage {
         filename: String,
     ): File = File(root, "${downloadId}_$filename")
 
+    override fun torrentDir(downloadId: String): File = File(File(root, "torrents").apply { mkdirs() }, downloadId).apply { mkdirs() }
+
     override fun reconcilePart(
         downloadId: String,
         index: Int,
@@ -217,6 +219,19 @@ class FakeTaskStorage(private val root: File) : TaskStorage {
         staged.copyTo(dest, overwrite = true)
         staged.delete()
         return dest.toURI().toString()
+    }
+
+    override suspend fun finalizeFolder(
+        files: List<File>,
+        folderName: String,
+        destinationUri: String?,
+    ): List<String> {
+        val folder = File(root, "final_folder_$folderName").apply { mkdirs() }
+        return files.map { file ->
+            val target = File(folder, file.name)
+            file.copyTo(target, overwrite = true)
+            target.toURI().toString()
+        }
     }
 
     override suspend fun deleteFinal(finalUri: String?): Boolean {

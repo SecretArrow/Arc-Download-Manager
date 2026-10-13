@@ -5,6 +5,9 @@ import com.arc.downloadmanager.data.db.SegmentEntity
 import com.arc.downloadmanager.data.settings.EngineSettings
 import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.engine.store.DownloadStore
+import com.arc.downloadmanager.engine.torrent.TorrentEngine
+import com.arc.downloadmanager.engine.torrent.TorrentFiles
+import com.arc.downloadmanager.engine.torrent.TorrentRunState
 import com.arc.downloadmanager.engine.transport.ContentStreams
 import com.arc.downloadmanager.engine.transport.FtpAuthException
 import com.arc.downloadmanager.engine.transport.FtpTransport
@@ -87,6 +90,7 @@ class TaskRunner
         private val networkMonitor: ConnectivityView,
         private val cookieProvider: CookieProvider,
         private val contentStreams: ContentStreams? = null,
+        private val torrentEngine: TorrentEngine? = null,
     ) {
         private val backoff = BackoffPolicy()
         private val ftpTransport = FtpTransport()
@@ -117,6 +121,7 @@ class TaskRunner
                 Protocols.FTP, Protocols.FTPS -> executeFtp(entity, settings, control)
                 Protocols.SFTP -> executeSftp(entity, settings, control)
                 Protocols.CONTENT -> executeContent(entity, settings, control)
+                Protocols.MAGNET -> executeTorrent(entity, settings, control)
                 else -> {
                     // magnet:, ed2k:, rtmp: ... fail with an actionable, friendly message.
                     if (!Protocols.isHttpUrl(entity.url)) {
@@ -406,6 +411,181 @@ class TaskRunner
                     control = control,
                 )
             return if (outcome == TaskOutcome.Completed) promoteAndFinalize(entity.id, settings) else outcome
+        }
+
+        // endregion
+
+        // region BitTorrent (magnet links)
+
+        /**
+         * Runs a magnet task through [TorrentEngine]: add to the libtorrent session, poll the
+         * handle every [TORRENT_POLL_MS] (progress writes, pause/cancel/network/storage checks,
+         * metadata timeout) and finalize the payload into the user destination when finished.
+         */
+        private suspend fun executeTorrent(
+            entity: DownloadEntity,
+            settings: EngineSettings,
+            control: TaskControl,
+        ): TaskOutcome {
+            val engine =
+                torrentEngine
+                    ?: return TaskOutcome.Failed(DownloadError.PROTOCOL_UNSUPPORTED, "BitTorrent engine unavailable")
+            val saveDir = storage.torrentDir(entity.id)
+            if (!engine.addMagnet(entity.url, saveDir)) {
+                return TaskOutcome.Failed(DownloadError.TORRENT_FAILED, "The BitTorrent engine could not start on this device")
+            }
+            // A paused handle must resume when the task is re-run after a USER pause.
+            engine.resume(entity.url)
+
+            // Show the dn= name immediately; the real torrent name arrives with the metadata.
+            val dn = MagnetUri.displayName(entity.url)
+            val placeholder = torrentPlaceholder(entity.url)
+            if (!dn.isNullOrBlank() && entity.filename.startsWith(placeholder)) {
+                store.updateMeta(entity.id, entity.url, FilenameDetector.sanitize(dn))
+            }
+
+            var metadataWaitMs = 0L
+            var lastWritten = -1L
+            while (true) {
+                delay(TORRENT_POLL_MS)
+                if (control.cancelRequested) {
+                    engine.remove(entity.url)
+                    return TaskOutcome.Canceled
+                }
+                if (control.pauseRequested) {
+                    engine.pause(entity.url)
+                    store.updateProgress(entity.id, currentTorrentBytes(engine, entity), lastTotalBytes(engine, entity))
+                    return TaskOutcome.Paused(PauseReason.USER)
+                }
+                if (!networkMonitor.isOnline.value) {
+                    engine.pause(entity.url)
+                    return TaskOutcome.Paused(PauseReason.NO_NETWORK)
+                }
+                val snap = engine.snapshot(entity.url)
+                if (snap == null) {
+                    metadataWaitMs += TORRENT_POLL_MS
+                    if (metadataWaitMs >= TORRENT_METADATA_TIMEOUT_MS) {
+                        engine.remove(entity.url)
+                        return TaskOutcome.Failed(DownloadError.TORRENT_METADATA_TIMEOUT, "No peers answered the magnet link")
+                    }
+                    continue
+                }
+                snap.errorMessage?.let {
+                    engine.remove(entity.url)
+                    return TaskOutcome.Failed(DownloadError.TORRENT_FAILED, it)
+                }
+                if (snap.state == TorrentRunState.FETCHING_METADATA || snap.totalWanted <= 0L) {
+                    metadataWaitMs += TORRENT_POLL_MS
+                    if (metadataWaitMs >= TORRENT_METADATA_TIMEOUT_MS) {
+                        engine.remove(entity.url)
+                        return TaskOutcome.Failed(DownloadError.TORRENT_METADATA_TIMEOUT, "Torrent metadata did not arrive in time")
+                    }
+                    continue
+                }
+                val fresh = store.getById(entity.id) ?: return TaskOutcome.Canceled
+                // Once metadata is known, prefer the real torrent name while the task still
+                // carries the auto-generated magnet placeholder.
+                if (fresh.filename.startsWith(placeholder) && !snap.name.isNullOrBlank() &&
+                    !snap.name.equals(MagnetUri.infoHashHex(entity.url), ignoreCase = true)
+                ) {
+                    store.updateMeta(entity.id, fresh.url, FilenameDetector.sanitize(snap.name!!))
+                }
+                // Payload is written in place (1x); the final promotion copy needs a second 1x.
+                if (!storage.hasFreeSpace((2L * snap.totalWanted - snap.totalWantedDone).coerceAtLeast(0L))) {
+                    engine.pause(entity.url)
+                    return TaskOutcome.Paused(PauseReason.LOW_STORAGE)
+                }
+                if (snap.totalWantedDone != lastWritten) {
+                    lastWritten = snap.totalWantedDone
+                    store.updateProgress(entity.id, snap.totalWantedDone, snap.totalWanted)
+                }
+                if (snap.state == TorrentRunState.FINISHED || snap.totalWantedDone >= snap.totalWanted) {
+                    store.updateProgress(entity.id, snap.totalWanted, snap.totalWanted)
+                    // Never seed from a mobile device: stop the moment we complete.
+                    engine.pause(entity.url)
+                    break
+                }
+            }
+            return finalizeTorrent(entity, saveDir, settings)
+        }
+
+        private fun currentTorrentBytes(
+            engine: TorrentEngine,
+            entity: DownloadEntity,
+        ): Long = engine.snapshot(entity.url)?.totalWantedDone ?: 0L
+
+        private fun lastTotalBytes(
+            engine: TorrentEngine,
+            entity: DownloadEntity,
+        ): Long = engine.snapshot(entity.url)?.totalWanted?.takeIf { it > 0 } ?: -1L
+
+        /** Promotes the finished torrent payload into the user destination. */
+        private suspend fun finalizeTorrent(
+            entity: DownloadEntity,
+            saveDir: File,
+            settings: EngineSettings,
+        ): TaskOutcome {
+            store.updateStatus(entity.id, DownloadStatus.MERGING)
+            val fresh = store.getById(entity.id) ?: return TaskOutcome.Canceled
+            val files = TorrentFiles.collect(saveDir)
+            if (files.isEmpty()) {
+                return TaskOutcome.Failed(DownloadError.IO_ERROR, "Torrent finished without payload files")
+            }
+            return if (files.size == 1) {
+                val file = files.first()
+                // Prefer the real payload name so MediaStore gets a proper extension/type.
+                val name = FilenameDetector.sanitize(file.name).ifBlank { fresh.filename }
+                val staged = storage.stagingFile(fresh.id, name)
+                staged.parentFile?.mkdirs()
+                file.copyTo(staged, overwrite = true)
+                val updated =
+                    fresh.copy(
+                        filename = name,
+                        totalBytes = staged.length(),
+                        mimeType = TorrentFiles.guessMime(name) ?: fresh.mimeType,
+                    )
+                store.update(updated)
+                val outcome = finalizeDownload(updated, staged, settings)
+                if (outcome == TaskOutcome.Completed) storage.cleanup(fresh.id)
+                outcome
+            } else {
+                finalizeTorrentFolder(fresh, files, settings)
+            }
+        }
+
+        /** Multi-file torrent: copy every payload file into Downloads/Arc/<folder>/ and complete. */
+        private suspend fun finalizeTorrentFolder(
+            fresh: DownloadEntity,
+            files: List<File>,
+            settings: EngineSettings,
+        ): TaskOutcome {
+            val folderName = FilenameDetector.sanitize(fresh.filename).ifBlank { "Torrent" }
+            return try {
+                val uris = storage.finalizeFolder(files, folderName, fresh.destinationUri)
+                val now = System.currentTimeMillis()
+                store.update(
+                    fresh.copy(
+                        status = DownloadStatus.COMPLETED,
+                        finalUri = uris.joinToString("\n"),
+                        totalBytes = TorrentFiles.totalBytes(files),
+                        errorCode = null,
+                        errorMessage = null,
+                        updatedAt = now,
+                        completedAt = now,
+                    ),
+                )
+                storage.cleanup(fresh.id)
+                TaskOutcome.Completed
+            } catch (e: java.io.IOException) {
+                store.updateStatus(fresh.id, DownloadStatus.FAILED, DownloadError.IO_ERROR.name, e.message)
+                TaskOutcome.Failed(DownloadError.IO_ERROR, e.message)
+            }
+        }
+
+        /** Auto filename for a magnet before its real name is known. */
+        private fun torrentPlaceholder(magnetUri: String): String {
+            val hash = MagnetUri.infoHashHex(magnetUri)
+            return if (hash != null) "magnet-${hash.take(12)}" else "magnet"
         }
 
         // endregion
@@ -1188,6 +1368,8 @@ class TaskRunner
             private const val AGGREGATE_PROGRESS_INTERVAL_MS = 500L
             private const val SPACE_CHECK_INTERVAL_MS = 2_000L
             private const val MAX_REDIRECTS = 10
+            private const val TORRENT_POLL_MS = 500L
+            private const val TORRENT_METADATA_TIMEOUT_MS = 180_000L
             const val DEFAULT_USER_AGENT: String =
                 "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36 ArcDM/1.0"
         }

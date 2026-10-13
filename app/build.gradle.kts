@@ -17,8 +17,8 @@ android {
         applicationId = "com.arc.downloadmanager"
         minSdk = 26
         targetSdk = 35
-        versionCode = 8
-        versionName = "1.6.0"
+        versionCode = 9
+        versionName = "1.7.0"
 
         testInstrumentationRunner = "com.arc.downloadmanager.HiltTestRunner"
         vectorDrawables {
@@ -147,6 +147,14 @@ dependencies {
     // Extra protocols: FTP/FTPS (Apache Commons Net) and SFTP (JSch)
     implementation(libs.commons.net)
     implementation(libs.jsch)
+
+    // BitTorrent (magnet links) via jlibtorrent - native libtorrent 2.0.
+    // ABIs: arm64-v8a + armeabi-v7a + x86_64 (32-bit x86 is a dead platform; devices with
+    // exotic ABIs degrade gracefully - only torrent tasks fail, every other protocol works).
+    implementation(libs.jlibtorrent)
+    implementation(libs.jlibtorrent.arm)
+    implementation(libs.jlibtorrent.arm64)
+    implementation(libs.jlibtorrent.x86.n64)
 
     // Files / media
     implementation(libs.androidx.documentfile)

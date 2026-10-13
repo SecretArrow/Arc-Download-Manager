@@ -31,13 +31,15 @@ class ProtocolsTest {
         assertTrue(CookieScopePolicy.isSupportedUrl("ftps://ftp.example.com/file.zip"))
         assertTrue(CookieScopePolicy.isSupportedUrl("sftp://server.example.com/home/user/file.iso"))
         assertTrue(CookieScopePolicy.isSupportedUrl("content://media/external/images/1"))
+        assertTrue(CookieScopePolicy.isSupportedUrl("magnet:?xt=urn:btih:abcdef"))
         // OkHttp leniency: stray spaces and unicode must not be rejected.
         assertTrue(CookieScopePolicy.isSupportedUrl("https://example.com/a b ünïcode.bin"))
     }
 
     @Test
     fun isSupportedUrl_rejectsUnknownAndBroken() {
-        assertFalse(CookieScopePolicy.isSupportedUrl("magnet:?xt=urn:btih:abcdef"))
+        // A magnet without any xt hash is not usable.
+        assertFalse(CookieScopePolicy.isSupportedUrl("magnet:?dn=file.iso"))
         assertFalse(CookieScopePolicy.isSupportedUrl("rtsp://stream.example.com/live"))
         assertFalse(CookieScopePolicy.isSupportedUrl("ftp://"))
         assertFalse(CookieScopePolicy.isSupportedUrl("sftp:///no-host/file"))

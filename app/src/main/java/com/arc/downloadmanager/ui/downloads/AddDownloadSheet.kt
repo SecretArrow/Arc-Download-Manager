@@ -140,6 +140,8 @@ fun AddDownloadSheet(
                             error && url.isBlank() -> Text(stringResource(R.string.add_empty_url))
                             error -> Text(stringResource(R.string.add_url_unsupported))
                             scheme != null && !urlSupported -> Text(stringResource(R.string.add_url_unsupported))
+                            scheme == com.arc.downloadmanager.engine.Protocols.MAGNET ->
+                                Text(stringResource(R.string.add_magnet_hint))
                             scheme == com.arc.downloadmanager.engine.Protocols.FTP ||
                                 scheme == com.arc.downloadmanager.engine.Protocols.FTPS ||
                                 scheme == com.arc.downloadmanager.engine.Protocols.SFTP ->
@@ -274,6 +276,7 @@ private fun ProtocolBadges(
             com.arc.downloadmanager.engine.Protocols.FTP,
             com.arc.downloadmanager.engine.Protocols.FTPS,
             com.arc.downloadmanager.engine.Protocols.SFTP,
+            com.arc.downloadmanager.engine.Protocols.MAGNET,
         )
     Row(
         verticalAlignment = Alignment.CenterVertically,

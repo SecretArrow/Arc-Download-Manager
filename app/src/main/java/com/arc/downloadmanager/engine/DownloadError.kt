@@ -19,6 +19,8 @@ enum class DownloadError(val isRecoverable: Boolean) {
     CHECKSUM_MISMATCH(false),
     PAGE_NOT_FILE(false),
     PROTOCOL_UNSUPPORTED(false),
+    TORRENT_METADATA_TIMEOUT(true),
+    TORRENT_FAILED(false),
     IO_ERROR(true),
     CANCELED(false),
     UNKNOWN(true),

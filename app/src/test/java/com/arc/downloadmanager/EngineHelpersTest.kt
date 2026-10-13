@@ -200,7 +200,7 @@ class CookieScopePolicyTest {
         assertTrue(CookieScopePolicy.isSupportedUrl("ftp://example.com/file.zip"))
         assertTrue(CookieScopePolicy.isSupportedUrl("sftp://example.com/file.zip"))
         assertTrue(CookieScopePolicy.isSupportedUrl("content://downloads/all/1"))
-        assertFalse(CookieScopePolicy.isSupportedUrl("magnet:?xt=urn:btih:abc"))
+        assertTrue(CookieScopePolicy.isSupportedUrl("magnet:?xt=urn:btih:abc"))
         assertFalse(CookieScopePolicy.isSupportedUrl("not a url"))
     }
 

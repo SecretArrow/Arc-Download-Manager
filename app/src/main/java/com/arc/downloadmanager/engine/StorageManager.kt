@@ -36,7 +36,16 @@ class StorageManager
         val stagingRoot: File
             get() = File(context.filesDir, "final").apply { mkdirs() }
 
+        /** Torrent payloads are assembled on shared storage (big files); falls back internally. */
+        val torrentRoot: File
+            get() {
+                val base = context.getExternalFilesDir(null) ?: context.filesDir
+                return File(base, "torrents").apply { mkdirs() }
+            }
+
         fun tempDirFor(downloadId: String): File = File(tempRoot, downloadId).apply { mkdirs() }
+
+        override fun torrentDir(downloadId: String): File = File(torrentRoot, downloadId).apply { mkdirs() }
 
         override fun partFile(
             downloadId: String,
@@ -62,16 +71,22 @@ class StorageManager
             return free >= bytesNeeded + margin.coerceAtMost(minFree) && free - bytesNeeded >= minFree / 2
         }
 
-        /** Deletes all temporary artifacts of a download. */
+        /** Deletes all temporary artifacts of a download (including its torrent payload dir). */
         override fun cleanup(downloadId: String) {
             runCatching { tempDirFor(downloadId).deleteRecursively() }
             File(stagingRoot, downloadId).delete()
+            runCatching { File(torrentRoot, downloadId).deleteRecursively() }
         }
 
         /** Removes orphaned temp dirs whose downloads no longer exist. [validIds] are live download ids. */
         override fun cleanupOrphans(validIds: Set<String>): Int {
             var removed = 0
             tempRoot.listFiles()?.forEach { dir ->
+                if (dir.isDirectory && dir.name !in validIds) {
+                    if (dir.deleteRecursively()) removed++
+                }
+            }
+            torrentRoot.listFiles()?.forEach { dir ->
                 if (dir.isDirectory && dir.name !in validIds) {
                     if (dir.deleteRecursively()) removed++
                 }
@@ -186,22 +201,110 @@ class StorageManager
             return doc.uri.toString()
         }
 
-        /** Deletes the finalized artifact (MediaStore row, SAF document or plain file). */
+        /**
+         * Copies a finished multi-file torrent payload into the destination folder. On API 29+
+         * each file becomes a MediaStore row under Downloads/Arc/<folderName>/; SAF trees get
+         * a subfolder; legacy targets use a plain folder in public Downloads.
+         */
+        @Throws(IOException::class)
+        override suspend fun finalizeFolder(
+            files: List<File>,
+            folderName: String,
+            destinationUri: String?,
+        ): List<String> =
+            withContext(Dispatchers.IO) {
+                require(files.isNotEmpty()) { "No payload files to finalize" }
+                if (destinationUri != null) {
+                    finalizeFolderToSaf(files, folderName, Uri.parse(destinationUri))
+                } else {
+                    finalizeFolderToPublicDownloads(files, folderName)
+                }
+            }
+
+        private fun finalizeFolderToPublicDownloads(
+            files: List<File>,
+            folderName: String,
+        ): List<String> {
+            val uris = mutableListOf<String>()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val resolver = context.contentResolver
+                files.forEach { file ->
+                    val mime = com.arc.downloadmanager.engine.torrent.TorrentFiles.guessMime(file.name) ?: "application/octet-stream"
+                    val values =
+                        ContentValues().apply {
+                            put(MediaStore.MediaColumns.DISPLAY_NAME, file.name)
+                            put(MediaStore.MediaColumns.MIME_TYPE, mime)
+                            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Arc/" + folderName)
+                            put(MediaStore.MediaColumns.IS_PENDING, 1)
+                        }
+                    val uri =
+                        resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                            ?: throw IOException("MediaStore rejected the torrent file")
+                    resolver.openOutputStream(uri)?.use { out -> file.inputStream().use { it.copyTo(out) } }
+                        ?: throw IOException("Cannot open MediaStore output stream")
+                    resolver.update(uri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null)
+                    uris += uri.toString()
+                }
+                return uris
+            }
+            // Legacy path (API 26..28)
+            val arcDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Arc")
+            val folder = File(arcDir, folderName).apply { mkdirs() }
+            files.forEach { file ->
+                val target = File(folder, file.name)
+                file.copyTo(target, overwrite = true)
+                uris += Uri.fromFile(target).toString()
+            }
+            return uris
+        }
+
+        private fun finalizeFolderToSaf(
+            files: List<File>,
+            folderName: String,
+            treeUri: Uri,
+        ): List<String> {
+            val tree =
+                DocumentFile.fromTreeUri(context, treeUri)
+                    ?: throw IOException("Destination folder is no longer accessible")
+            val folder = tree.findFile(folderName) ?: tree.createDirectory(folderName) ?: throw IOException("Cannot create folder in destination")
+            val uris = mutableListOf<String>()
+            files.forEach { file ->
+                val mime = com.arc.downloadmanager.engine.torrent.TorrentFiles.guessMime(file.name) ?: "application/octet-stream"
+                val name = com.arc.downloadmanager.engine.FilenameDetector.uniqueName(file.name) { folder.findFile(it) != null }
+                val doc = folder.createFile(mime, name) ?: throw IOException("Cannot create file in destination folder")
+                context.contentResolver.openOutputStream(doc.uri)?.use { out -> file.inputStream().use { it.copyTo(out) } }
+                    ?: throw IOException("Cannot write to destination folder")
+                uris += doc.uri.toString()
+            }
+            return uris
+        }
+
+        /** Deletes the finalized artifact(s). Accepts \n-joined multi-URI payloads (torrent folders). */
         override suspend fun deleteFinal(finalUri: String?): Boolean =
             withContext(Dispatchers.IO) {
                 if (finalUri.isNullOrBlank()) return@withContext false
-                runCatching {
-                    val uri = Uri.parse(finalUri)
-                    when (uri.scheme) {
-                        "content" ->
-                            if (uri.authority == "media") {
-                                context.contentResolver.delete(uri, null, null) > 0
-                            } else {
-                                DocumentFile.fromSingleUri(context, uri)?.delete() == true
-                            }
-                        "file" -> File(uri.path!!).delete()
-                        else -> false
-                    }
-                }.getOrDefault(false)
+                var anyDeleted = false
+                finalUri.split('\n').map { it.trim() }.filter { it.isNotEmpty() }.forEach { single ->
+                    anyDeleted = deleteSingleFinal(single) || anyDeleted
+                }
+                anyDeleted
             }
+
+        private fun deleteSingleFinal(finalUri: String): Boolean =
+            runCatching {
+                val uri = Uri.parse(finalUri)
+                when (uri.scheme) {
+                    "content" ->
+                        if (uri.authority == "media") {
+                            context.contentResolver.delete(uri, null, null) > 0
+                        } else {
+                            DocumentFile.fromSingleUri(context, uri)?.delete() == true
+                        }
+                    "file" -> {
+                        val file = File(uri.path!!)
+                        if (file.isDirectory) file.deleteRecursively() else file.delete()
+                    }
+                    else -> false
+                }
+            }.getOrDefault(false)
     }

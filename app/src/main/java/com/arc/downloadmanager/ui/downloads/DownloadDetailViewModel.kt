@@ -6,7 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.data.db.SegmentEntity
 import com.arc.downloadmanager.data.repository.DownloadRepository
+import com.arc.downloadmanager.engine.Protocols
 import com.arc.downloadmanager.engine.store.DownloadStore
+import com.arc.downloadmanager.engine.torrent.TorrentEngine
+import com.arc.downloadmanager.engine.torrent.TorrentSnapshot
 import com.arc.downloadmanager.util.SpeedTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -25,6 +28,7 @@ class DownloadDetailViewModel
         savedStateHandle: SavedStateHandle,
         private val repository: DownloadRepository,
         store: DownloadStore,
+        private val torrentEngine: TorrentEngine,
     ) : ViewModel() {
         private val id: String = savedStateHandle.get<String>("id") ?: ""
         private val speedTracker = SpeedTracker()
@@ -48,10 +52,18 @@ class DownloadDetailViewModel
                         speedTracker.forget(entity?.id ?: "")
                         0L
                     }
+                // Live BitTorrent stats (peers/seeds/state) while a magnet task is active.
+                val torrent =
+                    if (entity != null && entity.status.isActive && Protocols.schemeOf(entity.url) == Protocols.MAGNET) {
+                        torrentEngine.snapshot(entity.url)
+                    } else {
+                        null
+                    }
                 DetailUiState(
                     entity = entity,
                     segments = segments,
                     speedBps = speed,
+                    torrent = torrent,
                 )
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DetailUiState())
 
@@ -95,4 +107,6 @@ data class DetailUiState(
     val segments: List<SegmentEntity> = emptyList(),
     /** Live smoothed speed in bytes/sec (0 when not downloading). */
     val speedBps: Long = 0L,
+    /** Live BitTorrent stats for magnet tasks (null otherwise). */
+    val torrent: TorrentSnapshot? = null,
 )

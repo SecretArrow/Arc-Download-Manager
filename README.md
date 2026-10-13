@@ -17,7 +17,7 @@ Material Design 3.
 ## Features
 
 ### All internet protocols
-Arc downloads over **HTTPS, HTTP, FTP, FTPS and SFTP** out of the box, plus `content://` URIs:
+Arc downloads over **HTTPS, HTTP, FTP, FTPS, SFTP, magnet (BitTorrent)** and `content://` URIs:
 
 | Protocol | Transport | Highlights |
 |----------|-----------|------------|
@@ -25,12 +25,18 @@ Arc downloads over **HTTPS, HTTP, FTP, FTPS and SFTP** out of the box, plus `con
 | FTP | Apache Commons Net | Passive mode, binary transfer, `REST`-based resume, anonymous or `ftp://user:pass@host` credentials |
 | FTPS (explicit TLS) | Apache Commons Net | `AUTH TLS` + encrypted data channel (`PROT P`), self-signed home/NAS servers accepted |
 | SFTP | JSch (mwiede fork) | Modern SSH key exchange (works with current OpenSSH), `user:pass@host` credentials, resume via local offset skip |
+| Magnet (BitTorrent) | jlibtorrent (libtorrent 2.0) | DHT + tracker peer discovery, v1 & hybrid v1/v2 magnets, live peers/seeds in the detail screen |
 | content:// | ContentResolver | Copies any local content-provider document into your library |
 
-Magnet / BitTorrent and other niche schemes fail fast with a clear "protocol not supported"
-message instead of a cryptic error. The Add-download sheet shows a live protocol badge for the
-URL you type, and private-server links (FTP/FTPS/SFTP) accept credentials inline
-(`sftp://user:pass@host/path`).
+**BitTorrent notes:** magnet tasks run on a native libtorrent 2.0 session (arm64-v8a,
+armeabi-v7a and x86_64 are bundled; that is what grows the APK to ~40 MB).
+Files are assembled per-task, then promoted into `Downloads/Arc/` (single file) or
+`Downloads/Arc/<torrent name>/` (multi-file). Seeding is disabled by design: the torrent is
+paused the moment its payload completes. If no peers answer the magnet, the task fails after a
+3-minute metadata window with an actionable message. Other niche schemes (ed2k, rtmp ...) still
+fail fast with a clear "protocol not supported" message. The Add-download sheet shows a live
+protocol badge for the URL you type, and private-server links (FTP/FTPS/SFTP) accept credentials
+inline (`sftp://user:pass@host/path`).
 
 ### Download engine
 - Persistent state machine: Queued → Connecting → Downloading → Merging → Verifying → Completed

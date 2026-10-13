@@ -24,3 +24,7 @@
 # SFTP (JSch) - crypto classes are loaded reflectively via Class.forName
 -keep class com.jcraft.jsch.** { *; }
 -dontwarn com.jcraft.jsch.**
+
+# BitTorrent (jlibtorrent) - SWIG JNI bindings resolve symbols by exact name
+-keep class com.frostwire.jlibtorrent.** { *; }
+-dontwarn com.frostwire.jlibtorrent.**

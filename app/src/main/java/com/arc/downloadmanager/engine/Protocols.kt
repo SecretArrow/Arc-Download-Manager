@@ -11,8 +11,9 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
  *  - FTP / FTPS (Apache Commons Net, passive mode, REST resume, explicit TLS)
  *  - SFTP (JSch, SSH File Transfer Protocol, resume support)
  *  - content:// (Android content providers / SAF documents)
+ *  - magnet: (BitTorrent via libtorrent/jlibtorrent, DHT + tracker peer discovery)
  *
- * Known-but-unsupported schemes (magnet, ed2k, torrent trackers ...) surface a friendly
+ * Known-but-unsupported schemes (ed2k, rtmp ...) surface a friendly
  * [DownloadError.PROTOCOL_UNSUPPORTED] instead of a generic invalid-URL error.
  */
 object Protocols {
@@ -23,14 +24,14 @@ object Protocols {
     val FTPS = "ftps"
     val SFTP = "sftp"
     val CONTENT = "content"
+    val MAGNET = "magnet"
 
     /** Schemes that can be validated and queued, including locally resolvable ones. */
-    val SUPPORTED_SCHEMES: Set<String> = setOf(HTTP, HTTPS, FTP, FTPS, SFTP, CONTENT)
+    val SUPPORTED_SCHEMES: Set<String> = setOf(HTTP, HTTPS, FTP, FTPS, SFTP, CONTENT, MAGNET)
 
     /** Schemes users commonly paste that the engine cannot download. */
     val KNOWN_UNSUPPORTED: Map<String, String> =
         mapOf(
-            "magnet" to "magnet",
             "torrent" to "torrent",
             "ed2k" to "eDonkey",
             "thunder" to "Thunder",
@@ -67,6 +68,7 @@ object Protocols {
         val scheme = schemeOf(url) ?: return false
         if (scheme !in SUPPORTED_SCHEMES) return false
         if (scheme == CONTENT) return true
+        if (scheme == MAGNET) return MagnetUri.isMagnet(url)
         if (scheme == HTTP || scheme == HTTPS) {
             // OkHttp's HttpUrl is deliberately lenient (spaces, unicode, missing encoding),
             // which java.net.URI is not; pasted links frequently contain stray characters.
@@ -88,6 +90,7 @@ object Protocols {
             FTPS -> "FTPS"
             SFTP -> "SFTP"
             CONTENT -> "Content"
+            MAGNET -> "Magnet"
             null -> ""
             else -> scheme.uppercase()
         }

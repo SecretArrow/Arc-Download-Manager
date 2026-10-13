@@ -61,8 +61,8 @@
     <string name="add_advanced">Advanced options</string>
     <string name="add_invalid_url">Invalid URL</string>
     <string name="add_empty_url">Enter a URL to start</string>
-    <string name="add_url_unsupported">This protocol isn\u2019t supported. Use HTTPS, HTTP, FTP, FTPS or SFTP links.</string>
-    <string name="add_supported_protocols">HTTPS \u00B7 HTTP \u00B7 FTP \u00B7 FTPS \u00B7 SFTP</string>
+    <string name="add_url_unsupported">This protocol isn\u2019t supported. Use HTTPS, HTTP, FTP, FTPS, SFTP or magnet links.</string>
+    <string name="add_supported_protocols">HTTPS \u00B7 HTTP \u00B7 FTP \u00B7 FTPS \u00B7 SFTP \u00B7 Magnet</string>
     <string name="add_remote_credentials_hint">Private server? Include credentials in the URL: ftp://user:pass@host/path</string>
     <string name="add_started">Download started</string>
     <string name="add_batch_started">%1$d downloads queued, %2$d invalid entries skipped</string>
@@ -204,7 +204,7 @@
     <string name="error_checksum">Checksum mismatch. The file may be corrupted.</string>
     <string name="error_invalid_url">The URL is not valid</string>
     <string name="error_page_not_file">This link is a web page, not a downloadable file. On GitHub release pages, tap the exact asset file link.</string>
-    <string name="error_protocol_unsupported">Can\u2019t download this link: its protocol (for example magnet/BitTorrent) isn\u2019t supported yet. Use HTTPS, HTTP, FTP, FTPS or SFTP.</string>
+    <string name="error_protocol_unsupported">Can\u2019t download this link: its protocol isn\u2019t supported. Use HTTPS, HTTP, FTP, FTPS, SFTP or magnet links.</string>
     <string name="error_canceled">Download canceled</string>
     <string name="error_unknown">Unexpected error: %1$s</string>
 
@@ -269,4 +269,15 @@
     <string name="archived_empty_subtitle">Archive finished tasks to keep your queue tidy \u2014 they never auto-resume.</string>
     <string name="no_results_title">No matching tasks</string>
     <string name="no_results_subtitle">Try a different search or filter.</string>
+    <string name="add_magnet_hint">BitTorrent magnet link \u2014 peers are discovered via DHT and the trackers embedded in the link. Availability depends on seeders.</string>
+    <string name="details_torrent_state">Torrent</string>
+    <string name="details_torrent_peers">Peers</string>
+    <string name="torrent_peers_value">%1$d connected \u00B7 %2$d seeds</string>
+    <string name="torrent_state_metadata">Looking for peers\u2026</string>
+    <string name="torrent_state_checking">Checking files\u2026</string>
+    <string name="torrent_state_downloading">Downloading via BitTorrent</string>
+    <string name="torrent_state_finished">Finished</string>
+    <string name="torrent_state_unknown">Preparing\u2026</string>
+    <string name="error_torrent_metadata_timeout">Couldn\u2019t find peers for this torrent \u2014 it may have no active seeders right now. Try again later.</string>
+    <string name="error_torrent_failed">The BitTorrent engine hit an error. Check the magnet link and try again.</string>
 </resources>

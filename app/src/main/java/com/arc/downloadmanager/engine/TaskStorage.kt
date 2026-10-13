@@ -17,6 +17,9 @@ interface TaskStorage {
         filename: String,
     ): File
 
+    /** Per-task directory where a BitTorrent payload is assembled in place. */
+    fun torrentDir(downloadId: String): File
+
     fun reconcilePart(
         downloadId: String,
         index: Int,
@@ -33,6 +36,16 @@ interface TaskStorage {
         entity: DownloadEntity,
         staged: File,
     ): String
+
+    /**
+     * Copies a finished multi-file torrent payload ([files]) into the destination under
+     * [folderName] (e.g. Downloads/Arc/<folderName>/). Returns one final URI per file.
+     */
+    suspend fun finalizeFolder(
+        files: List<File>,
+        folderName: String,
+        destinationUri: String?,
+    ): List<String>
 
     suspend fun deleteFinal(finalUri: String?): Boolean
 }

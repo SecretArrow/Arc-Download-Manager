@@ -43,8 +43,15 @@ class TaskEditPolicyTest {
 
     @Test
     fun `unsupported scheme is rejected`() {
-        val verdict = TaskEditPolicy.evaluate(DownloadStatus.PAUSED, url, "magnet:?xt=urn:btih:xyz", "file.zip")
+        val verdict = TaskEditPolicy.evaluate(DownloadStatus.PAUSED, url, "rtsp://stream.example.com/live", "file.zip")
         assertEquals(TaskEditPolicy.Verdict.Rejected(TaskEditPolicy.Reason.INVALID_URL), verdict)
+    }
+
+    @Test
+    fun `magnet url is now a valid edit target`() {
+        // magnet became a supported scheme in v1.7.0 (BitTorrent engine).
+        val verdict = TaskEditPolicy.evaluate(DownloadStatus.PAUSED, url, "magnet:?xt=urn:btih:xyz", "file.zip")
+        assertEquals(TaskEditPolicy.Verdict.Allowed(resetProgress = true), verdict)
     }
 
     @Test

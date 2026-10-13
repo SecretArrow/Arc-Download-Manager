@@ -17,6 +17,13 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // jlibtorrent (BitTorrent engine) is distributed on FrostWire's Maven repository.
+        maven {
+            url = uri("https://dl.frostwire.com/maven")
+            content {
+                includeGroup("com.frostwire")
+            }
+        }
     }
 }
 

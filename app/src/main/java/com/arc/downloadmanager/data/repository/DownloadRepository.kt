@@ -67,6 +67,7 @@ class DownloadRepository
             val id = java.util.UUID.randomUUID().toString()
             val filename =
                 request.filename
+                    ?: magnetDisplayName(url)
                     ?: FilenameDetector.detect(url, request.contentDisposition, request.mimeType, fallbackSeed = System.currentTimeMillis())
             val entity =
                 DownloadEntity(
@@ -182,4 +183,19 @@ class DownloadRepository
         ): Boolean = engine.setTaskMeta(id, url, filename)
 
         suspend fun defaultSettings(): EngineSettings = settingsRepository.snapshot()
+
+        /**
+         * Magnet links carry their display name in dn=. Use it as the task filename; without a
+         * dn=, fall back to the engine placeholder ("magnet-<hash12>") so the runner swaps in
+         * the real torrent name as soon as the metadata arrives.
+         */
+        private fun magnetDisplayName(url: String): String? {
+            if (com.arc.downloadmanager.engine.Protocols.schemeOf(url) != com.arc.downloadmanager.engine.Protocols.MAGNET) return null
+            val dn = com.arc.downloadmanager.engine.MagnetUri.displayName(url)
+            if (!dn.isNullOrBlank()) {
+                return FilenameDetector.sanitize(dn).takeIf { it.isNotBlank() }
+            }
+            val hash = com.arc.downloadmanager.engine.MagnetUri.infoHashHex(url)
+            return if (hash != null) "magnet-${hash.take(12)}" else "magnet-download"
+        }
     }

@@ -4,6 +4,7 @@ import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.data.settings.EngineSettings
 import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.engine.store.DownloadStore
+import com.arc.downloadmanager.engine.torrent.TorrentEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -32,6 +33,7 @@ class DownloadEngine
         private val settingsRepository: EngineSettingsSource,
         private val networkMonitor: ConnectivityView,
         private val cookieProvider: CookieProvider,
+        torrentEngine: TorrentEngine,
     ) {
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         private val taskRunner =
@@ -41,6 +43,7 @@ class DownloadEngine
                 storage = storage,
                 networkMonitor = networkMonitor,
                 cookieProvider = cookieProvider,
+                torrentEngine = torrentEngine,
             )
 
         private val running = ConcurrentHashMap<String, kotlinx.coroutines.Job>()
