@@ -6,6 +6,7 @@ import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.engine.DownloadEngine
 import com.arc.downloadmanager.engine.TaskControl
 import com.arc.downloadmanager.engine.TaskRunner
+import com.arc.downloadmanager.engine.torrent.TorrentEngine
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import okhttp3.OkHttpClient
@@ -278,6 +279,7 @@ class DownloadEngineTest {
                 settingsRepository = settings,
                 networkMonitor = FakeConnectivity(),
                 cookieProvider = FixedCookieProvider(),
+                torrentEngine = TorrentEngine(),
             )
         engine.start()
 
@@ -322,6 +324,7 @@ class DownloadEngineTest {
                 settingsRepository = FixedSettingsSource(),
                 networkMonitor = FakeConnectivity(),
                 cookieProvider = FixedCookieProvider(),
+                torrentEngine = TorrentEngine(),
             )
         runBlocking {
             val id = "cancel-me"

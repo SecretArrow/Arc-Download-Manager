@@ -1,12 +1,10 @@
 package com.arc.downloadmanager.engine.torrent
 
-import android.content.Context
 import com.arc.downloadmanager.engine.MagnetUri
 import com.frostwire.jlibtorrent.SessionManager
 import com.frostwire.jlibtorrent.Sha1Hash
 import com.frostwire.jlibtorrent.TorrentHandle
 import com.frostwire.jlibtorrent.TorrentStatus
-import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -45,9 +43,7 @@ enum class TorrentRunState {
 @Singleton
 class TorrentEngine
     @Inject
-    constructor(
-        @ApplicationContext private val context: Context,
-    ) {
+    constructor() {
         private val started = AtomicBoolean(false)
         private val nativeAvailable = AtomicBoolean(true)
         private var sessionManager: SessionManager? = null

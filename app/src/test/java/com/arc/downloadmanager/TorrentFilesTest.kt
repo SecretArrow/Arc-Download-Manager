@@ -16,8 +16,8 @@ class TorrentFilesTest {
     fun `collect returns payload files recursively`() {
         val root = tmp.newFolder("task")
         File(root, "movie.mkv").writeBytes(byteArrayOf(1))
-        File(File(root, "subtitles")).apply { mkdirs() }
-        File(File(root, "subtitles"), "movie.srt").writeBytes(byteArrayOf(2))
+        File(root, "subtitles").apply { mkdirs() }
+        File(root, "subtitles/movie.srt").writeBytes(byteArrayOf(2))
         assertEquals(listOf("movie.mkv", "movie.srt"), TorrentFiles.collect(root).map { it.name })
     }
 
@@ -26,8 +26,8 @@ class TorrentFilesTest {
         val root = tmp.newFolder("task")
         File(root, "data.bin").writeBytes(byteArrayOf(1))
         File(root, ".parts").writeBytes(byteArrayOf(2))
-        File(File(root, ".pad")).apply { mkdirs() }
-        File(File(root, ".pad"), "1048576").writeBytes(ByteArray(64))
+        File(root, ".pad").apply { mkdirs() }
+        File(root, ".pad/1048576").writeBytes(ByteArray(64))
         assertEquals(listOf("data.bin"), TorrentFiles.collect(root).map { it.name })
     }
 
