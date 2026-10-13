@@ -281,9 +281,10 @@ private fun HeroCard(
     val progressTarget = if (ui.activeTotalBytes > 0) (activeBytes / ui.activeTotalBytes).coerceIn(0f, 1f) else 0f
     val animatedProgress by androidx.compose.animation.core.animateFloatAsState(
         targetValue = progressTarget,
-        animationSpec = androidx.compose.animation.core.SpringSpec(
-            stiffness = androidx.compose.animation.core.Spring.StiffnessLow,
-        ),
+        animationSpec =
+            androidx.compose.animation.core.SpringSpec(
+                stiffness = androidx.compose.animation.core.Spring.StiffnessLow,
+            ),
         label = "heroProgress",
     )
     val ctx = androidx.compose.ui.platform.LocalContext.current

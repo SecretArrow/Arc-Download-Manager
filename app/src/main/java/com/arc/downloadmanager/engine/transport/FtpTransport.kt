@@ -2,14 +2,14 @@ package com.arc.downloadmanager.engine.transport
 
 import com.arc.downloadmanager.engine.FilenameDetector
 import com.arc.downloadmanager.engine.Protocols
-import java.io.IOException
-import java.io.InputStream
-import java.security.cert.X509Certificate
-import javax.net.ssl.X509TrustManager
 import org.apache.commons.net.ftp.FTP
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPCmd
 import org.apache.commons.net.ftp.FTPSClient
+import java.io.IOException
+import java.io.InputStream
+import java.security.cert.X509Certificate
+import javax.net.ssl.X509TrustManager
 
 /** Thrown when the FTP server rejects the credentials. */
 class FtpAuthException(

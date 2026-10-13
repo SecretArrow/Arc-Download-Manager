@@ -1,7 +1,5 @@
 package com.arc.downloadmanager.engine
 
-import java.net.URI
-
 /**
  * Protocol registry for the download engine. Determines which URL schemes the engine can
  * transfer and exposes small pure helpers shared by the transports, the repository and the UI.

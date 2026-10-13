@@ -203,8 +203,9 @@ class TaskRunner
                             TransferSource(
                                 resumableUsed = opened.resumableUsed,
                                 stream = {
-                                    val body = opened.response.body
-                                        ?: throw java.io.IOException("Empty response body")
+                                    val body =
+                                        opened.response.body
+                                            ?: throw java.io.IOException("Empty response body")
                                     body.byteStream()
                                 },
                                 close = { opened.response.close() },
@@ -375,8 +376,9 @@ class TaskRunner
         ): TaskOutcome {
             val streams =
                 contentStreams ?: return TaskOutcome.Failed(DownloadError.PROTOCOL_UNSUPPORTED, "content:// unavailable")
-            val uri = CookieScopePolicy.safeUri(entity.url)
-                ?: return TaskOutcome.Failed(DownloadError.INVALID_URL, "Malformed content URI")
+            val uri =
+                CookieScopePolicy.safeUri(entity.url)
+                    ?: return TaskOutcome.Failed(DownloadError.INVALID_URL, "Malformed content URI")
             if (entity.downloadedBytes > 0) resetPartialData(entity.id)
             val size = streams.size(uri)
             val updated = prepareRemoteEntity(entity, size, null, acceptsRanges = false)

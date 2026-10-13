@@ -1,7 +1,6 @@
 package com.arc.downloadmanager.engine
 
 import android.net.Uri
-import com.arc.downloadmanager.engine.Protocols
 import java.net.URI
 
 /**
