@@ -31,7 +31,7 @@ object MagnetUri {
         return parse(trimmed)?.hasHash == true
     }
 
-    private fun Magnet.hasHash: Boolean
+    private val Magnet.hasHash: Boolean
         get() = !infoHashHex.isNullOrBlank() || hasV2Hash
 
     /**
