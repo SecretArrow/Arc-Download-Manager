@@ -168,7 +168,7 @@ class GitHubReleaseFlowTest {
         val payload = "GITHUB-RELEASE-APK-BYTES".toByteArray()
         val origin = server.url("/").toString().trimEnd('/')
         server.dispatcher = GitHubDispatcher(payload, origin)
-        val task = entity("$origin$assetPath", filename = "download")
+        val task = entity("$origin$ASSET_PATH", filename = "download")
         insert(task)
 
         runBlocking { runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {}) }
@@ -198,7 +198,7 @@ class GitHubReleaseFlowTest {
                 cookieProvider = FixedCookieProvider(),
             )
         val task =
-            entity("$assetOrigin$assetPath").copy(
+            entity("$assetOrigin$ASSET_PATH").copy(
                 cookies = "logged_in=yes; _gh_sess=SECRET-SESSION; __Host-user_session_same_site=TOKEN",
                 requiresSession = true,
                 referer = "$assetOrigin/SecretArrow/Arc-Download-Manager/releases/tag/v1.4.0",
@@ -217,7 +217,7 @@ class GitHubReleaseFlowTest {
         val origin = server.url("/").toString().trimEnd('/')
         server.dispatcher = GitHubDispatcher(payload, origin)
         val task =
-            entity("$origin$assetPath").copy(
+            entity("$origin$ASSET_PATH").copy(
                 resumable = true,
                 acceptRanges = true,
                 totalBytes = payload.size.toLong(),
@@ -272,7 +272,7 @@ class GitHubReleaseFlowTest {
                     }
                 }
             }
-        val task = entity("$origin$assetPath", segments = 2)
+        val task = entity("$origin$ASSET_PATH", segments = 2)
         insert(task)
 
         runBlocking { runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {}) }
