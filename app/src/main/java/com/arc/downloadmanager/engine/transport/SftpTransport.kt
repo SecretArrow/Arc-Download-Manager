@@ -78,7 +78,7 @@ class SftpTransport {
             channel.connect(connectTimeoutMs)
             try {
                 val attrs = channel.lstat(target.path)
-                if (attrs.isDirectory) throw IOException("SFTP path is a directory: ${target.path}")
+                if (attrs.isDir) throw IOException("SFTP path is a directory: ${target.path}")
                 return SftpSession(attrs.size, FilenameDetector.fromUrl(url), session, channel, target.path)
             } catch (e: SftpException) {
                 runCatching { channel.disconnect() }

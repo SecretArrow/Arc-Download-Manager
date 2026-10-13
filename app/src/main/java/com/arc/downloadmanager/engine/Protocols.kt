@@ -1,5 +1,7 @@
 package com.arc.downloadmanager.engine
 
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+
 /**
  * Protocol registry for the download engine. Determines which URL schemes the engine can
  * transfer and exposes small pure helpers shared by the transports, the repository and the UI.
@@ -68,7 +70,7 @@ object Protocols {
         if (scheme == HTTP || scheme == HTTPS) {
             // OkHttp's HttpUrl is deliberately lenient (spaces, unicode, missing encoding),
             // which java.net.URI is not; pasted links frequently contain stray characters.
-            return url?.trim()?.let { okhttp3.HttpUrl.Companion.toHttpUrlOrNull(it) } != null
+            return url?.trim()?.toHttpUrlOrNull() != null
         }
         // ftp/ftps/sftp need a host at minimum.
         return parseAuthority(url ?: return false) != null
@@ -138,7 +140,14 @@ object Protocols {
         }
         val rawPath = url.substringAfter("//", "").substringAfter('/', "").substringBefore('?').substringBefore('#')
         val path = "/" + percentDecode(rawPath)
-        return RemoteTarget(scheme, host, port, user, password, if (path == "/") "/" else path.trimEnd('/').ifEmpty { "/" })
+        return RemoteTarget(
+            scheme,
+            host,
+            portFromAuthority,
+            user,
+            password,
+            if (path == "/") "/" else path.trimEnd('/').ifEmpty { "/" },
+        )
     }
 
     /** Splits "host[:port]" from "user:pass@" of an authority section. */
