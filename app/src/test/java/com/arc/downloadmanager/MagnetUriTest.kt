@@ -64,7 +64,7 @@ class MagnetUriTest {
         // Hybrid magnet carries both v1 and v2 hashes; the v1 one wins for lookups.
         val hybrid =
             "magnet:?xt=urn:btmh:1220caf1e1c30e81cb361b9ee167c4a76c1e1d5e4f4f4f4f4f4f4f4f4f4f4f4f4f4f" +
-            "&xt=urn:btih:0123456789abcdef0123456789abcdef01234567"
+                "&xt=urn:btih:0123456789abcdef0123456789abcdef01234567"
         assertEquals("0123456789abcdef0123456789abcdef01234567", MagnetUri.infoHashHex(hybrid))
     }
 
