@@ -49,7 +49,8 @@ class MagnetUriTest {
     fun `unknown hash encodings are passed through verbatim`() {
         // The engine stays permissive at enqueue time; libtorrent is the hash authority.
         assertEquals("short", MagnetUri.parse("magnet:?xt=urn:btih:short")?.infoHashHex)
-        assertEquals("zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz", MagnetUri.parse("magnet:?xt=urn:btih:zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz")?.infoHashHex)
+        val longGarbage = "z".repeat(40)
+        assertEquals(longGarbage, MagnetUri.parse("magnet:?xt=urn:btih:$longGarbage")?.infoHashHex)
     }
 
     @Test
@@ -61,7 +62,9 @@ class MagnetUriTest {
     @Test
     fun `infoHashHex helper works for hybrid magnets`() {
         // Hybrid magnet carries both v1 and v2 hashes; the v1 one wins for lookups.
-        val hybrid = "magnet:?xt=urn:btmh:1220caf1e1c30e81cb361b9ee167c4a76c1e1d5e4f4f4f4f4f4f4f4f4f4f4f4f4f4f&xt=urn:btih:0123456789abcdef0123456789abcdef01234567"
+        val hybrid =
+            "magnet:?xt=urn:btmh:1220caf1e1c30e81cb361b9ee167c4a76c1e1d5e4f4f4f4f4f4f4f4f4f4f4f4f4f4f" +
+            "&xt=urn:btih:0123456789abcdef0123456789abcdef01234567"
         assertEquals("0123456789abcdef0123456789abcdef01234567", MagnetUri.infoHashHex(hybrid))
     }
 
