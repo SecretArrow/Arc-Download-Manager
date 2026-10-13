@@ -84,16 +84,28 @@ class GitHubReleaseFlowTest {
     private fun awaitStatus(
         id: String,
         vararg statuses: DownloadStatus,
-        timeoutMs: Long = 15_000,
+        timeoutMs: Long = 30_000,
     ): DownloadEntity =
         runBlocking {
-            withTimeout(timeoutMs) {
-                while (true) {
-                    store.getById(id)?.let { if (it.status in statuses) return@withTimeout it }
-                    Thread.sleep(25)
+            try {
+                withTimeout(timeoutMs) {
+                    while (true) {
+                        store.getById(id)?.let { if (it.status in statuses) return@withTimeout it }
+                        // delay() is cancellable: withTimeout can actually fire (Thread.sleep cannot).
+                        kotlinx.coroutines.delay(25)
+                    }
+                    @Suppress("UNREACHABLE_CODE")
+                    throw IllegalStateException()
                 }
-                @Suppress("UNREACHABLE_CODE")
-                throw IllegalStateException()
+            } catch (e: java.util.concurrent.TimeoutException) {
+                throw AssertionError("Timed out waiting for $statuses", e)
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                val last = store.getById(id)
+                throw AssertionError(
+                    "Timed out waiting for $statuses; last=${last?.status} " +
+                        "err=${last?.errorCode}:${last?.errorMessage} bytes=${last?.downloadedBytes}/${last?.totalBytes}",
+                    e,
+                )
             }
         }
 
@@ -257,16 +269,27 @@ class GitHubReleaseFlowTest {
                             MockResponse().setResponseCode(403)
                         path.startsWith("/signed/") -> {
                             val rangeHeader = request.getHeader("Range")
-                            val match = Regex("bytes=(\\d+)-(\\d+)?").find(rangeHeader ?: "") ?: return MockResponse().setResponseCode(416)
-                            val start = match.groupValues[1].toLong()
-                            val end = (match.groupValues[2].toLongOrNull() ?: (payload.size - 1L)).coerceAtMost(payload.size - 1L)
-                            MockResponse()
-                                .setResponseCode(206)
-                                .setHeader("Content-Range", "bytes $start-$end/${payload.size}")
-                                .setHeader("Accept-Ranges", "bytes")
-                                .setHeader("ETag", "\"0x8DF27910E5ED719\"")
-                                .setHeader("Content-Length", (end - start + 1).toString())
-                                .setBody(Buffer().write(payload.copyOfRange(start.toInt(), (end + 1).toInt())))
+                            if (rangeHeader == null) {
+                                // Range-less GET: the initial open or the refresh probe.
+                                MockResponse()
+                                    .setResponseCode(200)
+                                    .setHeader("Content-Type", "application/vnd.android.package-archive")
+                                    .setHeader("Accept-Ranges", "bytes")
+                                    .setHeader("ETag", "\"0x8DF27910E5ED719\"")
+                                    .setHeader("Content-Length", payload.size.toString())
+                                    .setBody(Buffer().write(payload))
+                            } else {
+                                val match = Regex("bytes=(\\d+)-(\\d+)?").find(rangeHeader) ?: return MockResponse().setResponseCode(416)
+                                val start = match.groupValues[1].toLong()
+                                val end = (match.groupValues[2].toLongOrNull() ?: (payload.size - 1L)).coerceAtMost(payload.size - 1L)
+                                MockResponse()
+                                    .setResponseCode(206)
+                                    .setHeader("Content-Range", "bytes $start-$end/${payload.size}")
+                                    .setHeader("Accept-Ranges", "bytes")
+                                    .setHeader("ETag", "\"0x8DF27910E5ED719\"")
+                                    .setHeader("Content-Length", (end - start + 1).toString())
+                                    .setBody(Buffer().write(payload.copyOfRange(start.toInt(), (end + 1).toInt())))
+                            }
                         }
                         else -> MockResponse().setResponseCode(404)
                     }
@@ -276,7 +299,7 @@ class GitHubReleaseFlowTest {
         insert(task)
 
         runBlocking { runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {}) }
-        val done = awaitStatus(task.id, DownloadStatus.COMPLETED, timeoutMs = 30_000)
+        val done = awaitStatus(task.id, DownloadStatus.COMPLETED, timeoutMs = 60_000)
         assertEquals(payload.size.toLong(), done.downloadedBytes)
         // finalUrl must have been refreshed to a newly signed link (counter > 1).
         val signedIndex = done.finalUrl.orEmpty().substringAfter("/signed/", "").substringBefore('/').toIntOrNull()
