@@ -17,7 +17,7 @@ object TorrentFiles {
                 // Any path segment starting with "." is bookkeeping (e.g. /.pad/123, .parts).
                 val relative = file.absolutePath.removePrefix(base)
                 relative.split(File.separator).none { it.startsWith(".") }
-            }.sortedBy { it.absolutePath }
+            }.sortedBy { it.absolutePath }.toList()
     }
 
     /** Total bytes of the payload files. */

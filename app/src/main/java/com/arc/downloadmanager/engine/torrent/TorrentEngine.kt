@@ -116,7 +116,8 @@ class TorrentEngine
 
         /** Removes the torrent from the session (files on disk are managed by the caller). */
         fun remove(magnetUri: String) {
-            withHandle(magnetUri) { sm -> sm.remove(it) }
+            val sm = sessionManager ?: return
+            withHandle(magnetUri) { handle -> sm.remove(handle) }
         }
 
         private fun withHandle(
