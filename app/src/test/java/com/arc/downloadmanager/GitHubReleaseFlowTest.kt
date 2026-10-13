@@ -69,13 +69,15 @@ class GitHubReleaseFlowTest {
     /** OkHttp client whose DNS resolves the fake test hosts onto the local MockWebServer. */
     private fun clientWithFakeHosts(): OkHttpClient =
         OkHttpClient.Builder()
-            .dns { hostname ->
-                if (hostname == "github.test" || hostname == "cdn.test") {
-                    listOf(InetAddress.getByAddress(hostname, server.socketAddress.address))
-                } else {
-                    Dns.SYSTEM.lookup(hostname)
-                }
-            }
+            .dns(
+                Dns { hostname: String ->
+                    if (hostname == "github.test" || hostname == "cdn.test") {
+                        listOf(InetAddress.getByAddress(hostname, server.socketAddress.address))
+                    } else {
+                        Dns.SYSTEM.lookup(hostname)
+                    }
+                },
+            )
             .build()
 
     private fun awaitStatus(
