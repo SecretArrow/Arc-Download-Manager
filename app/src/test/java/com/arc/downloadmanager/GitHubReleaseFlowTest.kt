@@ -28,6 +28,8 @@ import java.io.File
 import java.net.InetAddress
 import java.util.concurrent.atomic.AtomicInteger
 
+private const val ASSET_PATH = "/SecretArrow/Arc-Download-Manager/releases/download/v1.4.0/app-release.apk"
+
 /**
  * Regression tests for the GitHub release-asset download flow: the original URL 302-redirects
  * to a signed CDN link (release-assets.githubusercontent.com) that carries the file name in
@@ -42,8 +44,6 @@ class GitHubReleaseFlowTest {
     private lateinit var store: InMemoryDownloadStore
     private lateinit var storage: FakeTaskStorage
     private lateinit var runner: TaskRunner
-
-    private val assetPath = "/SecretArrow/Arc-Download-Manager/releases/download/v1.4.0/app-release.apk"
 
     @Before
     fun setUp() {
@@ -70,12 +70,13 @@ class GitHubReleaseFlowTest {
     private fun clientWithFakeHosts(): OkHttpClient =
         OkHttpClient.Builder()
             .dns(
-                Dns { hostname: String ->
-                    if (hostname == "github.test" || hostname == "cdn.test") {
-                        listOf(InetAddress.getByAddress(hostname, server.socketAddress.address))
-                    } else {
-                        Dns.SYSTEM.lookup(hostname)
-                    }
+                object : Dns {
+                    override fun lookup(hostname: String): List<InetAddress> =
+                        if (hostname == "github.test" || hostname == "cdn.test") {
+                            listOf(InetAddress.getLoopbackAddress())
+                        } else {
+                            Dns.SYSTEM.lookup(hostname)
+                        }
                 },
             )
             .build()
@@ -123,7 +124,7 @@ class GitHubReleaseFlowTest {
         override fun dispatch(request: RecordedRequest): MockResponse {
             val path = request.path ?: "/"
             return when {
-                path.startsWith(assetPath) -> {
+                path.startsWith(ASSET_PATH) -> {
                     val n = signedCounter.incrementAndGet()
                     MockResponse()
                         .setResponseCode(302)
@@ -245,7 +246,7 @@ class GitHubReleaseFlowTest {
                 override fun dispatch(request: RecordedRequest): MockResponse {
                     val path = request.path ?: "/"
                     return when {
-                        path.startsWith(assetPath) -> {
+                        path.startsWith(ASSET_PATH) -> {
                             val n = signedCounter.incrementAndGet()
                             MockResponse()
                                 .setResponseCode(302)
