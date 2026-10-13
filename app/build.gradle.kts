@@ -154,7 +154,7 @@ dependencies {
     implementation(libs.jlibtorrent)
     implementation(libs.jlibtorrent.arm)
     implementation(libs.jlibtorrent.arm64)
-    implementation(libs.jlibtorrent.x86.n64)
+    implementation(libs.jlibtorrent.x64)
 
     // Files / media
     implementation(libs.androidx.documentfile)
