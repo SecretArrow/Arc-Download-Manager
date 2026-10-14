@@ -4,6 +4,7 @@ package com.arc.downloadmanager.ui.settings
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,10 +13,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -35,7 +41,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,6 +51,8 @@ import com.arc.downloadmanager.BuildConfig
 import com.arc.downloadmanager.R
 import com.arc.downloadmanager.data.settings.OverwritePolicy
 import com.arc.downloadmanager.data.settings.ThemeMode
+
+private const val ABOUT_GITHUB_URL = "https://github.com/SecretArrow/Arc-Download-Manager"
 
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
@@ -176,13 +186,59 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
 
             SettingsSection(stringResource(R.string.settings_advanced)) {
                 TextButton(onClick = viewModel::reset) { Text(stringResource(R.string.settings_reset)) }
-                Text(
-                    stringResource(R.string.settings_version, BuildConfig.VERSION_NAME),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
+
+            AboutCard(version = BuildConfig.VERSION_NAME)
             Spacer(Modifier.height(32.dp))
+        }
+    }
+}
+
+@Composable
+private fun AboutCard(version: String) {
+    val context = LocalContext.current
+    Card(Modifier.fillMaxWidth()) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Image(
+                painter = painterResource(R.drawable.ic_logo),
+                contentDescription = null,
+                modifier = Modifier.size(52.dp),
+            )
+            Spacer(Modifier.height(10.dp))
+            Text(
+                stringResource(R.string.app_name),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                stringResource(R.string.about_developed_by, stringResource(R.string.about_developer)),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                stringResource(R.string.settings_version, version),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(4.dp))
+            TextButton(
+                onClick = {
+                    runCatching {
+                        context.startActivity(
+                            android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(ABOUT_GITHUB_URL)),
+                        )
+                    }
+                },
+            ) {
+                Icon(Icons.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.about_open_github))
+            }
         }
     }
 }

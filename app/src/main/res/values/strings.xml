@@ -167,6 +167,9 @@
     <string name="settings_reset">Reset settings</string>
     <string name="settings_about">About</string>
     <string name="settings_version">Version %1$s</string>
+    <string name="about_developer">Maragung</string>
+    <string name="about_developed_by">Developed by %1$s</string>
+    <string name="about_open_github">View project on GitHub</string>
     <string name="settings_min_free_space">Minimum free space warning (MB)</string>
     <string name="settings_overwrite_policy">Existing file policy</string>
     <string name="settings_overwrite_rename">Rename copy</string>
