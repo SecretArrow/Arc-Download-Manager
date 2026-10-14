@@ -69,8 +69,7 @@ class AutoRetryTest {
         code: Int,
         body: String = "boom",
     ) = object : Dispatcher() {
-        override fun dispatch(request: RecordedRequest): MockResponse =
-            MockResponse().setResponseCode(code).setBody(Buffer().write(body.toByteArray()))
+        override fun dispatch(request: RecordedRequest): MockResponse = MockResponse().setResponseCode(code).setBody(Buffer().write(body.toByteArray()))
     }
 
     @Test
