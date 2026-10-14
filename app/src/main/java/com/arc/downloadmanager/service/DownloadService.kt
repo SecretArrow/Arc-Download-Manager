@@ -100,9 +100,13 @@ class DownloadService : Service() {
         val notification = notifications.aggregateNotification(0, 0, 0, 0, emptyList(), anyActive = false)
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+                // Use the SAME id as the live aggregate notification: the platform-required
+                // foreground notification IS the aggregate one, so postAggregate() updates it
+                // in place and the user only ever sees a single, live-updating notification
+                // (previously a separate id froze at 0 B/s — the duplicate notification).
+                startForeground(NotificationHelper.NOTIF_AGGREGATE_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
             } else {
-                startForeground(NOTIFICATION_ID, notification)
+                startForeground(NotificationHelper.NOTIF_AGGREGATE_ID, notification)
             }
             startedInForeground = true
         } catch (rejected: IllegalStateException) {
@@ -220,7 +224,6 @@ class DownloadService : Service() {
         const val ACTION_PAUSE_ALL = "com.arc.downloadmanager.PAUSE_ALL"
         const val ACTION_RESUME_ALL = "com.arc.downloadmanager.RESUME_ALL"
         const val ACTION_CANCEL_ALL = "com.arc.downloadmanager.CANCEL_ALL"
-        const val NOTIFICATION_ID = 2001
 
         fun start(context: Context) {
             val intent = Intent(context, DownloadService::class.java)
