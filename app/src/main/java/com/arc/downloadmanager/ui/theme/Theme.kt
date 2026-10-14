@@ -10,6 +10,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -77,16 +78,22 @@ private val DarkColors =
 /** Softer, rounder geometry than the M3 defaults for a friendlier feel. */
 private val ArcShapes =
     Shapes(
-        extraSmall = RoundedCornerShape(8.dp),
-        small = RoundedCornerShape(10.dp),
-        medium = RoundedCornerShape(14.dp),
-        large = RoundedCornerShape(20.dp),
-        extraLarge = RoundedCornerShape(28.dp),
+        extraSmall = RoundedCornerShape(10.dp),
+        small = RoundedCornerShape(12.dp),
+        medium = RoundedCornerShape(16.dp),
+        large = RoundedCornerShape(22.dp),
+        extraLarge = RoundedCornerShape(30.dp),
     )
 
-/** Brand gradient used by hero surfaces (works on light and dark themes). */
+/** Brand gradient stops used by hero surfaces (works on light and dark themes). */
 val ArcBrandGradient =
     listOf(ArcBlue, ArcViolet)
+
+/** Rich diagonal hero gradient: blue → indigo → violet, for hero and about headers. */
+val ArcHeroBrush: Brush =
+    Brush.linearGradient(
+        colors = listOf(ArcBlue, Color(0xFF4A54FF), ArcViolet),
+    )
 
 @Composable
 fun ArcTheme(

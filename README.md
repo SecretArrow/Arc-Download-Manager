@@ -85,8 +85,11 @@ inline (`sftp://user:pass@host/path`).
 - 401/403 responses surface a "Sign-in required" state instead of silently corrupting files.
 
 ### Files & UI
-- Material 3 UI with dynamic color, dark/light themes, compact/detailed list modes, and an
-  adaptive layout (NavigationBar on phones, NavigationRail on tablets).
+- **Modern Material 3 redesign (v2.0)**: brand-gradient hero card with glass stat chips and
+  decorative depth, gradient progress bars on every download row, a premium About card with
+  developer credit, icon-led settings sections, smooth tab transitions, a tighter editorial
+  type scale, dynamic color, dark/light themes, compact/detailed list modes, and an adaptive
+  layout (NavigationBar on phones, NavigationRail on tablets).
 - **Full task management**: edit a task's URL and filename (validated per protocol; URL changes
   discard partial progress safely), delete tasks with an optional "also delete the downloaded
   file" step, and **archive** finished or paused tasks out of the queue — archived tasks never

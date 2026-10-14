@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -27,6 +28,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -98,7 +100,7 @@ import com.arc.downloadmanager.domain.model.DownloadRequest
 import com.arc.downloadmanager.engine.CookieScopePolicy
 import com.arc.downloadmanager.ui.components.DownloadRow
 import com.arc.downloadmanager.ui.downloads.AddDownloadSheet
-import com.arc.downloadmanager.ui.theme.ArcBrandGradient
+import com.arc.downloadmanager.ui.theme.ArcHeroBrush
 import com.arc.downloadmanager.util.Format
 import kotlinx.coroutines.launch
 
@@ -599,16 +601,23 @@ private fun EmptyState(
         Box(
             modifier =
                 Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                    .size(72.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
+                            ),
+                        ),
+                    ),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 icon,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(30.dp),
+                modifier = Modifier.size(32.dp),
             )
         }
         Spacer(Modifier.height(14.dp))
@@ -685,34 +694,50 @@ private fun HeroCard(
             Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
-                .clip(RoundedCornerShape(26.dp))
-                .background(Brush.linearGradient(ArcBrandGradient))
+                .clip(RoundedCornerShape(28.dp))
+                .background(ArcHeroBrush)
                 .padding(20.dp),
     ) {
+        // Decorative translucent circles bleeding past the edges — depth without noise.
+        Box(
+            modifier =
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = 52.dp, y = (-58).dp)
+                    .size(150.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.10f)),
+        )
+        Box(
+            modifier =
+                Modifier
+                    .align(Alignment.BottomStart)
+                    .offset(x = (-44).dp, y = 46.dp)
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.08f)),
+        )
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(
                         text = stringResource(if (ui.activeCount > 0) R.string.hero_downloading else R.string.hero_idle),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
                         color = Color.White,
                     )
-                    Text(
-                        text =
-                            listOfNotNull(
-                                stringResource(R.string.hero_active_count, ui.activeCount),
-                                stringResource(R.string.hero_queued_count, ui.runningCount),
-                                stringResource(R.string.hero_failed_count, ui.failedCount).takeIf { ui.failedCount > 0 },
-                            ).joinToString("  \u00B7  "),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.78f),
-                    )
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        HeroChip(stringResource(R.string.hero_active_count, ui.activeCount))
+                        HeroChip(stringResource(R.string.hero_queued_count, ui.runningCount))
+                        if (ui.failedCount > 0) {
+                            HeroChip(stringResource(R.string.hero_failed_count, ui.failedCount))
+                        }
+                    }
                 }
                 Box(contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(
                         progress = { animatedProgress },
-                        modifier = Modifier.size(56.dp),
+                        modifier = Modifier.size(60.dp),
                         color = Color.White,
                         trackColor = Color.White.copy(alpha = 0.22f),
                         strokeWidth = 5.dp,
@@ -721,7 +746,6 @@ private fun HeroCard(
                     Text(
                         text = if (progressTarget > 0f) "${(progressTarget * 100).toInt()}%" else "",
                         style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
                         color = Color.White,
                     )
                 }
@@ -790,6 +814,21 @@ private fun HeroCard(
     }
 }
 
+/** Translucent glass pill used inside the hero card. */
+@Composable
+private fun HeroChip(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelSmall,
+        color = Color.White,
+        modifier =
+            Modifier
+                .clip(RoundedCornerShape(50))
+                .background(Color.White.copy(alpha = 0.16f))
+                .padding(horizontal = 10.dp, vertical = 4.dp),
+    )
+}
+
 @Composable
 private fun QuickActions(
     onAdd: () -> Unit,
@@ -846,16 +885,23 @@ private fun EmptyDownloads(
         Box(
             modifier =
                 Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                    .size(72.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
+                            ),
+                        ),
+                    ),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 Icons.Filled.Download,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(30.dp),
+                modifier = Modifier.size(32.dp),
             )
         }
         Spacer(Modifier.height(14.dp))

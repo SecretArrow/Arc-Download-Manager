@@ -1,5 +1,10 @@
 package com.arc.downloadmanager.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -159,7 +164,15 @@ private fun ArcNavHost(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier.fillMaxSize()) {
-        NavHost(navController = navController, startDestination = Routes.HOME) {
+        NavHost(
+            navController = navController,
+            startDestination = Routes.HOME,
+            // Soft cross-fade with a subtle vertical drift — modern app-tab feel, no jarring jumps.
+            enterTransition = { fadeIn(tween(220)) + slideInVertically(tween(220)) { it / 24 } },
+            exitTransition = { fadeOut(tween(150)) },
+            popEnterTransition = { fadeIn(tween(220)) },
+            popExitTransition = { fadeOut(tween(150)) + slideOutVertically(tween(150)) { it / 24 } },
+        ) {
             composable(Routes.HOME) {
                 HomeScreen(
                     onOpenDetail = { id -> navController.navigate(Routes.downloadDetail(id)) },
