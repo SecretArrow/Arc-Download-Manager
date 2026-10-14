@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
@@ -126,7 +127,14 @@ fun ArcApp() {
         }
     } else {
         Scaffold(contentWindowInsets = WindowInsets(0.dp)) { padding ->
-            Row(Modifier.fillMaxSize()) {
+            // navigationBarsPadding: with the side rail there is no bottom NavigationBar, so
+            // content (lists, FAB, browser controls) must clear the system navigation bar;
+            // screens applying their own navigationBarsPadding see consumed insets (no double pad).
+            Row(
+                Modifier
+                    .fillMaxSize()
+                    .navigationBarsPadding(),
+            ) {
                 rail()
                 ArcNavHost(navController, Modifier.padding(padding))
             }

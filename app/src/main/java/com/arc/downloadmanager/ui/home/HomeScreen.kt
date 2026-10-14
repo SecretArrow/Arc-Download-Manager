@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -425,7 +426,12 @@ private fun SelectionTopBar(
     onDelete: () -> Unit,
     archivedView: Boolean,
 ) {
-    Surface(color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+    // statusBarsPadding: this custom bar replaces the TopAppBar in selection mode, so it
+    // must apply the status-bar inset itself or its content collides with the notification bar.
+    Surface(
+        modifier = Modifier.fillMaxWidth().statusBarsPadding(),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
         Row(
             modifier =
                 Modifier

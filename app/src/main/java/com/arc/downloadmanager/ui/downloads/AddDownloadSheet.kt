@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -114,10 +115,13 @@ fun AddDownloadSheet(
             modifier =
                 Modifier
                     .fillMaxWidth()
+                    // Insets are applied OUTSIDE the scroll container: the viewport itself
+                    // stays clear of the system navigation bar and lifts above the keyboard
+                    // while typing (fields never end up behind system UI).
+                    .navigationBarsPadding()
+                    .imePadding()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp)
-                    // Keep URL/batch fields above the keyboard while typing.
-                    .imePadding()
                     .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {

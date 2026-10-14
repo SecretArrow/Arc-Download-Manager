@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
@@ -321,7 +322,7 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
     // Tabs sheet
     if (showTabs) {
         ModalBottomSheet(onDismissRequest = { showTabs = false }) {
-            Column(Modifier.padding(16.dp)) {
+            Column(Modifier.navigationBarsPadding().padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(R.string.browser_new_tab), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                     TextButton(onClick = {
@@ -362,7 +363,7 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
     if (showBookmarks) {
         val bookmarks by viewModel.bookmarks.collectAsStateWithLifecycle()
         ModalBottomSheet(onDismissRequest = { showBookmarks = false }) {
-            Column(Modifier.padding(16.dp)) {
+            Column(Modifier.navigationBarsPadding().padding(16.dp)) {
                 Text(stringResource(R.string.browser_bookmarks), style = MaterialTheme.typography.titleMedium)
                 bookmarks.forEach { bookmark ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -386,7 +387,7 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
     if (showHistory) {
         val history by viewModel.history.collectAsStateWithLifecycle()
         ModalBottomSheet(onDismissRequest = { showHistory = false }) {
-            Column(Modifier.padding(16.dp)) {
+            Column(Modifier.navigationBarsPadding().padding(16.dp)) {
                 Text(stringResource(R.string.browser_history), style = MaterialTheme.typography.titleMedium)
                 history.forEach { entry ->
                     TextButton(
@@ -405,7 +406,7 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
     // Long-press link menu
     showLinkMenu?.let { link ->
         ModalBottomSheet(onDismissRequest = { showLinkMenu = null }) {
-            Column(Modifier.padding(16.dp)) {
+            Column(Modifier.navigationBarsPadding().padding(16.dp)) {
                 Text(CookieScopePolicy.redact(link), style = MaterialTheme.typography.labelMedium)
                 TextButton(onClick = {
                     viewModel.newTab(link)
