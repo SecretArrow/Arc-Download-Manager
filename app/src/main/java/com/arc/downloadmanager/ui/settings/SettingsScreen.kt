@@ -115,13 +115,19 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 SwitchRow(stringResource(R.string.settings_auto_segments), settings.autoDetectSegments, viewModel::setAutoSegments)
                 SwitchRow(stringResource(R.string.settings_wifi_only), settings.wifiOnly, viewModel::setWifiOnly)
                 SwitchRow(stringResource(R.string.settings_auto_resume), settings.autoResume, viewModel::setAutoResume)
-                SwitchRow(stringResource(R.string.settings_notify_complete), settings.notifyCompletion, viewModel::setNotifyCompletion)
+                SwitchRow(stringResource(R.string.settings_auto_retry), settings.autoRetry, viewModel::setAutoRetry)
+                Text(
+                    stringResource(R.string.settings_auto_retry_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 NumberRow(
                     label = stringResource(R.string.settings_retries),
                     value = settings.retryAttempts,
                     range = 0f..20f,
                     onCommit = viewModel::setRetries,
                 )
+                SwitchRow(stringResource(R.string.settings_notify_complete), settings.notifyCompletion, viewModel::setNotifyCompletion)
                 Text(stringResource(R.string.settings_overwrite_policy), style = MaterialTheme.typography.labelMedium)
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                     listOf(

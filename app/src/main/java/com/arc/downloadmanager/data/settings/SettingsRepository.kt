@@ -30,6 +30,7 @@ class SettingsRepository
             val AUTO_SEGMENTS = booleanPreferencesKey("auto_detect_segments")
             val WIFI_ONLY = booleanPreferencesKey("wifi_only")
             val AUTO_RESUME = booleanPreferencesKey("auto_resume")
+            val AUTO_RETRY = booleanPreferencesKey("auto_retry")
             val NOTIFY_COMPLETION = booleanPreferencesKey("notify_completion")
             val RETRY_ATTEMPTS = intPreferencesKey("retry_attempts")
             val CONNECT_TIMEOUT = intPreferencesKey("connect_timeout_sec")
@@ -56,6 +57,7 @@ class SettingsRepository
                     autoDetectSegments = p[Keys.AUTO_SEGMENTS] ?: true,
                     wifiOnly = p[Keys.WIFI_ONLY] ?: false,
                     autoResume = p[Keys.AUTO_RESUME] ?: true,
+                    autoRetry = p[Keys.AUTO_RETRY] ?: true,
                     notifyCompletion = p[Keys.NOTIFY_COMPLETION] ?: true,
                     retryAttempts = p[Keys.RETRY_ATTEMPTS] ?: 5,
                     connectTimeoutSec = p[Keys.CONNECT_TIMEOUT] ?: 15,
@@ -88,6 +90,8 @@ class SettingsRepository
         suspend fun setWifiOnly(value: Boolean) = edit { it[Keys.WIFI_ONLY] = value }
 
         suspend fun setAutoResume(value: Boolean) = edit { it[Keys.AUTO_RESUME] = value }
+
+        suspend fun setAutoRetry(value: Boolean) = edit { it[Keys.AUTO_RETRY] = value }
 
         suspend fun setNotifyCompletion(value: Boolean) = edit { it[Keys.NOTIFY_COMPLETION] = value }
 

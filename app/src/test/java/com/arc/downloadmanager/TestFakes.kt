@@ -244,6 +244,10 @@ class FakeTaskStorage(private val root: File) : TaskStorage {
 class FakeConnectivity(initialOnline: Boolean = true) : ConnectivityView {
     override val isOnline: MutableStateFlow<Boolean> = MutableStateFlow(initialOnline)
     override val isOnWifi: MutableStateFlow<Boolean> = MutableStateFlow(true)
+
+    override fun refreshNow() {
+        // Static fake: the current values are already "live".
+    }
 }
 
 class FixedSettingsSource(var current: EngineSettings = EngineSettings()) : EngineSettingsSource {

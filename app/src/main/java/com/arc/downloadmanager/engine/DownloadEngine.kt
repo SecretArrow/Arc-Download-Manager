@@ -60,14 +60,19 @@ class DownloadEngine
         fun start() {
             if (!started.compareAndSet(expect = false, update = true)) return
             scope.launch {
+                // Re-read live connectivity first: a stale cached state at process start must not
+                // strand fresh tasks in WAITING_NETWORK until the user toggles Wi-Fi.
+                networkMonitor.refreshNow()
                 // Recover tasks interrupted by process death.
                 recoverInterruptedTasks()
                 schedule()
             }
             scope.launch {
-                // Ticker: retries queued tasks after backoff, waits out rate limits and network loss.
+                // Ticker: re-reads connectivity (self-healing), retries queued tasks after backoff,
+                // waits out rate limits, retry cool-downs and network loss.
                 while (true) {
                     delay(TICKER_INTERVAL_MS)
+                    networkMonitor.refreshNow()
                     if (!networkMonitor.isOnline.value) continue
                     wakeWaitingTasks()
                     schedule()
@@ -424,10 +429,19 @@ class DownloadEngine
 
         private suspend fun noteHostThrottleFromStore(id: String) {
             val entity = store.getById(id) ?: return
-            if (entity.errorCode == DownloadError.RATE_LIMITED.name) {
-                val host = CookieScopePolicy.hostOf(entity.finalUrl ?: entity.url)
-                noteThrottled(host, DEFAULT_THROTTLE_MS)
-                retryNotBefore[id] = System.currentTimeMillis() + DEFAULT_THROTTLE_MS
+            val code = entity.errorCode ?: return
+            when (code) {
+                DownloadError.RATE_LIMITED.name -> {
+                    val host = CookieScopePolicy.hostOf(entity.finalUrl ?: entity.url)
+                    noteThrottled(host, DEFAULT_THROTTLE_MS)
+                    retryNotBefore[id] = System.currentTimeMillis() + DEFAULT_THROTTLE_MS
+                }
+                // TaskRunner auto-requeued this task after a recoverable failure: hold it for a
+                // fixed cool-down before the next attempt instead of hammering the server.
+                else ->
+                    if (entity.status == DownloadStatus.QUEUED) {
+                        retryNotBefore[id] = System.currentTimeMillis() + RETRY_DELAY_MS
+                    }
             }
         }
 
@@ -457,6 +471,9 @@ class DownloadEngine
         companion object {
             private const val TICKER_INTERVAL_MS = 15_000L
             private const val DEFAULT_THROTTLE_MS = 30_000L
+
+            /** Cool-down between automatic retries of a failed attempt. */
+            private const val RETRY_DELAY_MS = 30_000L
             private const val MIN_THROTTLED_SEGMENTS = 2
         }
     }

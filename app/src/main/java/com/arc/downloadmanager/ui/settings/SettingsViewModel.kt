@@ -33,6 +33,8 @@ class SettingsViewModel
 
         fun setAutoResume(value: Boolean) = launch { settingsRepository.setAutoResume(value) }
 
+        fun setAutoRetry(value: Boolean) = launch { settingsRepository.setAutoRetry(value) }
+
         fun setNotifyCompletion(value: Boolean) = launch { settingsRepository.setNotifyCompletion(value) }
 
         fun setRetries(value: Int) = launch { settingsRepository.setRetryAttempts(value) }
@@ -73,6 +75,7 @@ class SettingsViewModel
                 settingsRepository.setMaxConcurrentFiles(3)
                 settingsRepository.setMaxSegmentsPerFile(4)
                 settingsRepository.setRetryAttempts(5)
+                settingsRepository.setAutoRetry(true)
                 settingsRepository.setWifiOnly(false)
                 settingsRepository.setBandwidthLimit(0)
                 settingsRepository.setDefaultDestination(null)

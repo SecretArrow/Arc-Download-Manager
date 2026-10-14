@@ -1306,24 +1306,29 @@ class TaskRunner
             when (outcome.error) {
                 DownloadError.RESOURCE_CHANGED, DownloadError.SEGMENT_MISMATCH -> {
                     // Partial data is no longer valid: restart from scratch (bounded attempts).
-                    if (entity.retryCount < 2) {
+                    if (settings.autoRetry && entity.retryCount < 2) {
                         resetPartialData(id)
                         store.incrementRetry(id)
-                        store.updateStatus(id, DownloadStatus.QUEUED, null, "File changed, restarting")
+                        store.updateStatus(id, DownloadStatus.QUEUED, outcome.error.name, "File changed, restarting")
                     } else {
                         store.updateStatus(id, DownloadStatus.FAILED, outcome.error.name, outcome.message)
                     }
                 }
                 DownloadError.NETWORK_UNAVAILABLE -> store.updateStatus(id, DownloadStatus.WAITING_NETWORK, null, null)
                 DownloadError.RATE_LIMITED -> {
-                    store.incrementRetry(id)
-                    store.updateStatus(id, DownloadStatus.QUEUED, outcome.error.name, outcome.message)
+                    if (settings.autoRetry && entity.retryCount < settings.retryAttempts) {
+                        store.incrementRetry(id)
+                        store.updateStatus(id, DownloadStatus.QUEUED, outcome.error.name, outcome.message)
+                    } else {
+                        store.updateStatus(id, DownloadStatus.FAILED, outcome.error.name, outcome.message)
+                    }
                 }
                 DownloadError.AUTH_REQUIRED -> store.updateStatus(id, DownloadStatus.AUTH_REQUIRED, outcome.error.name, outcome.message)
                 DownloadError.INSUFFICIENT_STORAGE -> store.updateStatus(id, DownloadStatus.WAITING_STORAGE, null, null)
                 DownloadError.CANCELED -> markCanceled(entity)
                 else -> {
-                    val recoverable = outcome.error.isRecoverable && entity.retryCount < settings.retryAttempts
+                    val recoverable =
+                        settings.autoRetry && outcome.error.isRecoverable && entity.retryCount < settings.retryAttempts
                     if (recoverable) {
                         store.incrementRetry(id)
                         store.updateStatus(id, DownloadStatus.QUEUED, outcome.error.name, outcome.message)

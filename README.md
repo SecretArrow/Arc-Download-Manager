@@ -47,6 +47,14 @@ inline (`sftp://user:pass@host/path`).
   500 ms cadence, so the list, detail screen, hero card, notification and widget all update in
   real time — live per-task speed, smoothed ETA and total throughput included.
 - **Reliable pause/resume** backed by Room — survives process death, network loss and app restarts.
+- **Configurable auto-retry (v2.1)**: recoverable failures are retried automatically with a 30 s
+  cool-down between attempts (switch in Settings, on by default; attempt count 0–20, default 5).
+  Only when every attempt is exhausted is the task marked Failed — permanent errors (auth,
+  page links, unsupported protocols) still fail fast. Sign-in-required tasks are never retried
+  blindly.
+- **Robust starts**: connectivity is re-read live on every scheduler tick (and relaxed to the
+  INTERNET capability instead of Android's lagging VALIDATED flag), so newly added tasks start
+  immediately — no more stranded "waiting for network" until you toggle Wi-Fi.
 - Automatic retry with exponential backoff + jitter, `Retry-After` awareness and adaptive
   parallelism when servers rate-limit (HTTP 429/503).
 - **Large-file safe**: the whole pipeline is streaming — bounded 128 KiB network buffers, a

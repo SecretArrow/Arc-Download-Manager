@@ -9,6 +9,7 @@ data class EngineSettings(
     val autoDetectSegments: Boolean = true,
     val wifiOnly: Boolean = false,
     val autoResume: Boolean = true,
+    val autoRetry: Boolean = true,
     val notifyCompletion: Boolean = true,
     val retryAttempts: Int = 5,
     val connectTimeoutSec: Int = 15,

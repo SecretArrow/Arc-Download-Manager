@@ -152,9 +152,11 @@
     <string name="settings_max_concurrent">Simultaneous downloads</string>
     <string name="settings_max_segments">Max connections per file</string>
     <string name="settings_auto_segments">Auto detect multi-part</string>
-    <string name="settings_retries">Retry attempts</string>
     <string name="settings_wifi_only">Wi-Fi only downloads</string>
     <string name="settings_auto_resume">Auto resume on reconnect</string>
+    <string name="settings_auto_retry">Auto retry failed downloads</string>
+    <string name="settings_auto_retry_hint">Failed attempts are retried every 30 s before being marked as failed</string>
+    <string name="settings_retries">Auto-retry attempts</string>
     <string name="settings_notify_complete">Completion notifications</string>
     <string name="settings_bandwidth_limit">Speed limit (KB/s, 0 = unlimited)</string>
     <string name="settings_connect_timeout">Connection timeout (s)</string>
