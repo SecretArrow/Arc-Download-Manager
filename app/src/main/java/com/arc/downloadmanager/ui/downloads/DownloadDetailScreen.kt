@@ -201,7 +201,7 @@ private fun ProgressCard(
             Text(
                 text = "${Format.bytes(entity.downloadedBytes)} / ${
                     if (entity.totalBytes > 0) Format.bytes(entity.totalBytes) else "?"
-                }  •  ${stringResource(statusLabelRes(entity.status))}",
+                }  •  ${stringResource(statusLabelRes(entity.status, entity.errorCode))}",
                 style = MaterialTheme.typography.bodyMedium,
                 color =
                     statusColor(entity.status).takeIf { it != androidx.compose.ui.graphics.Color.Unspecified }

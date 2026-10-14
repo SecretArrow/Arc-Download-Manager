@@ -14,14 +14,18 @@ import javax.inject.Singleton
 /**
  * Observes connectivity so the engine can pause and resume tasks appropriately.
  *
- * "Online" means the active network advertises NET_CAPABILITY_INTERNET. NET_CAPABILITY_VALIDATED
- * is deliberately NOT required: validation lags behind actual connectivity on many devices and
- * can stay unvalidated on VPNs, which used to strand newly added tasks in WAITING_NETWORK until
- * the user toggled Wi-Fi. A genuinely dead network now fails fast into the (configurable)
- * auto-retry flow instead of getting stuck.
+ * "Online" means ANY known network advertises NET_CAPABILITY_INTERNET — cellular included.
+ * NET_CAPABILITY_VALIDATED is deliberately NOT required: validation lags behind actual
+ * connectivity on many devices and can stay unvalidated on VPNs, which used to strand newly
+ * added tasks in WAITING_NETWORK until the user toggled Wi-Fi. A genuinely dead network now
+ * fails fast into the (configurable) auto-retry flow instead of getting stuck.
  *
- * The cached StateFlows are refreshed by network callbacks AND by [refreshNow], which the engine
- * ticker calls every cycle — so a missed/late callback can no longer wedge the queue.
+ * Two layers make the state hard to get wrong:
+ *  1. [NetworkStateResolver] — the default network wins while it works, otherwise the scan of
+ *     all known networks supplies a usable one (activeNetwork can be null/stale mid-handoff
+ *     on some ROMs while cellular data still works).
+ *  2. The cached StateFlows are refreshed by network callbacks AND by [refreshNow], which the
+ *     engine ticker calls every cycle — so a missed/late callback can no longer wedge the queue.
  */
 @Singleton
 class NetworkMonitor
@@ -59,12 +63,35 @@ class NetworkMonitor
                 }
             }
 
+        // Catches default-network switches even on ROMs that never deliver the
+        // NetworkRequest-filtered callbacks above.
+        private val defaultCallback =
+            object : ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: Network) {
+                    refreshNow()
+                }
+
+                override fun onLost(network: Network) {
+                    refreshNow()
+                }
+
+                override fun onCapabilitiesChanged(
+                    network: Network,
+                    capabilities: NetworkCapabilities,
+                ) {
+                    refreshNow()
+                }
+            }
+
         init {
             runCatching {
                 connectivityManager.registerNetworkCallback(
                     NetworkRequest.Builder().addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).build(),
                     callback,
                 )
+            }
+            runCatching {
+                connectivityManager.registerDefaultNetworkCallback(defaultCallback)
             }
             refreshNow()
         }
@@ -77,14 +104,21 @@ class NetworkMonitor
             _isMetered.value = !wifi
         }
 
-        /** Returns (online, onWifi) for the currently active network. */
+        @Suppress("DEPRECATION") // allNetworks: the cheapest way to see every known network
         private fun currentState(): Pair<Boolean, Boolean> {
-            val network = connectivityManager.activeNetwork ?: return false to false
-            val caps = connectivityManager.getNetworkCapabilities(network) ?: return false to false
-            val online = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-            val wifi =
-                caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-                    caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
-            return online to wifi
+            val active =
+                connectivityManager.activeNetwork
+                    ?.let { connectivityManager.getNetworkCapabilities(it) }
+                    ?.let(::pairOf)
+            val others =
+                connectivityManager.allNetworks
+                    .mapNotNull { network -> connectivityManager.getNetworkCapabilities(network)?.let(::pairOf) }
+            return NetworkStateResolver.resolve(active, others)
         }
+
+        private fun pairOf(caps: NetworkCapabilities): Pair<Boolean, Boolean> = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) to isWifi(caps)
+
+        private fun isWifi(caps: NetworkCapabilities): Boolean =
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
     }

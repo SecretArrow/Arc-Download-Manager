@@ -20,6 +20,7 @@
     <string name="status_failed">Failed</string>
     <string name="status_canceled">Canceled</string>
     <string name="status_waiting_network">Waiting for network</string>
+    <string name="status_waiting_wifi">Waiting for Wi-Fi</string>
     <string name="status_waiting_storage">Waiting for storage</string>
     <string name="status_auth_required">Sign-in required</string>
 

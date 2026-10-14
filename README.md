@@ -55,6 +55,11 @@ inline (`sftp://user:pass@host/path`).
 - **Robust starts**: connectivity is re-read live on every scheduler tick (and relaxed to the
   INTERNET capability instead of Android's lagging VALIDATED flag), so newly added tasks start
   immediately — no more stranded "waiting for network" until you toggle Wi-Fi.
+- **Works on any network (v2.2)**: cellular included. When the default route is missing or
+  stale (a real quirk on some ROMs mid Wi-Fi↔data handoff), connectivity now falls back to
+  scanning every known network — downloads no longer appear "Wi-Fi only" while the Wi-Fi-only
+  switch is off. Tasks genuinely held by the Wi-Fi-only switch now say "Waiting for Wi-Fi"
+  instead of the misleading "Waiting for network".
 - Automatic retry with exponential backoff + jitter, `Retry-After` awareness and adaptive
   parallelism when servers rate-limit (HTTP 429/503).
 - **Large-file safe**: the whole pipeline is streaming — bounded 128 KiB network buffers, a

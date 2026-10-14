@@ -4,6 +4,7 @@ package com.arc.downloadmanager.engine
 enum class DownloadError(val isRecoverable: Boolean) {
     INVALID_URL(false),
     NETWORK_UNAVAILABLE(true),
+    WIFI_REQUIRED(true),
     SERVER_ERROR(true),
     AUTH_REQUIRED(true),
     FORBIDDEN(true),

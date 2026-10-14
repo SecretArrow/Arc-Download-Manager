@@ -373,14 +373,18 @@ class DownloadEngine
             val online = networkMonitor.isOnline.value
             if (!online) {
                 if (task.status != DownloadStatus.WAITING_NETWORK) {
-                    scope.launch { store.updateStatus(task.id, DownloadStatus.WAITING_NETWORK) }
+                    scope.launch { store.updateStatus(task.id, DownloadStatus.WAITING_NETWORK, null, null) }
                 }
                 return false
             }
             val wantsWifi = task.wifiOnly || settings.wifiOnly
             if (wantsWifi && !networkMonitor.isOnWifi.value) {
-                if (task.status != DownloadStatus.WAITING_NETWORK) {
-                    scope.launch { store.updateStatus(task.id, DownloadStatus.WAITING_NETWORK) }
+                // Persist WHY the task is held so the UI can say "Waiting for Wi-Fi" instead of
+                // the generic "Waiting for network" while cellular data is working fine.
+                if (task.status != DownloadStatus.WAITING_NETWORK || task.errorCode != DownloadError.WIFI_REQUIRED.name) {
+                    scope.launch {
+                        store.updateStatus(task.id, DownloadStatus.WAITING_NETWORK, DownloadError.WIFI_REQUIRED.name, null)
+                    }
                 }
                 return false
             }
@@ -455,16 +459,28 @@ class DownloadEngine
             storage.cleanupOrphans(all.map { it.id }.toSet())
         }
 
+        /**
+         * Re-queues held tasks whose blocking reason is gone. Tasks whose reason persists
+         * (offline, or Wi-Fi required but absent) keep their status — otherwise they would
+         * flip-flop between QUEUED and WAITING_* on every tick and churn the database.
+         */
         private suspend fun wakeWaitingTasks() {
             val now = System.currentTimeMillis()
+            val online = networkMonitor.isOnline.value
+            val onWifi = networkMonitor.isOnWifi.value
+            val settings = settingsRepository.snapshot()
             store.getAllNow().forEach { entity ->
                 if (entity.archivedAt != null) return@forEach
-                if (entity.status == DownloadStatus.WAITING_NETWORK || entity.status == DownloadStatus.WAITING_STORAGE) {
-                    val notBefore = retryNotBefore[entity.id] ?: 0L
-                    if (now >= notBefore) {
-                        store.updateStatus(entity.id, DownloadStatus.QUEUED, null, null)
-                    }
+                val waiting =
+                    entity.status == DownloadStatus.WAITING_NETWORK || entity.status == DownloadStatus.WAITING_STORAGE
+                if (!waiting) return@forEach
+                val notBefore = retryNotBefore[entity.id] ?: 0L
+                if (now < notBefore) return@forEach
+                if (entity.status == DownloadStatus.WAITING_NETWORK) {
+                    if (!online) return@forEach
+                    if ((entity.wifiOnly || settings.wifiOnly) && !onWifi) return@forEach
                 }
+                store.updateStatus(entity.id, DownloadStatus.QUEUED, null, null)
             }
         }
 

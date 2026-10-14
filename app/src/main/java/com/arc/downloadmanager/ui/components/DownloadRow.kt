@@ -55,8 +55,11 @@ import com.arc.downloadmanager.ui.theme.categoryAccent
 import com.arc.downloadmanager.ui.theme.categoryGradient
 import com.arc.downloadmanager.util.Format
 
-/** Maps a status to a color-consistent icon + text pair (never color alone). */
-fun statusLabelRes(status: DownloadStatus): Int =
+/** Maps a status (plus optional error code) to a color-consistent icon + text pair (never color alone). */
+fun statusLabelRes(
+    status: DownloadStatus,
+    errorCode: String? = null,
+): Int =
     when (status) {
         DownloadStatus.QUEUED -> com.arc.downloadmanager.R.string.status_queued
         DownloadStatus.CONNECTING -> com.arc.downloadmanager.R.string.status_connecting
@@ -68,7 +71,12 @@ fun statusLabelRes(status: DownloadStatus): Int =
         DownloadStatus.COMPLETED -> com.arc.downloadmanager.R.string.status_completed
         DownloadStatus.FAILED -> com.arc.downloadmanager.R.string.status_failed
         DownloadStatus.CANCELED -> com.arc.downloadmanager.R.string.status_canceled
-        DownloadStatus.WAITING_NETWORK -> com.arc.downloadmanager.R.string.status_waiting_network
+        DownloadStatus.WAITING_NETWORK ->
+            if (errorCode == com.arc.downloadmanager.engine.DownloadError.WIFI_REQUIRED.name) {
+                com.arc.downloadmanager.R.string.status_waiting_wifi
+            } else {
+                com.arc.downloadmanager.R.string.status_waiting_network
+            }
         DownloadStatus.WAITING_STORAGE -> com.arc.downloadmanager.R.string.status_waiting_storage
         DownloadStatus.AUTH_REQUIRED -> com.arc.downloadmanager.R.string.status_auth_required
     }
@@ -220,7 +228,7 @@ fun DownloadRow(
                     }
                 }
                 Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    StatusPill(status)
+                    StatusPill(status, entity.errorCode)
                     Row {
                         if (onArchive != null && !inSelectionMode) {
                             IconButton(onClick = onArchive) {
@@ -330,14 +338,17 @@ fun DownloadRow(
 
 /** Small rounded status chip with a tinted container. */
 @Composable
-private fun StatusPill(status: DownloadStatus) {
+private fun StatusPill(
+    status: DownloadStatus,
+    errorCode: String?,
+) {
     val accent = statusAccent(status)
     Surface(
         color = accent.copy(alpha = 0.13f),
         shape = RoundedCornerShape(50),
     ) {
         Text(
-            text = androidx.compose.ui.res.stringResource(statusLabelRes(status)),
+            text = androidx.compose.ui.res.stringResource(statusLabelRes(status, errorCode)),
             style = MaterialTheme.typography.labelSmall,
             color = accent,
             modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
