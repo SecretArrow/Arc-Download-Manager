@@ -112,6 +112,5 @@ object MagnetUri {
         return if (out.length == 40) out.toString() else null
     }
 
-    private fun percentDecode(value: String): String? =
-        runCatching { URLDecoder.decode(value, Charsets.UTF_8.name()) }.getOrNull()
+    private fun percentDecode(value: String): String? = runCatching { URLDecoder.decode(value, Charsets.UTF_8.name()) }.getOrNull()
 }
