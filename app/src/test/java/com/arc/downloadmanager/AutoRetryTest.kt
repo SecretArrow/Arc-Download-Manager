@@ -80,7 +80,7 @@ class AutoRetryTest {
 
         runBlocking { runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {}) }
 
-        val after = store.getById(task.id)!!
+        val after = runBlocking { store.getById(task.id)!! }
         assertEquals(DownloadStatus.QUEUED, after.status)
         assertEquals(1, after.retryCount)
         assertEquals("SERVER_ERROR", after.errorCode)
@@ -96,7 +96,7 @@ class AutoRetryTest {
             runner.run(task.id, EngineSettings(autoRetry = false), TaskControl(), { 16 }, {})
         }
 
-        val after = store.getById(task.id)!!
+        val after = runBlocking { store.getById(task.id)!! }
         assertEquals(DownloadStatus.FAILED, after.status)
         assertEquals(0, after.retryCount)
     }
@@ -109,7 +109,7 @@ class AutoRetryTest {
 
         runBlocking { runner.run(task.id, EngineSettings(retryAttempts = 5), TaskControl(), { 16 }, {}) }
 
-        val after = store.getById(task.id)!!
+        val after = runBlocking { store.getById(task.id)!! }
         assertEquals(DownloadStatus.FAILED, after.status)
     }
 
@@ -121,7 +121,7 @@ class AutoRetryTest {
 
         runBlocking { runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {}) }
 
-        val after = store.getById(task.id)!!
+        val after = runBlocking { store.getById(task.id)!! }
         assertEquals(DownloadStatus.AUTH_REQUIRED, after.status)
         assertEquals(0, after.retryCount)
     }
@@ -141,7 +141,7 @@ class AutoRetryTest {
 
         runBlocking { runner.run(task.id, EngineSettings(), TaskControl(), { 16 }, {}) }
 
-        val after = store.getById(task.id)!!
+        val after = runBlocking { store.getById(task.id)!! }
         assertEquals(DownloadStatus.FAILED, after.status)
         assertEquals("PAGE_NOT_FILE", after.errorCode)
     }
