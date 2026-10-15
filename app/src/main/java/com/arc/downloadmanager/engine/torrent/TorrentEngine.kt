@@ -1,6 +1,7 @@
 package com.arc.downloadmanager.engine.torrent
 
 import com.arc.downloadmanager.engine.MagnetUri
+import com.frostwire.jlibtorrent.Priority
 import com.frostwire.jlibtorrent.SessionManager
 import com.frostwire.jlibtorrent.Sha1Hash
 import com.frostwire.jlibtorrent.TorrentHandle
@@ -20,6 +21,14 @@ data class TorrentSnapshot(
     val numPeers: Int,
     val numSeeds: Int,
     val errorMessage: String?,
+)
+
+/** One file inside a torrent's payload: [priority] is 0 (excluded) or 1 (included). */
+data class TorrentFileInfo(
+    val fileIndex: Int,
+    val path: String,
+    val sizeBytes: Long,
+    val priority: Int,
 )
 
 /** High-level torrent states the UI can render. */
@@ -100,6 +109,46 @@ class TorrentEngine
             return runCatching { mapSnapshot(handle) }.getOrNull()
         }
 
+        /** True when the torrent's metadata (and thus its file list) has arrived from peers. */
+        fun hasMetadata(magnetUri: String): Boolean = withHandleResult(magnetUri) { it.torrentFile() != null } ?: false
+
+        /**
+         * Per-file view of the torrent payload: index, path, size and selection state.
+         * Empty when the torrent is not in the session or its metadata has not been
+         * downloaded yet. [TorrentFileInfo.priority] is 0 when the file is excluded
+         * (Priority.IGNORE) and 1 otherwise.
+         */
+        fun files(magnetUri: String): List<TorrentFileInfo> {
+            val result =
+                withHandleResult(magnetUri) { handle ->
+                    val fs = handle.torrentFile()?.files()
+                    if (fs == null) {
+                        emptyList<TorrentFileInfo>()
+                    } else {
+                        List(fs.numFiles()) { i ->
+                            TorrentFileInfo(
+                                fileIndex = i,
+                                path = fs.filePath(i),
+                                sizeBytes = fs.fileSize(i),
+                                priority = if (handle.filePriority(i) == Priority.IGNORE) 0 else 1,
+                            )
+                        }
+                    }
+                }
+            return result ?: emptyList()
+        }
+
+        /** Includes/excludes one file from the download (Priority.DEFAULT vs Priority.IGNORE). */
+        fun setFilePriority(
+            magnetUri: String,
+            index: Int,
+            include: Boolean,
+        ) {
+            withHandle(magnetUri) { handle ->
+                handle.filePriority(index, if (include) Priority.DEFAULT else Priority.IGNORE)
+            }
+        }
+
         /** Pauses the torrent's traffic (kept in session for an instant resume). */
         fun pause(magnetUri: String) {
             withHandle(magnetUri) { it.pause() }
@@ -120,15 +169,23 @@ class TorrentEngine
             magnetUri: String,
             block: (TorrentHandle) -> Unit,
         ) {
-            val sm = sessionManager ?: return
-            val hashHex = MagnetUri.infoHashHex(magnetUri) ?: return
+            withHandleResult(magnetUri, block)
+        }
+
+        /** [withHandle] variant returning the block's result, or null when no handle is available. */
+        private fun <T> withHandleResult(
+            magnetUri: String,
+            block: (TorrentHandle) -> T,
+        ): T? {
+            val sm = sessionManager ?: return null
+            val hashHex = MagnetUri.infoHashHex(magnetUri) ?: return null
             val handle =
                 try {
                     sm.find(Sha1Hash(hashHex))
                 } catch (t: Throwable) {
                     null
-                } ?: return
-            runCatching { block(handle) }
+                } ?: return null
+            return runCatching { block(handle) }.getOrNull()
         }
 
         private fun mapSnapshot(handle: TorrentHandle): TorrentSnapshot {

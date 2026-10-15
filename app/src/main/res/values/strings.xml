@@ -286,4 +286,10 @@
     <string name="torrent_state_unknown">Preparing\u2026</string>
     <string name="error_torrent_metadata_timeout">Couldn\u2019t find peers for this torrent \u2014 it may have no active seeders right now. Try again later.</string>
     <string name="error_torrent_failed">The BitTorrent engine hit an error. Check the magnet link and try again.</string>
+
+    <!-- Torrent files -->
+    <string name="torrent_files">Files</string>
+    <string name="torrent_waiting_metadata">Waiting for metadata\u2026</string>
+    <string name="torrent_selected_summary">%1$d/%2$d selected</string>
+    <string name="torrent_at_least_one">At least one file recommended</string>
 </resources>

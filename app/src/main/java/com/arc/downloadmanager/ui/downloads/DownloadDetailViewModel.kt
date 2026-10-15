@@ -9,15 +9,23 @@ import com.arc.downloadmanager.data.repository.DownloadRepository
 import com.arc.downloadmanager.engine.Protocols
 import com.arc.downloadmanager.engine.store.DownloadStore
 import com.arc.downloadmanager.engine.torrent.TorrentEngine
+import com.arc.downloadmanager.engine.torrent.TorrentFileInfo
+import com.arc.downloadmanager.engine.torrent.TorrentRunState
 import com.arc.downloadmanager.engine.torrent.TorrentSnapshot
 import com.arc.downloadmanager.util.SpeedTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -67,6 +75,39 @@ class DownloadDetailViewModel
                 )
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DetailUiState())
 
+        /** Per-file metadata for magnet tasks; empty until the torrent's metadata arrives. */
+        private val _torrentFiles = MutableStateFlow<List<TorrentFileInfo>>(emptyList())
+
+        /** Per-file selection state for magnet tasks (index, path, size, 0 = excluded). */
+        val torrentFiles: StateFlow<List<TorrentFileInfo>> = _torrentFiles.asStateFlow()
+
+        private var torrentFilesJob: Job? = null
+
+        init {
+            // Poll torrent file metadata every 2 s while the detail screen shows a magnet
+            // task. Restarted only when the URL or the active/terminal state changes, so a
+            // progress write does not reset the poll cadence. Cancelled in onCleared.
+            viewModelScope.launch {
+                repository.observeById(id)
+                    .map { entity -> entity?.url to (entity?.status?.isActive == true) }
+                    .distinctUntilChanged()
+                    .collect { (url, active) ->
+                        torrentFilesJob?.cancel()
+                        torrentFilesJob = null
+                        if (url != null && url.startsWith(MAGNET_PREFIX)) {
+                            torrentFilesJob = launch { pollTorrentFiles(url, active) }
+                        } else {
+                            _torrentFiles.value = emptyList()
+                        }
+                    }
+            }
+        }
+
+        override fun onCleared() {
+            torrentFilesJob?.cancel()
+            super.onCleared()
+        }
+
         fun pause() = repository.pause(id)
 
         fun resume() = repository.resume(id)
@@ -99,6 +140,48 @@ class DownloadDetailViewModel
             viewModelScope.launch {
                 onResult(repository.setTaskMeta(id, url, filename))
             }
+        }
+
+        /** Includes/excludes a torrent file: applies it to the engine, then updates the UI optimistically. */
+        fun setTorrentFileIncluded(
+            index: Int,
+            include: Boolean,
+        ) {
+            val url = detail.value.entity?.url ?: return
+            if (!url.startsWith(MAGNET_PREFIX)) return
+            torrentEngine.setFilePriority(url, index, include)
+            _torrentFiles.update { files ->
+                files.map { file ->
+                    if (file.fileIndex == index) file.copy(priority = if (include) 1 else 0) else file
+                }
+            }
+        }
+
+        /**
+         * Polls per-file metadata every 2 s while the task is active; when the task is
+         * terminal it emits the current list once (a paused/finished handle may still be
+         * in the session and expose its files).
+         */
+        private suspend fun pollTorrentFiles(
+            url: String,
+            active: Boolean,
+        ) {
+            while (true) {
+                val snapshot = torrentEngine.snapshot(url)
+                _torrentFiles.value =
+                    if (snapshot != null && snapshot.state != TorrentRunState.FETCHING_METADATA) {
+                        torrentEngine.files(url)
+                    } else {
+                        emptyList()
+                    }
+                if (!active) break
+                delay(TORRENT_FILE_POLL_MS)
+            }
+        }
+
+        private companion object {
+            const val MAGNET_PREFIX = "magnet:"
+            const val TORRENT_FILE_POLL_MS = 2_000L
         }
     }
 

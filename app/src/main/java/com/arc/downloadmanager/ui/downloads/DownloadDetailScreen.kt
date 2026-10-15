@@ -38,6 +38,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -51,12 +52,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arc.downloadmanager.R
 import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.domain.model.DownloadStatus
+import com.arc.downloadmanager.engine.torrent.TorrentFileInfo
 import com.arc.downloadmanager.ui.components.statusColor
 import com.arc.downloadmanager.ui.components.statusLabelRes
 import com.arc.downloadmanager.util.Format
@@ -68,6 +71,7 @@ fun DownloadDetailScreen(
     viewModel: DownloadDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.detail.collectAsStateWithLifecycle()
+    val torrentFiles by viewModel.torrentFiles.collectAsStateWithLifecycle()
     val entity = state.entity
     val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -115,6 +119,9 @@ fun DownloadDetailScreen(
             ProgressCard(entity, state.segments, state.speedBps)
             ActionRow(entity, viewModel, context, onEdit = { showEditDialog = true })
             InfoSection(entity, state.torrent)
+            if (entity.url.startsWith("magnet:")) {
+                TorrentFilesCard(files = torrentFiles, onToggle = viewModel::setTorrentFileIncluded)
+            }
         }
     }
 
@@ -393,6 +400,73 @@ private fun InfoSection(
         }
     }
     Spacer(Modifier.height(4.dp))
+}
+
+/** Per-file download selection for magnet tasks (switches Priority.DEFAULT vs Priority.IGNORE). */
+@Composable
+private fun TorrentFilesCard(
+    files: List<TorrentFileInfo>,
+    onToggle: (index: Int, include: Boolean) -> Unit,
+) {
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (files.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.torrent_waiting_metadata),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                return@Column
+            }
+            val selected = files.count { it.priority != 0 }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.torrent_files),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = stringResource(R.string.torrent_selected_summary, selected, files.size),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            files.forEach { file ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            text = file.path.substringAfterLast('/').substringAfterLast('\\'),
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = Format.bytes(file.sizeBytes),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Switch(
+                        checked = file.priority != 0,
+                        onCheckedChange = { include -> onToggle(file.fileIndex, include) },
+                    )
+                }
+            }
+            if (selected == 0) {
+                Text(
+                    text = stringResource(R.string.torrent_at_least_one),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+        }
+    }
 }
 
 @Composable
