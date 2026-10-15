@@ -337,4 +337,9 @@ feat/applock
     <string name="media_add">Download</string>
     <string name="media_added">Added to Arc</string>
     <string name="media_empty">No media detected on this page.</string>
+    <!-- Torrent files -->
+    <string name="torrent_files">Files</string>
+    <string name="torrent_waiting_metadata">Waiting for metadata\u2026</string>
+    <string name="torrent_selected_summary">%1$d/%2$d selected</string>
+    <string name="torrent_at_least_one">At least one file recommended</string>
 </resources>
