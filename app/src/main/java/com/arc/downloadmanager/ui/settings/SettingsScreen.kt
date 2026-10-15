@@ -29,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FileOpen
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Person
@@ -70,6 +71,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arc.downloadmanager.BuildConfig
@@ -77,6 +79,7 @@ import com.arc.downloadmanager.R
 import com.arc.downloadmanager.data.settings.OverwritePolicy
 import com.arc.downloadmanager.data.settings.ThemeMode
 import com.arc.downloadmanager.data.update.UpdateInfo
+import com.arc.downloadmanager.ui.components.showBiometricPrompt
 import com.arc.downloadmanager.ui.theme.ArcHeroBrush
 import kotlinx.coroutines.launch
 
@@ -279,6 +282,41 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 }
                 SwitchRow(stringResource(R.string.settings_dynamic_color), settings.dynamicColor, viewModel::setDynamicColor)
                 SwitchRow(stringResource(R.string.settings_compact_rows), settings.compactRows, viewModel::setCompactRows)
+            }
+
+            SettingsSection(stringResource(R.string.settings_security), icon = Icons.Filled.Lock) {
+                SwitchRow(
+                    label = stringResource(R.string.settings_app_lock),
+                    checked = settings.appLock,
+                    onChange = { enable ->
+                        if (enable) {
+                            // Verify BEFORE persisting: app lock turns on only after a
+                            // successful authentication, so a cancelled/failed prompt
+                            // can never leave the user locked out on the next launch.
+                            val activity = context as? FragmentActivity
+                            if (activity != null) {
+                                // runCatching guards odd OEM window states; a `false`
+                                // return means no usable authenticator (no hardware /
+                                // nothing enrolled) — both cases simply keep it off.
+                                runCatching {
+                                    showBiometricPrompt(
+                                        activity,
+                                        onSuccess = { viewModel.setAppLock(true) },
+                                        onError = { _, _ -> /* cancelled or failed → keep off */ },
+                                    )
+                                }
+                            }
+                        } else {
+                            // Disabling needs no verification.
+                            viewModel.setAppLock(false)
+                        }
+                    },
+                )
+                Text(
+                    stringResource(R.string.settings_app_lock_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
 
             SettingsSection(stringResource(R.string.settings_advanced), icon = Icons.Filled.Tune) {

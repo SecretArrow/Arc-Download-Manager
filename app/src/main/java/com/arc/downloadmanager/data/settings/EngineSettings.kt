@@ -25,6 +25,7 @@ data class EngineSettings(
     val privateByDefault: Boolean = false,
     val computeSha256: Boolean = false,
     val autoCleanupTemp: Boolean = true,
+    val appLock: Boolean = false,
     val defaultDestinationUri: String? = null,
 )
 

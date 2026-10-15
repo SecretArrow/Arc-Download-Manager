@@ -312,4 +312,14 @@
     <string name="backup_imported">Imported %1$d \u00B7 skipped %2$d</string>
     <string name="backup_failed">Backup failed \u2014 couldn\u2019t access the file</string>
 feat/update-backup
+    <!-- App lock -->
+    <string name="lock_title">Unlock Arc</string>
+    <string name="lock_subtitle">Locked</string>
+    <string name="lock_unlock">Unlock</string>
+    <string name="lock_unlock_anyway">Unlock anyway</string>
+    <string name="lock_fallback">Set a screen lock or fingerprint first</string>
+    <string name="settings_security">Security</string>
+    <string name="settings_app_lock">App lock</string>
+    <string name="settings_app_lock_hint">Require fingerprint or screen lock to open Arc</string>
+feat/applock
 </resources>
