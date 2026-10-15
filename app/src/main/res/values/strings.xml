@@ -331,4 +331,10 @@ feat/applock
     <string name="stats_top_hosts">Top hosts</string>
     <string name="stats_empty">No completed downloads yet</string>
     <string name="stats_refresh">Refresh statistics</string>
+    <!-- Media capture -->
+    <string name="media_badge_n">Media</string>
+    <string name="media_sheet_title">Detected media on page</string>
+    <string name="media_add">Download</string>
+    <string name="media_added">Added to Arc</string>
+    <string name="media_empty">No media detected on this page.</string>
 </resources>

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -27,10 +28,12 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Stop
@@ -49,6 +52,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -61,6 +65,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -81,6 +86,7 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
     val downloadEvent by viewModel.downloadEvents.collectAsStateWithLifecycle()
     val loadRequest by viewModel.loadRequests.collectAsStateWithLifecycle()
     val appSettings by viewModel.settings.collectAsStateWithLifecycle()
+    val detectedMedia by viewModel.detectedMedia.collectAsStateWithLifecycle()
 
     val snackbar = remember { SnackbarHostState() }
     var showTabs by remember { mutableStateOf(false) }
@@ -88,7 +94,9 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
     var showHistory by remember { mutableStateOf(false) }
     var showLinkMenu by remember { mutableStateOf<String?>(null) }
     var menuOpen by remember { mutableStateOf(false) }
+    var showMedia by remember { mutableStateOf(false) }
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
+    val mediaBridge = remember { MediaBridge { viewModel.onMediaFound(it) } }
 
     LaunchedEffect(Unit) {
         viewModel.setDesktop(appSettings.desktopModeDefault)
@@ -146,6 +154,31 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
                     },
                     modifier = Modifier.weight(1f),
                 )
+                if (detectedMedia.isNotEmpty()) {
+                    Surface(
+                        onClick = { showMedia = true },
+                        shape = MaterialTheme.shapes.extraLarge,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(start = 4.dp),
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        ) {
+                            Icon(
+                                Icons.Filled.Movie,
+                                contentDescription = stringResource(R.string.media_badge_n),
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Text(
+                                detectedMedia.size.toString(),
+                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.padding(start = 4.dp),
+                            )
+                        }
+                    }
+                }
                 IconButton(onClick = { viewModel.toggleBookmark(webViewRef?.url, webViewRef?.title) }) {
                     Icon(Icons.Filled.BookmarkBorder, contentDescription = stringResource(R.string.browser_bookmarks))
                 }
@@ -236,6 +269,7 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
                             settings.mediaPlaybackRequiresUserGesture = false
                             settings.userAgentString = null
                             setAcceptThirdParty()
+                            addJavascriptInterface(mediaBridge, "ArcMediaBridge")
 
                             webViewClient = ArcWebViewClient(viewModel)
                             webChromeClient =
@@ -403,6 +437,47 @@ fun BrowserScreen(viewModel: BrowserViewModel = hiltViewModel()) {
         }
     }
 
+    // Detected media sheet
+    if (showMedia) {
+        ModalBottomSheet(onDismissRequest = { showMedia = false }) {
+            Column(Modifier.navigationBarsPadding().padding(16.dp)) {
+                Text(stringResource(R.string.media_sheet_title), style = MaterialTheme.typography.titleMedium)
+                if (detectedMedia.isEmpty()) {
+                    Text(
+                        stringResource(R.string.media_empty),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                } else {
+                    detectedMedia.forEachIndexed { index, url ->
+                        MediaRow(
+                            name = mediaDisplayName(url, index + 1),
+                            url = url,
+                            onDownload = {
+                                // Same capture path as the long-press link menu: session cookies + page referer.
+                                val cookies = runCatching { CookieManager.getInstance().getCookie(url) }.getOrNull()
+                                viewModel.downloadFromBrowser(
+                                    url = url,
+                                    userAgent = webViewRef?.settings?.userAgentString,
+                                    contentDisposition = null,
+                                    mimeType = null,
+                                    referer = webViewRef?.url,
+                                    cookies = cookies,
+                                )
+                                viewModel.removeMedia(url)
+                                android.widget.Toast.makeText(
+                                    context,
+                                    context.getString(R.string.media_added),
+                                    android.widget.Toast.LENGTH_SHORT,
+                                ).show()
+                            },
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     // Long-press link menu
     showLinkMenu?.let { link ->
         ModalBottomSheet(onDismissRequest = { showLinkMenu = null }) {
@@ -466,6 +541,32 @@ private fun BrowserMenu(
     }
 }
 
+@Composable
+private fun MediaRow(
+    name: String,
+    url: String,
+    onDownload: () -> Unit,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 4.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(name, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                url,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        IconButton(onClick = onDownload) {
+            Icon(Icons.Filled.Download, contentDescription = stringResource(R.string.media_add))
+        }
+    }
+}
+
 private class ArcWebViewClient(
     private val viewModel: BrowserViewModel,
 ) : WebViewClient() {
@@ -491,6 +592,8 @@ private class ArcWebViewClient(
         favicon: Bitmap?,
     ) {
         viewModel.setLoading(true)
+        // A new document is loading: previously detected media no longer belongs to it.
+        viewModel.clearMedia()
     }
 
     override fun onPageFinished(
@@ -499,6 +602,7 @@ private class ArcWebViewClient(
     ) {
         viewModel.onNavigated(url, view.title ?: "")
         viewModel.setLoading(false, 100)
+        view.evaluateJavascript(MEDIA_SNIPPET, null)
     }
 }
 
@@ -507,6 +611,20 @@ private fun WebView.setAcceptThirdParty() {
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
     }
+}
+
+/** Best-effort name for a detected media URL: last URL-decoded path segment, or "media-<n>". */
+private fun mediaDisplayName(
+    url: String,
+    index: Int,
+): String {
+    val lastSegment = url.substringBefore('#').substringBefore('?').substringAfterLast('/')
+    val decoded =
+        runCatching { java.net.URLDecoder.decode(lastSegment, "UTF-8") }
+            .getOrNull()
+            ?.trim()
+            .orEmpty()
+    return decoded.ifEmpty { "media-$index" }
 }
 
 private const val DESKTOP_UA =
