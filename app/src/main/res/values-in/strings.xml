@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Arc Download Manager</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Beranda</string>
+    <string name="nav_browser">Browser</string>
+    <string name="nav_files">File</string>
+    <string name="nav_settings">Setelan</string>
+
+    <!-- Download statuses -->
+    <string name="status_queued">Antre</string>
+    <string name="status_connecting">Menyambungkan…</string>
+    <string name="status_downloading">Mengunduh</string>
+    <string name="status_pausing">Menjeda…</string>
+    <string name="status_paused">Dijeda</string>
+    <string name="status_merging">Menggabungkan…</string>
+    <string name="status_verifying">Memverifikasi…</string>
+    <string name="status_completed">Selesai</string>
+    <string name="status_failed">Gagal</string>
+    <string name="status_canceled">Dibatalkan</string>
+    <string name="status_waiting_network">Menunggu jaringan</string>
+    <string name="status_waiting_wifi">Menunggu Wi-Fi</string>
+    <string name="status_waiting_storage">Menunggu penyimpanan</string>
+    <string name="status_auth_required">Perlu masuk</string>
+
+    <!-- Actions -->
+    <string name="action_add_download">Tambah unduhan</string>
+    <string name="action_batch_download">Unduh massal</string>
+    <string name="action_paste_url">Tempel URL</string>
+    <string name="action_pause">Jeda</string>
+    <string name="action_resume">Lanjutkan</string>
+    <string name="action_retry">Coba lagi</string>
+    <string name="action_cancel">Batal</string>
+    <string name="action_delete">Hapus</string>
+    <string name="action_restart">Mulai ulang</string>
+    <string name="action_open">Buka</string>
+    <string name="action_share">Bagikan</string>
+    <string name="action_rename">Ganti nama</string>
+    <string name="action_start">Mulai</string>
+    <string name="action_start_all">Mulai semua</string>
+    <string name="action_import_file">Impor dari file</string>
+    <string name="action_open_browser">Buka browser</string>
+    <string name="action_sign_in">Masuk</string>
+    <string name="action_choose_folder">Pilih folder</string>
+    <string name="action_clear">Bersihkan</string>
+    <string name="action_back">Kembali</string>
+    <string name="action_forward">Maju</string>
+    <string name="action_reload">Muat ulang</string>
+    <string name="action_save">Simpan</string>
+    <string name="action_copy">Salin</string>
+
+    <!-- Add download -->
+    <string name="add_url_hint">URL unduhan</string>
+    <string name="add_filename_hint">Nama file</string>
+    <string name="add_batch_hint">Satu URL per baris…</string>
+    <string name="add_destination">Tujuan</string>
+    <string name="add_segments">Koneksi paralel</string>
+    <string name="add_priority">Prioritas</string>
+    <string name="add_wifi_only">Hanya Wi-Fi</string>
+    <string name="add_checksum_hint">Checksum SHA-256 (opsional)</string>
+    <string name="add_advanced">Opsi lanjutan</string>
+    <string name="add_invalid_url">URL tidak valid</string>
+    <string name="add_empty_url">Masukkan URL untuk memulai</string>
+    <string name="add_url_unsupported">Protokol ini tidak didukung. Gunakan tautan HTTPS, HTTP, FTP, FTPS, SFTP, atau magnet.</string>
+    <string name="add_supported_protocols">HTTPS \u00B7 HTTP \u00B7 FTP \u00B7 FTPS \u00B7 SFTP \u00B7 Magnet</string>
+    <string name="add_remote_credentials_hint">Server privat? Sertakan kredensial di URL: ftp://user:pass@host/path</string>
+    <string name="add_started">Unduhan dimulai</string>
+    <string name="add_batch_started">%1$d unduhan diantrekan, %2$d entri tidak valid dilewati</string>
+
+    <!-- Home -->
+    <string name="home_active_downloads">Unduhan aktif</string>
+    <string name="home_queue_count">%1$d aktif • %2$d antre • %3$d gagal</string>
+    <string name="home_recent_files">File terbaru</string>
+    <string name="home_needs_attention">Perlu perhatian</string>
+    <string name="home_attention_empty">Semua unduhan berjalan lancar.</string>
+    <string name="home_no_downloads">Belum ada unduhan. Tambahkan untuk mulai.</string>
+    <string name="home_storage_used">%1$s terpakai • %2$s tersisa</string>
+    <string name="home_completed_count">%1$d selesai</string>
+    <string name="home_free_space">%1$s tersisa di perangkat</string>
+    <string name="hero_downloading">Sedang mengunduh</string>
+    <string name="hero_idle">Semua beres</string>
+    <string name="hero_active_count">%1$d aktif</string>
+    <string name="hero_queued_count">%1$d antre</string>
+    <string name="hero_failed_count">%1$d gagal</string>
+    <string name="view_compact">Ringkas</string>
+    <string name="view_detailed">Rinci</string>
+
+    <!-- Files -->
+    <string name="files_category_all">Semua</string>
+    <string name="files_category_images">Gambar</string>
+    <string name="files_category_videos">Video</string>
+    <string name="files_category_audio">Audio</string>
+    <string name="files_category_documents">Dokumen</string>
+    <string name="files_category_archives">Arsip</string>
+    <string name="files_category_apps">Aplikasi</string>
+    <string name="files_category_other">Lainnya</string>
+    <string name="files_empty">Belum ada file yang diunduh.</string>
+    <string name="files_search_hint">Cari file</string>
+    <string name="files_deleted">File dihapus</string>
+
+    <!-- Details -->
+    <string name="details_segments">Segmen</string>
+    <string name="details_speed_avg">Kecepatan rata-rata</string>
+    <string name="details_time_remaining">Sisa waktu</string>
+    <string name="details_resume_supported">Dapat dilanjutkan</string>
+    <string name="details_resume_unsupported">Tidak dapat dilanjutkan</string>
+    <string name="details_source">Sumber</string>
+    <string name="details_retries">Percobaan ulang</string>
+    <string name="details_checksum">Checksum (SHA-256)</string>
+    <string name="details_error">Galat</string>
+    <string name="details_open_folder">Buka folder</string>
+    <string name="details_added">Ditambahkan</string>
+    <string name="details_completed_at">Selesai</string>
+    <string name="empty_state_title">Belum ada apa pun di sini</string>
+    <string name="empty_state_subtitle">Tempel tautan atau jelajahi web untuk memulai unduhan pertama Anda.</string>
+
+    <!-- Browser -->
+    <string name="browser_address_hint">Telusuri atau masukkan alamat</string>
+    <string name="browser_menu">Opsi lainnya</string>
+    <string name="browser_tabs">Tab</string>
+    <string name="browser_download_started">Unduhan dikirim ke Arc: %1$s</string>
+    <string name="browser_new_tab">Tab baru</string>
+    <string name="browser_close_tab">Tutup tab</string>
+    <string name="browser_bookmark_added">Bookmark ditambahkan</string>
+    <string name="browser_bookmark_removed">Bookmark dihapus</string>
+    <string name="browser_bookmarks">Bookmark</string>
+    <string name="browser_history">Histori</string>
+    <string name="browser_desktop_site">Situs desktop</string>
+    <string name="browser_private_mode">Mode pribadi</string>
+    <string name="browser_copy_link">Salin alamat tautan</string>
+    <string name="browser_download_link">Unduh file tertaut</string>
+    <string name="browser_open_new_tab">Buka di tab baru</string>
+    <string name="browser_share_link">Bagikan tautan</string>
+    <string name="browser_save_image">Simpan gambar</string>
+    <string name="browser_clear_data">Hapus data penjelajahan</string>
+    <string name="browser_cleared">Data penjelajahan dihapus</string>
+    <string name="browser_loading">Memuat halaman…</string>
+
+    <!-- Settings -->
+    <string name="settings_downloads">Unduhan</string>
+    <string name="settings_network">Jaringan</string>
+    <string name="settings_browser">Browser &amp; privasi</string>
+    <string name="settings_storage">Penyimpanan</string>
+    <string name="settings_appearance">Tampilan</string>
+    <string name="settings_advanced">Lanjutan</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_system">Sistem</string>
+    <string name="settings_theme_light">Terang</string>
+    <string name="settings_theme_dark">Gelap</string>
+    <string name="settings_dynamic_color">Warna dinamis (Material You)</string>
+    <string name="settings_compact_rows">Baris unduhan ringkas</string>
+    <string name="settings_max_concurrent">Unduhan serentak</string>
+    <string name="settings_max_segments">Koneksi maksimal per file</string>
+    <string name="settings_auto_segments">Deteksi multi-part otomatis</string>
+    <string name="settings_wifi_only">Unduhan hanya Wi-Fi</string>
+    <string name="settings_auto_resume">Lanjutkan otomatis saat tersambung kembali</string>
+    <string name="settings_auto_retry">Coba lagi otomatis untuk unduhan gagal</string>
+    <string name="settings_auto_retry_hint">Percobaan yang gagal dicoba ulang setiap 30 detik sebelum ditandai gagal</string>
+    <string name="settings_retries">Jumlah percobaan ulang otomatis</string>
+    <string name="settings_notify_complete">Notifikasi penyelesaian</string>
+    <string name="settings_bandwidth_limit">Batas kecepatan (KB/s, 0 = tanpa batas)</string>
+    <string name="settings_connect_timeout">Batas waktu koneksi (detik)</string>
+    <string name="settings_read_timeout">Batas waktu baca (detik)</string>
+    <string name="settings_default_destination">Tujuan default</string>
+    <string name="settings_storage_usage">Penggunaan penyimpanan</string>
+    <string name="settings_cleanup_temp">Bersihkan file sementara</string>
+    <string name="settings_sha256_after">Hitung SHA-256 setelah selesai</string>
+    <string name="settings_export_prefs">Ekspor preferensi</string>
+    <string name="settings_reset">Reset setelan</string>
+    <string name="settings_about">Tentang</string>
+    <string name="settings_version">Versi %1$s</string>
+    <string name="about_developer">Maragung</string>
+    <string name="about_developed_by">Dikembangkan oleh %1$s</string>
+    <string name="about_open_github">Lihat proyek di GitHub</string>
+    <string name="settings_min_free_space">Peringatan ruang kosong minimum (MB)</string>
+    <string name="settings_overwrite_policy">Kebijakan file yang sudah ada</string>
+    <string name="settings_overwrite_rename">Ganti nama salinan</string>
+    <string name="settings_overwrite_skip">Lewati</string>
+    <string name="settings_overwrite_replace">Ganti</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_downloads">Unduhan</string>
+    <string name="notif_channel_downloads_desc">Progres unduhan aktif</string>
+    <string name="notif_channel_status">Status</string>
+    <string name="notif_channel_status_desc">Unduhan yang selesai dan gagal</string>
+    <string name="notif_title_active">%1$d unduhan • %2$s</string>
+    <string name="notif_pause_all">Jeda semua</string>
+    <string name="notif_resume_all">Lanjutkan semua</string>
+    <string name="notif_cancel_all">Batalkan semua</string>
+    <string name="notif_completed">Unduhan selesai</string>
+    <string name="notif_failed">Unduhan gagal</string>
+    <string name="notif_quota_paused_title">Unduhan dijeda</string>
+    <string name="notif_quota_paused_text">Android menghentikan unduhan latar belakang setelah batas harian. Buka Arc untuk terus mengunduh.</string>
+
+    <!-- Errors -->
+    <string name="error_network">Tidak ada koneksi jaringan</string>
+    <string name="error_server">Galat server (HTTP %1$d)</string>
+    <string name="error_auth">Perlu masuk. Buka browser, masuk ke akun, lalu coba lagi.</string>
+    <string name="error_forbidden">Akses ke resource ini ditolak</string>
+    <string name="error_expired">Tautan unduhan mungkin sudah kedaluwarsa</string>
+    <string name="error_no_range">Server tidak mendukung unduhan yang dapat dilanjutkan</string>
+    <string name="error_resource_changed">File berubah di server. Perlu memulai ulang dari awal.</string>
+    <string name="error_rate_limited">Server membatasi kecepatan koneksi. Akan dicoba lagi nanti.</string>
+    <string name="error_storage">Ruang penyimpanan tidak cukup</string>
+    <string name="error_permission">Izin penyimpanan ditolak</string>
+    <string name="error_exists">File sudah ada</string>
+    <string name="error_segment_mismatch">Data segmen tidak cocok dengan file</string>
+    <string name="error_merge">Gagal menggabungkan segmen yang diunduh</string>
+    <string name="error_checksum">Checksum tidak cocok. File mungkin rusak.</string>
+    <string name="error_invalid_url">URL tidak valid</string>
+    <string name="error_page_not_file">Tautan ini adalah halaman web, bukan file yang dapat diunduh. Di halaman rilis GitHub, ketuk tautan file aset yang tepat.</string>
+    <string name="error_protocol_unsupported">Tidak dapat mengunduh tautan ini: protokolnya tidak didukung. Gunakan tautan HTTPS, HTTP, FTP, FTPS, SFTP, atau magnet.</string>
+    <string name="error_canceled">Unduhan dibatalkan</string>
+    <string name="error_unknown">Galat tak terduga: %1$s</string>
+
+    <!-- Duplicate dialog -->
+    <string name="duplicate_title">Unduhan sudah ada</string>
+    <string name="duplicate_message">URL ini sudah ada di daftar unduhan Anda. Apa yang ingin Anda lakukan?</string>
+    <string name="duplicate_skip">Lewati</string>
+    <string name="duplicate_new_copy">Unduh salinan lain</string>
+    <string name="duplicate_replace">Ganti yang sudah ada</string>
+
+    <!-- Misc -->
+    <string name="speed_format">%1$s/s</string>
+    <string name="eta_format">Sekitar %1$s lagi</string>
+    <string name="permission_notif_rationale">Arc memerlukan izin notifikasi untuk menampilkan progres unduhan dan notifikasi saat unduhan selesai.</string>
+    <string name="segments_active">%1$d dari %2$d koneksi</string>
+
+    <!-- Widget & Quick Settings tile -->
+    <string name="widget_status_idle">Tidak ada unduhan aktif</string>
+    <string name="widget_desc">Progres unduhan dengan kontrol jeda/lanjutkan</string>
+    <string name="tile_label">Unduhan Arc</string>
+    <string name="tile_pause_all">Ketuk untuk menjeda semua</string>
+    <string name="tile_resume_all">Ketuk untuk melanjutkan semua</string>
+
+    <!-- Task management: edit / delete / archive / selection -->
+    <string name="action_edit">Edit</string>
+    <string name="action_archive">Arsipkan</string>
+    <string name="action_unarchive">Batal arsipkan</string>
+    <string name="action_select_all">Pilih semua</string>
+    <string name="action_clear_selection">Hapus pilihan</string>
+    <string name="action_clear_finished">Hapus yang selesai</string>
+    <string name="edit_task_title">Edit tugas</string>
+    <string name="edit_url_label">URL unduhan</string>
+    <string name="edit_filename_label">Nama file</string>
+    <string name="edit_invalid_url">Masukkan tautan unduhan yang didukung (http, https, ftp, ftps, sftp)</string>
+    <string name="edit_invalid_filename">Nama file tidak boleh kosong</string>
+    <string name="edit_hint">Mengubah URL akan membuang progres sebagian untuk tugas ini.</string>
+    <string name="edit_rejected">Tugas ini tidak dapat diedit saat ini. Jeda terlebih dahulu (tugas yang selesai tidak dapat diedit).</string>
+    <string name="delete_task_title">Hapus tugas</string>
+    <string name="delete_task_message">Hapus \u201C%s\u201D dari daftar?</string>
+    <string name="delete_selection_title">Hapus tugas terpilih</string>
+    <string name="delete_selection_message">Hapus tugas yang dipilih dari daftar?</string>
+    <string name="delete_also_file">Juga hapus file yang sudah diunduh</string>
+    <string name="selection_count">%1$d dipilih</string>
+    <string name="clear_finished_done">%1$d tugas selesai telah dihapus</string>
+
+    <!-- Search / filter / sort -->
+    <string name="search_hint">Cari tugas dan tautan</string>
+    <string name="filter_all">Semua</string>
+    <string name="filter_running">Berjalan (%1$d)</string>
+    <string name="filter_completed">Selesai (%1$d)</string>
+    <string name="filter_failed">Gagal (%1$d)</string>
+    <string name="filter_archived">Arsip (%1$d)</string>
+    <string name="sort_by">Urutkan</string>
+    <string name="sort_date_newest">Terbaru dulu</string>
+    <string name="sort_date_oldest">Terlama dulu</string>
+    <string name="sort_name">Nama (A\u2013Z)</string>
+    <string name="sort_size">Terbesar dulu</string>
+
+    <!-- Empty states -->
+    <string name="home_archived_downloads">Diarsipkan</string>
+    <string name="archived_empty_title">Belum ada yang diarsipkan</string>
+    <string name="archived_empty_subtitle">Arsipkan tugas yang selesai agar antrean tetap rapi \u2014 tugas terarsip tidak pernah dilanjutkan otomatis.</string>
+    <string name="no_results_title">Tidak ada tugas yang cocok</string>
+    <string name="no_results_subtitle">Coba penelusuran atau filter lain.</string>
+    <string name="add_magnet_hint">Tautan magnet BitTorrent \u2014 peer ditemukan melalui DHT dan tracker yang tertanam di tautan. Ketersediaan bergantung pada seeder.</string>
+    <string name="details_torrent_state">Torrent</string>
+    <string name="details_torrent_peers">Peer</string>
+    <string name="torrent_peers_value">%1$d tersambung \u00B7 %2$d seeder</string>
+    <string name="torrent_state_metadata">Mencari peer\u2026</string>
+    <string name="torrent_state_checking">Memeriksa file\u2026</string>
+    <string name="torrent_state_downloading">Mengunduh melalui BitTorrent</string>
+    <string name="torrent_state_finished">Selesai</string>
+    <string name="torrent_state_unknown">Menyiapkan\u2026</string>
+    <string name="error_torrent_metadata_timeout">Tidak menemukan peer untuk torrent ini \u2014 mungkin tidak ada seeder aktif saat ini. Coba lagi nanti.</string>
+    <string name="error_torrent_failed">Mesin BitTorrent mengalami galat. Periksa tautan magnet lalu coba lagi.</string>
+
+    <!-- Share & UA features -->
+    <string name="share_paste_download">Tempel &amp; unduh</string>
+    <string name="share_added">Ditambahkan ke Arc</string>
+    <string name="share_duplicate">Sudah ada di unduhan Anda</string>
+    <string name="share_invalid">Tidak dapat menambahkan tautan</string>
+    <string name="share_no_link">Tidak ada tautan di teks yang dibagikan</string>
+    <string name="ua_advanced_options">Opsi lanjutan</string>
+    <string name="ua_label">User agent</string>
+    <string name="ua_preset_default">Default</string>
+    <string name="ua_preset_desktop">Desktop</string>
+    <string name="ua_preset_android">Android</string>
+    <string name="ua_preset_iphone">iPhone</string>
+    <string name="ua_preset_custom">Kustom</string>
+    <string name="ua_custom_hint">String user agent kustom</string>
+    <!-- Update & backup features -->
+    <string name="update_available">Pembaruan tersedia: %1$s</string>
+    <string name="update_open_release">Ketuk untuk membuka halaman rilis</string>
+    <string name="update_check">Periksa pembaruan</string>
+    <string name="update_up_to_date">Sudah versi terbaru</string>
+    <string name="backup_export">Ekspor daftar tugas</string>
+    <string name="backup_import">Impor daftar tugas</string>
+    <string name="backup_exported">%1$d tugas diekspor</string>
+    <string name="backup_imported">Diimpor %1$d \u00B7 dilewati %2$d</string>
+    <string name="backup_failed">Pencadangan gagal \u2014 tidak dapat mengakses file</string>
+    <!-- App lock -->
+    <string name="lock_title">Buka kunci Arc</string>
+    <string name="lock_subtitle">Terkunci</string>
+    <string name="lock_unlock">Buka kunci</string>
+    <string name="lock_unlock_anyway">Tetap buka kunci</string>
+    <string name="lock_fallback">Atur kunci layar atau sidik jari terlebih dahulu</string>
+    <string name="settings_security">Keamanan</string>
+    <string name="settings_app_lock">Kunci aplikasi</string>
+    <string name="settings_app_lock_hint">Wajibkan sidik jari atau kunci layar untuk membuka Arc</string>
+    <!-- Statistics -->
+    <string name="stats_title">Statistik</string>
+    <string name="stats_completed">Selesai</string>
+    <string name="stats_failed">Gagal</string>
+    <string name="stats_total_downloaded">Total diunduh</string>
+    <string name="stats_last_7_days">7 hari terakhir</string>
+    <string name="stats_top_hosts">Host teratas</string>
+    <string name="stats_empty">Belum ada unduhan yang selesai</string>
+    <string name="stats_refresh">Segarkan statistik</string>
+    <!-- Media capture -->
+    <string name="media_badge_n">Media</string>
+    <string name="media_sheet_title">Media terdeteksi di halaman</string>
+    <string name="media_add">Unduh</string>
+    <string name="media_added">Ditambahkan ke Arc</string>
+    <string name="media_empty">Tidak ada media yang terdeteksi di halaman ini.</string>
+    <!-- Torrent files -->
+    <string name="torrent_files">File</string>
+    <string name="torrent_waiting_metadata">Menunggu metadata\u2026</string>
+    <string name="torrent_selected_summary">%1$d/%2$d dipilih</string>
+    <string name="torrent_at_least_one">Disarankan memilih minimal satu file</string>
+    <!-- Network limits -->
+    <string name="netlimit_cellular_title">Batas kecepatan di data seluler (KB/s)</string>
+    <string name="netlimit_cellular_hint">0 = tanpa batas. Berlaku saat Wi-Fi nonaktif.</string>
+    <string name="netlimit_unlimited">Tanpa batas</string>
+</resources>
