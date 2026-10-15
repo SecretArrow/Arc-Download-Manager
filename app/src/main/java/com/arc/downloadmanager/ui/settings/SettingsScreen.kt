@@ -315,7 +315,9 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                                     showBiometricPrompt(
                                         activity,
                                         onSuccess = { viewModel.setAppLock(true) },
-                                        onError = { _, _ -> /* cancelled or failed → keep off */ },
+                                        onError = { _, _ ->
+                                            // cancelled or failed → keep off
+                                        },
                                     )
                                 }
                             }
