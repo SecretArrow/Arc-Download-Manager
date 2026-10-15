@@ -10,6 +10,7 @@ import com.arc.downloadmanager.data.repository.DownloadRepository
 import com.arc.downloadmanager.data.settings.SettingsRepository
 import com.arc.downloadmanager.domain.model.DownloadRequest
 import com.arc.downloadmanager.domain.model.DownloadSource
+import com.arc.downloadmanager.engine.CookieScopePolicy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -57,6 +58,9 @@ class BrowserViewModel
 
         private val _downloadEvents = MutableStateFlow<String?>(null)
         val downloadEvents: StateFlow<String?> = _downloadEvents.asStateFlow()
+
+        private val _detectedMedia = MutableStateFlow<List<String>>(emptyList())
+        val detectedMedia: StateFlow<List<String>> = _detectedMedia.asStateFlow()
 
         /** Requests the current WebView to load or evaluate (consumed by the screen). */
         val loadRequests = MutableStateFlow<LoadRequest?>(null)
@@ -209,6 +213,26 @@ class BrowserViewModel
             _downloadEvents.value = null
         }
 
+        /** Merges media URLs detected on the current page: http(s) only, deduped, capped. */
+        fun onMediaFound(urls: List<String>) {
+            if (urls.isEmpty()) return
+            val merged = LinkedHashSet(_detectedMedia.value)
+            urls.forEach { url ->
+                if (merged.size < MAX_DETECTED_MEDIA && CookieScopePolicy.isHttpUrl(url)) merged.add(url)
+            }
+            if (merged.size != _detectedMedia.value.size) _detectedMedia.value = merged.toList()
+        }
+
+        /** Removes a single detected media URL after it has been captured. */
+        fun removeMedia(url: String) {
+            _detectedMedia.value = _detectedMedia.value - url
+        }
+
+        /** Clears detected media when a new page starts loading. */
+        fun clearMedia() {
+            _detectedMedia.value = emptyList()
+        }
+
         fun clearBrowsingData(onDone: () -> Unit) {
             viewModelScope.launch {
                 historyDao.clear()
@@ -221,6 +245,8 @@ class BrowserViewModel
         }
 
         companion object {
+            private const val MAX_DETECTED_MEDIA = 50
+
             fun normalizeUrl(raw: String): String? {
                 val trimmed = raw.trim()
                 if (trimmed.isEmpty()) return null

@@ -14,7 +14,7 @@
 # Room entities keep stable names for DB debugging
 -keep class com.arc.downloadmanager.data.db.** { *; }
 
-# WebView JS bridge attribute (no bridge is exposed, kept for clarity)
+# WebView JS bridge: MediaBridge is exposed to pages as window.ArcMediaBridge
 -keepattributes JavascriptInterface
 
 # FTP/FTPS (Apache Commons Net)
