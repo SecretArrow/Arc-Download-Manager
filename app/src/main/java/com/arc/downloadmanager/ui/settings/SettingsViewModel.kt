@@ -65,6 +65,10 @@ class SettingsViewModel
 
         fun setAutoCleanup(value: Boolean) = launch { settingsRepository.setAutoCleanupTemp(value) }
 
+        // Called with true only AFTER a successful biometric/device-credential
+        // verification in the UI layer; false persists immediately.
+        fun setAppLock(value: Boolean) = launch { settingsRepository.setAppLock(value) }
+
         fun setDefaultDestination(uri: String?) = launch { settingsRepository.setDefaultDestination(uri) }
 
         fun reset() =

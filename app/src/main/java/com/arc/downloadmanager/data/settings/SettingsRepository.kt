@@ -46,6 +46,7 @@ class SettingsRepository
             val PRIVATE_DEFAULT = booleanPreferencesKey("private_by_default")
             val COMPUTE_SHA256 = booleanPreferencesKey("compute_sha256")
             val AUTO_CLEANUP_TEMP = booleanPreferencesKey("auto_cleanup_temp")
+            val APP_LOCK = booleanPreferencesKey("app_lock")
             val DEFAULT_DESTINATION = stringPreferencesKey("default_destination_uri")
         }
 
@@ -75,6 +76,7 @@ class SettingsRepository
                     privateByDefault = p[Keys.PRIVATE_DEFAULT] ?: false,
                     computeSha256 = p[Keys.COMPUTE_SHA256] ?: false,
                     autoCleanupTemp = p[Keys.AUTO_CLEANUP_TEMP] ?: true,
+                    appLock = p[Keys.APP_LOCK] ?: false,
                     defaultDestinationUri = p[Keys.DEFAULT_DESTINATION],
                 )
             }
@@ -122,6 +124,8 @@ class SettingsRepository
         suspend fun setComputeSha256(value: Boolean) = edit { it[Keys.COMPUTE_SHA256] = value }
 
         suspend fun setAutoCleanupTemp(value: Boolean) = edit { it[Keys.AUTO_CLEANUP_TEMP] = value }
+
+        suspend fun setAppLock(value: Boolean) = edit { it[Keys.APP_LOCK] = value }
 
         suspend fun setDefaultDestination(uri: String?) =
             edit { p ->
