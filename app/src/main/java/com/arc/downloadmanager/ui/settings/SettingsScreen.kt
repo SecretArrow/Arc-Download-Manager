@@ -2,11 +2,13 @@
 
 package com.arc.downloadmanager.ui.settings
 
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,17 +26,24 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -47,8 +56,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -65,14 +76,29 @@ import com.arc.downloadmanager.BuildConfig
 import com.arc.downloadmanager.R
 import com.arc.downloadmanager.data.settings.OverwritePolicy
 import com.arc.downloadmanager.data.settings.ThemeMode
+import com.arc.downloadmanager.data.update.UpdateInfo
 import com.arc.downloadmanager.ui.theme.ArcHeroBrush
+import kotlinx.coroutines.launch
 
 private const val ABOUT_GITHUB_URL = "https://github.com/SecretArrow/Arc-Download-Manager"
+private const val EXPORT_FILENAME = "arc-tasks.json"
 
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val updateInfo by viewModel.updateInfo.collectAsStateWithLifecycle()
+    val updateChecking by viewModel.checking.collectAsStateWithLifecycle()
+    val updateDismissed by viewModel.updateDismissed.collectAsStateWithLifecycle()
+    val upToDateTick by viewModel.upToDateTick.collectAsStateWithLifecycle()
+
+    // One-shot "you're up to date" toast after a manual update check.
+    LaunchedEffect(upToDateTick) {
+        if (upToDateTick > 0) {
+            Toast.makeText(context, R.string.update_up_to_date, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     val folderPicker =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
@@ -84,6 +110,56 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     )
                 }
                 viewModel.setDefaultDestination(it.toString())
+            }
+        }
+
+    val exportLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+            uri?.let { target ->
+                scope.launch {
+                    val outcome =
+                        runCatching {
+                            val export = viewModel.exportTasks()
+                            context.contentResolver.openOutputStream(target)?.use { out ->
+                                out.write(export.json.toByteArray(Charsets.UTF_8))
+                            } ?: error("No output stream for $target")
+                            export.count
+                        }
+                    outcome
+                        .onSuccess { count ->
+                            Toast.makeText(context, context.getString(R.string.backup_exported, count), Toast.LENGTH_SHORT).show()
+                        }
+                        .onFailure {
+                            Toast.makeText(context, context.getString(R.string.backup_failed), Toast.LENGTH_SHORT).show()
+                        }
+                }
+            }
+        }
+
+    val importLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let { target ->
+                scope.launch {
+                    val outcome =
+                        runCatching {
+                            val text =
+                                context.contentResolver.openInputStream(target)?.use { input ->
+                                    input.readBytes().toString(Charsets.UTF_8)
+                                } ?: error("No input stream for $target")
+                            viewModel.importTasks(text)
+                        }
+                    outcome
+                        .onSuccess { result ->
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.backup_imported, result.added, result.skipped),
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        }
+                        .onFailure {
+                            Toast.makeText(context, context.getString(R.string.backup_failed), Toast.LENGTH_SHORT).show()
+                        }
+                }
             }
         }
 
@@ -206,17 +282,41 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             }
 
             SettingsSection(stringResource(R.string.settings_advanced), icon = Icons.Filled.Tune) {
+                BackupRow(
+                    icon = Icons.Filled.UploadFile,
+                    label = stringResource(R.string.backup_export),
+                    onClick = { exportLauncher.launch(EXPORT_FILENAME) },
+                )
+                BackupRow(
+                    icon = Icons.Filled.FileOpen,
+                    label = stringResource(R.string.backup_import),
+                    onClick = { importLauncher.launch(arrayOf("application/json")) },
+                )
                 TextButton(onClick = viewModel::reset) { Text(stringResource(R.string.settings_reset)) }
             }
 
-            AboutCard(version = BuildConfig.VERSION_NAME)
+            AboutCard(
+                version = BuildConfig.VERSION_NAME,
+                updateInfo = updateInfo,
+                updateDismissed = updateDismissed,
+                checking = updateChecking,
+                onCheckNow = viewModel::checkNow,
+                onDismissUpdate = viewModel::dismissUpdate,
+            )
             Spacer(Modifier.height(32.dp))
         }
     }
 }
 
 @Composable
-private fun AboutCard(version: String) {
+private fun AboutCard(
+    version: String,
+    updateInfo: UpdateInfo?,
+    updateDismissed: Boolean,
+    checking: Boolean,
+    onCheckNow: () -> Unit,
+    onDismissUpdate: () -> Unit,
+) {
     val context = LocalContext.current
     Card(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge) {
         Column(Modifier.fillMaxWidth()) {
@@ -324,9 +424,111 @@ private fun AboutCard(version: String) {
                     Spacer(Modifier.width(6.dp))
                     Text(stringResource(R.string.about_open_github))
                 }
+                Spacer(Modifier.height(12.dp))
+                // Update banner — only when a newer GitHub release is published and not dismissed.
+                updateInfo?.takeIf { !updateDismissed }?.let { info ->
+                    UpdateBanner(
+                        info = info,
+                        onOpen = { url ->
+                            runCatching {
+                                context.startActivity(
+                                    android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)),
+                                )
+                            }
+                        },
+                        onDismiss = onDismissUpdate,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                }
+                TextButton(onClick = onCheckNow, enabled = !checking) {
+                    if (checking) {
+                        CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
+                        Spacer(Modifier.width(6.dp))
+                    } else {
+                        Icon(Icons.Filled.SystemUpdateAlt, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                    }
+                    Text(stringResource(R.string.update_check))
+                }
                 Spacer(Modifier.height(6.dp))
             }
         }
+    }
+}
+
+@Composable
+private fun UpdateBanner(
+    info: UpdateInfo,
+    onOpen: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+    ) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpen(info.url) }
+                    .padding(start = 14.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Filled.SystemUpdateAlt,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    stringResource(R.string.update_available, info.tag),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+                Text(
+                    stringResource(R.string.update_open_release),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+            }
+            IconButton(onClick = onDismiss) {
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BackupRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .clickable(onClick = onClick)
+                .padding(horizontal = 4.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(18.dp),
+        )
+        Spacer(Modifier.width(10.dp))
+        Text(label, style = MaterialTheme.typography.bodyMedium)
     }
 }
 

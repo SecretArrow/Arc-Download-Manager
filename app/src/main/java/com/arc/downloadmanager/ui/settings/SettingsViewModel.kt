@@ -2,13 +2,20 @@ package com.arc.downloadmanager.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.arc.downloadmanager.data.repository.ExportResult
+import com.arc.downloadmanager.data.repository.ImportResult
+import com.arc.downloadmanager.data.repository.TaskBackup
 import com.arc.downloadmanager.data.settings.EngineSettings
 import com.arc.downloadmanager.data.settings.OverwritePolicy
 import com.arc.downloadmanager.data.settings.SettingsRepository
 import com.arc.downloadmanager.data.settings.ThemeMode
+import com.arc.downloadmanager.data.update.UpdateChecker
+import com.arc.downloadmanager.data.update.UpdateInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -18,10 +25,55 @@ class SettingsViewModel
     @Inject
     constructor(
         private val settingsRepository: SettingsRepository,
+        private val updateChecker: UpdateChecker,
+        private val taskBackup: TaskBackup,
     ) : ViewModel() {
         val settings: StateFlow<EngineSettings> =
             settingsRepository.settings
                 .stateIn(viewModelScope, SharingStarted.Eagerly, EngineSettings())
+
+        // Update checker (GitHub releases)
+        private val _updateInfo = MutableStateFlow<UpdateInfo?>(null)
+        val updateInfo: StateFlow<UpdateInfo?> = _updateInfo.asStateFlow()
+
+        private val _checking = MutableStateFlow(false)
+        val checking: StateFlow<Boolean> = _checking.asStateFlow()
+
+        private val _updateDismissed = MutableStateFlow(false)
+        val updateDismissed: StateFlow<Boolean> = _updateDismissed.asStateFlow()
+
+        /** One-shot tick: incremented after a manual check that found nothing newer. */
+        private val _upToDateTick = MutableStateFlow(0)
+        val upToDateTick: StateFlow<Int> = _upToDateTick.asStateFlow()
+
+        init {
+            refreshUpdate(manual = false)
+        }
+
+        fun checkNow() = refreshUpdate(manual = true)
+
+        fun dismissUpdate() {
+            _updateDismissed.value = true
+        }
+
+        private fun refreshUpdate(manual: Boolean) {
+            if (_checking.value) return
+            viewModelScope.launch {
+                _checking.value = true
+                val info = runCatching { updateChecker.check() }.getOrNull()
+                _updateInfo.value = info
+                _checking.value = false
+                if (manual) {
+                    _updateDismissed.value = false
+                    if (info == null) _upToDateTick.value += 1
+                }
+            }
+        }
+
+        // Task list backup pass-throughs (UI calls these in its own scope).
+        suspend fun exportTasks(): ExportResult = taskBackup.export()
+
+        suspend fun importTasks(text: String): ImportResult = taskBackup.importJson(text)
 
         fun setMaxConcurrent(value: Int) = launch { settingsRepository.setMaxConcurrentFiles(value) }
 
