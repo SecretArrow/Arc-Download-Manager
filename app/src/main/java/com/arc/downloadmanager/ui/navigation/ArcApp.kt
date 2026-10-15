@@ -47,6 +47,7 @@ import com.arc.downloadmanager.ui.downloads.DownloadDetailScreen
 import com.arc.downloadmanager.ui.files.FilesScreen
 import com.arc.downloadmanager.ui.home.HomeScreen
 import com.arc.downloadmanager.ui.settings.SettingsScreen
+import com.arc.downloadmanager.ui.stats.StatsScreen
 
 object Routes {
     const val HOME = "home"
@@ -54,6 +55,7 @@ object Routes {
     const val FILES = "files"
     const val SETTINGS = "settings"
     const val DOWNLOAD_DETAIL = "download/{id}"
+    const val STATS = "stats"
 
     fun downloadDetail(id: String) = "download/$id"
 }
@@ -178,6 +180,7 @@ private fun ArcNavHost(
                     onOpenDetail = { id -> navController.navigate(Routes.downloadDetail(id)) },
                     onOpenBrowser = { navigateTo(navController, Routes.BROWSER) },
                     onOpenFiles = { navigateTo(navController, Routes.FILES) },
+                    onOpenStats = { navController.navigate(Routes.STATS) },
                 )
             }
             composable(Routes.BROWSER) {
@@ -195,6 +198,9 @@ private fun ArcNavHost(
                     downloadId = id,
                     onBack = { navController.popBackStack() },
                 )
+            }
+            composable(Routes.STATS) {
+                StatsScreen(onBack = { navController.popBackStack() })
             }
         }
     }

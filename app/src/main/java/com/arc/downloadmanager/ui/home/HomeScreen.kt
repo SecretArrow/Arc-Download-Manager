@@ -33,6 +33,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentPaste
@@ -109,6 +110,7 @@ fun HomeScreen(
     onOpenDetail: (String) -> Unit,
     onOpenBrowser: () -> Unit,
     onOpenFiles: () -> Unit,
+    onOpenStats: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
@@ -242,6 +244,7 @@ fun HomeScreen(
                         },
                         onBatch = { showAdd = true },
                         onBrowser = onOpenBrowser,
+                        onStats = onOpenStats,
                         onClearFinished =
                             if (ui.completedCount > 0) {
                                 {
@@ -835,6 +838,7 @@ private fun QuickActions(
     onPaste: () -> Unit,
     onBatch: () -> Unit,
     onBrowser: () -> Unit,
+    onStats: () -> Unit,
     onClearFinished: (() -> Unit)?,
 ) {
     Row(
@@ -859,6 +863,11 @@ private fun QuickActions(
             onClick = onBrowser,
             label = { Text(stringResource(R.string.action_open_browser)) },
             leadingIcon = { Icon(Icons.Filled.Public, contentDescription = null, modifier = Modifier.size(17.dp)) },
+        )
+        AssistChip(
+            onClick = onStats,
+            label = { Text(stringResource(R.string.stats_title)) },
+            leadingIcon = { Icon(Icons.Filled.BarChart, contentDescription = null, modifier = Modifier.size(17.dp)) },
         )
         if (onClearFinished != null) {
             AssistChip(
