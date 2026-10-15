@@ -242,6 +242,19 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     onCommit = { viewModel.setBandwidthLimit(it.toLong()) },
                 )
                 NumberRow(
+                    label = stringResource(R.string.netlimit_cellular_title),
+                    value = settings.cellularLimitKBps.toInt(),
+                    range = 0f..10240f,
+                    steps = 20,
+                    onCommit = { viewModel.setCellularLimitKBps(it.toLong()) },
+                    zeroLabel = stringResource(R.string.netlimit_unlimited),
+                )
+                Text(
+                    stringResource(R.string.netlimit_cellular_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                NumberRow(
                     label = stringResource(R.string.settings_connect_timeout),
                     value = settings.connectTimeoutSec,
                     range = 5f..120f,
@@ -623,12 +636,16 @@ private fun NumberRow(
     range: ClosedFloatingPointRange<Float>,
     steps: Int = 0,
     onCommit: (Int) -> Unit,
+    zeroLabel: String? = null,
 ) {
     var sliderValue by rememberSaveable(value) { mutableStateOf(value.toFloat()) }
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-            Text("${sliderValue.toInt()}", style = MaterialTheme.typography.bodyMedium)
+            Text(
+                zeroLabel?.takeIf { sliderValue.toInt() == 0 } ?: "${sliderValue.toInt()}",
+                style = MaterialTheme.typography.bodyMedium,
+            )
         }
         Slider(
             value = sliderValue,

@@ -342,4 +342,8 @@ feat/applock
     <string name="torrent_waiting_metadata">Waiting for metadata\u2026</string>
     <string name="torrent_selected_summary">%1$d/%2$d selected</string>
     <string name="torrent_at_least_one">At least one file recommended</string>
+    <!-- Network limits -->
+    <string name="netlimit_cellular_title">Speed limit on mobile data (KB/s)</string>
+    <string name="netlimit_cellular_hint">0 = unlimited. Applies when Wi-Fi is off.</string>
+    <string name="netlimit_unlimited">Unlimited</string>
 </resources>

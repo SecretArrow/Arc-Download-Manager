@@ -4,6 +4,7 @@ import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.data.settings.EngineSettings
 import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.engine.CookieScopePolicy
+import com.arc.downloadmanager.engine.SpeedLimitHolder
 import com.arc.downloadmanager.engine.TaskControl
 import com.arc.downloadmanager.engine.TaskRunner
 import kotlinx.coroutines.runBlocking
@@ -58,6 +59,7 @@ class GitHubReleaseFlowTest {
                 storage = storage,
                 networkMonitor = FakeConnectivity(),
                 cookieProvider = FixedCookieProvider(),
+                speedLimitHolder = SpeedLimitHolder(),
             )
     }
 
@@ -208,6 +210,7 @@ class GitHubReleaseFlowTest {
                 storage = storage,
                 networkMonitor = FakeConnectivity(),
                 cookieProvider = FixedCookieProvider(),
+                speedLimitHolder = SpeedLimitHolder(),
             )
         val task =
             entity("$assetOrigin$ASSET_PATH").copy(

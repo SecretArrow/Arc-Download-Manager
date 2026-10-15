@@ -4,6 +4,7 @@ import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.data.db.SegmentEntity
 import com.arc.downloadmanager.data.settings.EngineSettings
 import com.arc.downloadmanager.domain.model.DownloadStatus
+import com.arc.downloadmanager.engine.hls.HlsPlaylist
 import com.arc.downloadmanager.engine.store.DownloadStore
 import com.arc.downloadmanager.engine.torrent.TorrentEngine
 import com.arc.downloadmanager.engine.torrent.TorrentFiles
@@ -89,6 +90,7 @@ class TaskRunner
         private val storage: TaskStorage,
         private val networkMonitor: ConnectivityView,
         private val cookieProvider: CookieProvider,
+        private val speedLimitHolder: SpeedLimitHolder,
         private val contentStreams: ContentStreams? = null,
         private val torrentEngine: TorrentEngine? = null,
     ) {
@@ -131,7 +133,12 @@ class TaskRunner
                             if (scheme != null) "Protocol '$scheme:' is not supported" else "Not a downloadable URL",
                         )
                     } else {
-                        executeHttp(id, settings, control, segmentCapFor)
+                        if (isHlsUrl(entity.url)) {
+                            // .m3u8 playlists get the dedicated HLS pipeline (concatenated TS output).
+                            runHls(entity, settings, control)
+                        } else {
+                            executeHttp(id, settings, control, segmentCapFor)
+                        }
                     }
                 }
             }
@@ -153,6 +160,13 @@ class TaskRunner
                 is StreamOpen.Opened -> Unit
             }
             val opened = open as StreamOpen.Opened
+
+            // A URL without an .m3u8 extension can still be an HLS stream; the probe's
+            // Content-Type (application/vnd.apple.mpegurl, x-mpegURL) gives it away.
+            if (opened.mimeType?.contains("mpegurl", ignoreCase = true) == true) {
+                opened.response.close()
+                return runHls(entity, settings, control)
+            }
 
             // If the server ignored our Range request while we had partial data, restart cleanly.
             if (opened.restartFromZero) {
@@ -590,6 +604,255 @@ class TaskRunner
 
         // endregion
 
+        // region HLS (m3u8)
+
+        /** True when the URL path (before query/fragment) points at an .m3u8 playlist. */
+        private fun isHlsUrl(url: String): Boolean =
+            url
+                .substringBefore('#')
+                .substringBefore('?')
+                .substringAfterLast('/')
+                .substringAfterLast('.', "")
+                .equals("m3u8", ignoreCase = true)
+
+        /**
+         * Downloads an HLS (m3u8) stream: fetch + parse the playlist (following at most two
+         * master-playlist hops), then GET every media segment IN ORDER and append the bytes to
+         * the single-segment part file, which is finalized through the exact same
+         * [promoteAndFinalize] path a plain single-stream download uses (concatenated TS output).
+         *
+         * v1 limitation: a failed segment fails the attempt (auto-retry then restarts the whole
+         * file) and pause/resume likewise restarts from the first segment — no per-segment state.
+         */
+        private suspend fun runHls(
+            entity: DownloadEntity,
+            settings: EngineSettings,
+            control: TaskControl,
+        ): TaskOutcome {
+            // HLS output is concatenated MPEG-TS: never append into stale single-stream data.
+            resetPartialData(entity.id)
+            val fresh = store.getById(entity.id) ?: return TaskOutcome.Canceled
+            val outputName = hlsOutputName(fresh.filename)
+            val updated =
+                fresh.copy(
+                    finalUrl = entity.url,
+                    filename = outputName,
+                    // Total bytes are unknown until every segment landed; keep -1 so the
+                    // final size check validates against what was actually written.
+                    totalBytes = -1L,
+                    mimeType = if (outputName.endsWith(".ts")) "video/mp2t" else fresh.mimeType,
+                )
+            store.update(updated)
+
+            // Fetch + parse, following master playlists (max 2 hops).
+            var playlistUrl = entity.url
+            var playlist: HlsPlaylist? = null
+            var hops = 0
+            while (true) {
+                val fetched =
+                    fetchPlaylist(updated, playlistUrl, settings, control)
+                        ?: return TaskOutcome.Failed(DownloadError.SERVER_ERROR, "Could not fetch HLS playlist")
+                val parsed = HlsPlaylist.parse(fetched.text)
+                if (!parsed.isMaster) {
+                    playlist = parsed
+                    // Relative segment URIs resolve against the FINAL (post-redirect) playlist URL.
+                    playlistUrl = fetched.finalUrl
+                    break
+                }
+                val next =
+                    parsed.nextPlaylistUri
+                        ?: return TaskOutcome.Failed(DownloadError.PROTOCOL_UNSUPPORTED, "Master playlist has no variants")
+                playlistUrl = HlsPlaylist.resolve(fetched.finalUrl, next)
+                hops++
+                if (hops > 2) {
+                    return TaskOutcome.Failed(DownloadError.PROTOCOL_UNSUPPORTED, "Nested HLS master playlists too deep")
+                }
+            }
+            val segments = playlist?.segments.orEmpty()
+            if (segments.isEmpty()) {
+                return TaskOutcome.Failed(
+                    DownloadError.PROTOCOL_UNSUPPORTED,
+                    "Empty or unsupported HLS playlist (encrypted streams are not supported)",
+                )
+            }
+
+            val tempFile = storage.partFile(entity.id, 0)
+            tempFile.delete()
+            val limiter = BandwidthLimiter { connectedLimit(speedLimitHolder.limitKBps) }
+            var written = 0L
+            var lastFlush = System.currentTimeMillis()
+            try {
+                FileOutputStream(tempFile, false).use { out ->
+                    val buffer = ByteArray(BUFFER_SIZE)
+                    segments.forEachIndexed { index, segment ->
+                        if (control.cancelRequested) return TaskOutcome.Canceled
+                        if (control.pauseRequested) {
+                            store.updateProgress(entity.id, written, -1L)
+                            return TaskOutcome.Paused(PauseReason.USER)
+                        }
+                        if (!networkMonitor.isOnline.value) {
+                            store.updateProgress(entity.id, written, -1L)
+                            return TaskOutcome.Paused(PauseReason.NO_NETWORK)
+                        }
+                        val segUrl = HlsPlaylist.resolve(playlistUrl, segment.uri)
+                        val response =
+                            try {
+                                executeHlsRequest(updated, segUrl, settings)
+                            } catch (e: java.io.IOException) {
+                                return TaskOutcome.Failed(DownloadError.IO_ERROR, hlsSegmentError(index, segments.size, e.message))
+                            }
+                        response.use { resp ->
+                            if (!resp.isSuccessful) {
+                                return TaskOutcome.Failed(
+                                    DownloadError.SERVER_ERROR,
+                                    hlsSegmentError(index, segments.size, "HTTP ${resp.code}"),
+                                )
+                            }
+                            val body =
+                                resp.body
+                                    ?: return TaskOutcome.Failed(DownloadError.IO_ERROR, hlsSegmentError(index, segments.size, null))
+                            body.byteStream().use { input ->
+                                while (true) {
+                                    if (control.cancelRequested) return TaskOutcome.Canceled
+                                    if (control.pauseRequested) {
+                                        store.updateProgress(entity.id, written, -1L)
+                                        return TaskOutcome.Paused(PauseReason.USER)
+                                    }
+                                    val read = input.read(buffer)
+                                    if (read == -1) break
+                                    out.write(buffer, 0, read)
+                                    written += read
+                                    limiter.onBytes(read)
+                                    val now = System.currentTimeMillis()
+                                    if (now - lastFlush >= FLUSH_INTERVAL_MS) {
+                                        lastFlush = now
+                                        store.updateProgress(entity.id, written, -1L)
+                                        if (!networkMonitor.isOnline.value) {
+                                            store.updateProgress(entity.id, written, -1L)
+                                            return TaskOutcome.Paused(PauseReason.NO_NETWORK)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                // Total size is only known once every segment landed: publish it so the
+                // size check in promoteAndFinalize validates the assembled file.
+                store.updateProgress(entity.id, written, written)
+                return promoteAndFinalize(entity.id, settings)
+            } catch (e: java.io.IOException) {
+                return TaskOutcome.Failed(DownloadError.IO_ERROR, e.message)
+            }
+        }
+
+        private fun hlsSegmentError(
+            index: Int,
+            total: Int,
+            cause: String?,
+        ): String {
+            val base = "HLS segment ${index + 1}/$total failed"
+            return if (cause.isNullOrBlank()) base else "$base ($cause)"
+        }
+
+        /**
+         * Executes a plain GET with the entity's headers for one HLS segment URL. Redirects
+         * are followed manually (httpClientFor disables auto-follow, same as [openStream]);
+         * any failure surfaces as [java.io.IOException] so the caller maps it to a segment
+         * failure that auto-retry can handle.
+         */
+        private fun executeHlsRequest(
+            entity: DownloadEntity,
+            url: String,
+            settings: EngineSettings,
+        ): okhttp3.Response {
+            var current = url
+            var hops = 0
+            while (hops < MAX_REDIRECTS) {
+                val request = buildRequest(entity, current, 0L, -1L, null)
+                val response = httpClientFor(entity, settings).newCall(request).execute()
+                if (response.code in 300..399) {
+                    val location = response.header("Location")
+                    response.close()
+                    val next = location?.let { resolveRedirect(current, it) } ?: throw java.io.IOException("Redirect without Location")
+                    if (!CookieScopePolicy.isHttpUrl(next)) throw java.io.IOException("Redirect to unsupported scheme")
+                    current = next
+                    hops++
+                    continue
+                }
+                return response
+            }
+            throw java.io.IOException("Too many redirects")
+        }
+
+        private data class HlsPlaylistFetch(
+            val text: String,
+            val finalUrl: String,
+        )
+
+        /**
+         * GETs an m3u8 body, following redirects manually (same conventions as [openStream]).
+         * Returns null on any failure — offline/expired states surface through the surrounding
+         * outcome checks instead.
+         */
+        private fun fetchPlaylist(
+            entity: DownloadEntity,
+            url: String,
+            settings: EngineSettings,
+            control: TaskControl,
+        ): HlsPlaylistFetch? {
+            var current = url
+            var hops = 0
+            while (hops < MAX_REDIRECTS) {
+                if (control.cancelRequested) return null
+                val request = buildRequest(entity, current, 0L, -1L, null)
+                val response =
+                    try {
+                        httpClientFor(entity, settings).newCall(request).execute()
+                    } catch (_: java.io.IOException) {
+                        return null
+                    }
+                when {
+                    response.code in 300..399 -> {
+                        val location = response.header("Location")
+                        response.close()
+                        val next = location?.let { resolveRedirect(current, it) } ?: return null
+                        if (!CookieScopePolicy.isHttpUrl(next)) return null
+                        current = next
+                        hops++
+                    }
+                    response.code == 200 || response.code == 206 -> {
+                        val text =
+                            try {
+                                response.body?.byteStream()?.bufferedReader()?.use { it.readText() }
+                            } catch (_: java.io.IOException) {
+                                null
+                            }
+                        response.close()
+                        return text?.let { HlsPlaylistFetch(it, current) }
+                    }
+                    else -> {
+                        response.close()
+                        return null
+                    }
+                }
+            }
+            return null
+        }
+
+        /** Output name for an HLS task: <name>.m3u8 becomes <name>.ts; an existing .ts/.mp4 name is kept. */
+        private fun hlsOutputName(filename: String): String {
+            val base = FilenameDetector.sanitize(filename)
+            val lower = base.lowercase()
+            return when {
+                lower.endsWith(".ts") || lower.endsWith(".mp4") -> base
+                lower.endsWith(".m3u8") -> FilenameDetector.sanitize(base.dropLast(".m3u8".length) + ".ts")
+                else -> FilenameDetector.sanitize("$base.ts")
+            }
+        }
+
+        // endregion
+
         // region Shared transfer loop
 
         /**
@@ -618,7 +881,7 @@ class TaskRunner
                 }
             }
             if (!append) tempFile.delete()
-            val limiter = BandwidthLimiter(connectedLimit(settings))
+            val limiter = BandwidthLimiter { connectedLimit(speedLimitHolder.limitKBps) }
             var written = if (append) startOffset else 0L
             var lastFlush = System.currentTimeMillis()
             var lastSpaceCheck = lastFlush
@@ -719,7 +982,7 @@ class TaskRunner
                     }
                 }
 
-            val limiter = BandwidthLimiter(connectedLimit(settings))
+            val limiter = BandwidthLimiter { connectedLimit(speedLimitHolder.limitKBps) }
             val results =
                 coroutineScope {
                     // Live aggregate progress: each segment only updates its own row, so the
@@ -1365,7 +1628,7 @@ class TaskRunner
             return base.coerceIn(1, cap)
         }
 
-        private fun connectedLimit(settings: EngineSettings): Long = if (settings.bandwidthLimitKBps > 0) settings.bandwidthLimitKBps * 1024L / 4L else 0L
+        private fun connectedLimit(limitKBps: Long): Long = if (limitKBps > 0) limitKBps * 1024L / 4L else 0L
 
         companion object {
             private const val BUFFER_SIZE = 128 * 1024

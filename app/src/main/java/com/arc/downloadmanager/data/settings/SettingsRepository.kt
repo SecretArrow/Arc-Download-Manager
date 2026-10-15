@@ -36,6 +36,7 @@ class SettingsRepository
             val CONNECT_TIMEOUT = intPreferencesKey("connect_timeout_sec")
             val READ_TIMEOUT = intPreferencesKey("read_timeout_sec")
             val BANDWIDTH_LIMIT = longPreferencesKey("bandwidth_limit_kbps")
+            val CELLULAR_LIMIT = longPreferencesKey("cellular_limit_kbps")
             val MIN_FREE_SPACE = longPreferencesKey("min_free_space_mb")
             val OVERWRITE_POLICY = stringPreferencesKey("overwrite_policy")
             val THEME = stringPreferencesKey("theme")
@@ -64,6 +65,7 @@ class SettingsRepository
                     connectTimeoutSec = p[Keys.CONNECT_TIMEOUT] ?: 15,
                     readTimeoutSec = p[Keys.READ_TIMEOUT] ?: 30,
                     bandwidthLimitKBps = p[Keys.BANDWIDTH_LIMIT] ?: 0L,
+                    cellularLimitKBps = p[Keys.CELLULAR_LIMIT] ?: 0L,
                     minFreeSpaceMB = p[Keys.MIN_FREE_SPACE] ?: 200L,
                     overwritePolicy =
                         p[Keys.OVERWRITE_POLICY]?.let { runCatching { OverwritePolicy.valueOf(it) }.getOrNull() }
@@ -104,6 +106,8 @@ class SettingsRepository
         suspend fun setReadTimeout(value: Int) = edit { it[Keys.READ_TIMEOUT] = value.coerceIn(5, 600) }
 
         suspend fun setBandwidthLimit(kbps: Long) = edit { it[Keys.BANDWIDTH_LIMIT] = kbps.coerceAtLeast(0) }
+
+        suspend fun setCellularLimitKBps(kbps: Long) = edit { it[Keys.CELLULAR_LIMIT] = kbps.coerceAtLeast(0) }
 
         suspend fun setMinFreeSpace(mb: Long) = edit { it[Keys.MIN_FREE_SPACE] = mb.coerceAtLeast(50) }
 

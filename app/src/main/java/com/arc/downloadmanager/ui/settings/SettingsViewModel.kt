@@ -97,6 +97,8 @@ class SettingsViewModel
 
         fun setBandwidthLimit(kbps: Long) = launch { settingsRepository.setBandwidthLimit(kbps) }
 
+        fun setCellularLimitKBps(kbps: Long) = launch { settingsRepository.setCellularLimitKBps(kbps) }
+
         fun setMinFreeSpace(mb: Long) = launch { settingsRepository.setMinFreeSpace(mb) }
 
         fun setOverwritePolicy(policy: OverwritePolicy) = launch { settingsRepository.setOverwritePolicy(policy) }
@@ -134,6 +136,7 @@ class SettingsViewModel
                 settingsRepository.setAutoRetry(true)
                 settingsRepository.setWifiOnly(false)
                 settingsRepository.setBandwidthLimit(0)
+                settingsRepository.setCellularLimitKBps(0)
                 settingsRepository.setDefaultDestination(null)
             }
 
