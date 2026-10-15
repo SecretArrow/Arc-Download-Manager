@@ -3,6 +3,7 @@ package com.arc.downloadmanager
 import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.data.settings.EngineSettings
 import com.arc.downloadmanager.domain.model.DownloadStatus
+import com.arc.downloadmanager.engine.SpeedLimitHolder
 import com.arc.downloadmanager.engine.TaskControl
 import com.arc.downloadmanager.engine.TaskRunner
 import kotlinx.coroutines.runBlocking
@@ -47,6 +48,7 @@ class AutoRetryTest {
                 storage = storage,
                 networkMonitor = FakeConnectivity(),
                 cookieProvider = FixedCookieProvider(),
+                speedLimitHolder = SpeedLimitHolder(),
             )
     }
 

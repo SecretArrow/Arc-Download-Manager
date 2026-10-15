@@ -4,6 +4,7 @@ import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.data.settings.EngineSettings
 import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.engine.DownloadEngine
+import com.arc.downloadmanager.engine.SpeedLimitHolder
 import com.arc.downloadmanager.engine.TaskControl
 import com.arc.downloadmanager.engine.TaskRunner
 import com.arc.downloadmanager.engine.torrent.TorrentEngine
@@ -76,6 +77,7 @@ class TaskRunnerTest {
                 storage = storage,
                 networkMonitor = FakeConnectivity(),
                 cookieProvider = FixedCookieProvider(),
+                speedLimitHolder = SpeedLimitHolder(),
             )
     }
 
@@ -279,6 +281,7 @@ class DownloadEngineTest {
                 settingsRepository = settings,
                 networkMonitor = FakeConnectivity(),
                 cookieProvider = FixedCookieProvider(),
+                speedLimitHolder = SpeedLimitHolder(),
                 torrentEngine = TorrentEngine(),
             )
         engine.start()
@@ -324,6 +327,7 @@ class DownloadEngineTest {
                 settingsRepository = FixedSettingsSource(),
                 networkMonitor = FakeConnectivity(),
                 cookieProvider = FixedCookieProvider(),
+                speedLimitHolder = SpeedLimitHolder(),
                 torrentEngine = TorrentEngine(),
             )
         runBlocking {

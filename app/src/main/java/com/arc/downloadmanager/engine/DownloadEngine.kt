@@ -11,6 +11,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -33,6 +34,7 @@ class DownloadEngine
         private val settingsRepository: EngineSettingsSource,
         private val networkMonitor: ConnectivityView,
         private val cookieProvider: CookieProvider,
+        private val speedLimitHolder: SpeedLimitHolder,
         torrentEngine: TorrentEngine,
     ) {
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -43,6 +45,7 @@ class DownloadEngine
                 storage = storage,
                 networkMonitor = networkMonitor,
                 cookieProvider = cookieProvider,
+                speedLimitHolder = speedLimitHolder,
                 torrentEngine = torrentEngine,
             )
 
@@ -85,6 +88,16 @@ class DownloadEngine
                         schedule()
                     }
                 }
+            }
+            scope.launch {
+                // Per-network speed limits: metered (non-Wi-Fi) networks use the cellular
+                // limit when one is set, otherwise the all-networks limit applies. Published
+                // through the holder so RUNNING transfers pick it up on their next throttle
+                // check — no restart needed.
+                combine(settingsRepository.settings, networkMonitor.isOnWifi) { s, onWifi ->
+                    val metered = !onWifi
+                    if (metered) s.cellularLimitKBps.takeIf { it > 0 } ?: s.bandwidthLimitKBps else s.bandwidthLimitKBps
+                }.collect { speedLimitHolder.limitKBps = it }
             }
         }
 

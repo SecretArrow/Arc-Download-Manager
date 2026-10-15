@@ -15,6 +15,7 @@ data class EngineSettings(
     val connectTimeoutSec: Int = 15,
     val readTimeoutSec: Int = 30,
     val bandwidthLimitKBps: Long = 0L,
+    val cellularLimitKBps: Long = 0L,
     val minFreeSpaceMB: Long = 200L,
     val overwritePolicy: OverwritePolicy = OverwritePolicy.RENAME,
     val theme: ThemeMode = ThemeMode.SYSTEM,

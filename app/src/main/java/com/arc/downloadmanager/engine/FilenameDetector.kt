@@ -88,7 +88,7 @@ object FilenameDetector {
             "apk", "aab", "zip", "rar", "7z", "tar", "gz", "tgz", "bz2", "xz", "zst",
             "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "csv", "txt", "rtf",
             "mp3", "wav", "flac", "ogg", "m4a", "aac", "opus", "wma",
-            "mp4", "mkv", "webm", "avi", "mov", "flv", "wmv", "m4v", "ts",
+            "mp4", "mkv", "webm", "avi", "mov", "flv", "wmv", "m4v", "ts", "m3u8",
             "jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "heic", "avif", "ico", "tiff",
             "exe", "msi", "dmg", "pkg", "deb", "rpm", "appimage", "iso", "img",
             "bin", "dat", "jar", "ttf", "otf", "woff", "woff2", "epub", "mobi",
