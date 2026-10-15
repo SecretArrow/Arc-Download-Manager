@@ -7,10 +7,13 @@ import com.arc.downloadmanager.data.settings.SettingsRepository
 import com.arc.downloadmanager.domain.model.DownloadRequest
 import com.arc.downloadmanager.domain.model.DownloadSource
 import com.arc.downloadmanager.domain.model.DownloadStatus
+import com.arc.downloadmanager.engine.CookieScopePolicy
 import com.arc.downloadmanager.engine.DownloadEngine
 import com.arc.downloadmanager.engine.FilenameDetector
 import com.arc.downloadmanager.engine.StorageManager
 import com.arc.downloadmanager.engine.store.DownloadStore
+import java.time.Instant
+import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -23,6 +26,29 @@ sealed interface AddResult {
 }
 
 data class BatchResult(val started: Int, val invalid: Int)
+
+/** Aggregate statistics for the Statistics screen (computed on demand, never persisted). */
+data class DownloadStats(
+    val totalCompleted: Int,
+    val totalFailed: Int,
+    val totalBytes: Long,
+    val last7Days: List<DayStat>,
+    val topHosts: List<HostStat>,
+)
+
+/** Completed downloads bucketed into one device-local calendar day. */
+data class DayStat(
+    val epochDay: Long,
+    val completed: Int,
+    val bytes: Long,
+)
+
+/** Per-host aggregate of completed downloads. */
+data class HostStat(
+    val host: String,
+    val count: Int,
+    val bytes: Long,
+)
 
 /**
  * Use-case layer between UI and the engine: filename detection, duplicate handling and
@@ -141,6 +167,54 @@ class DownloadRepository
                 completed = all.count { it.status == DownloadStatus.COMPLETED },
                 totalBytesDownloaded = all.filter { it.status.isActive }.sumOf { it.downloadedBytes },
                 totalBytesAll = all.filter { it.status.isActive }.sumOf { it.totalBytes.coerceAtLeast(0) },
+            )
+        }
+
+        /**
+         * All-time statistics for the Statistics screen, computed from a full store snapshot:
+         * totals, the last 7 days bucketed device-local (always 7 entries, zero-filled) and
+         * the top 5 hosts by downloaded bytes.
+         */
+        suspend fun downloadStats(): DownloadStats {
+            val all = store.getAllNow()
+            val completed = all.filter { it.status == DownloadStatus.COMPLETED }
+            val today =
+                Instant.ofEpochMilli(System.currentTimeMillis())
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+                    .toEpochDay()
+            val byDay =
+                completed.groupBy { entity ->
+                    entity.completedAt
+                        ?.let { Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate().toEpochDay() }
+                        ?: Long.MIN_VALUE
+                }
+            val byHost = completed.groupBy { CookieScopePolicy.hostOf(it.finalUrl ?: it.url) }
+            return DownloadStats(
+                totalCompleted = completed.size,
+                totalFailed = all.count { it.status == DownloadStatus.FAILED || it.status == DownloadStatus.AUTH_REQUIRED },
+                totalBytes = completed.sumOf { it.downloadedBytes.coerceAtLeast(0) },
+                last7Days =
+                    (6 downTo 0).map { offset ->
+                        val epochDay = today - offset
+                        val bucket = byDay[epochDay].orEmpty()
+                        DayStat(
+                            epochDay = epochDay,
+                            completed = bucket.size,
+                            bytes = bucket.sumOf { it.downloadedBytes.coerceAtLeast(0) },
+                        )
+                    },
+                topHosts =
+                    byHost
+                        .map { (host, tasks) ->
+                            HostStat(
+                                host = host,
+                                count = tasks.size,
+                                bytes = tasks.sumOf { it.downloadedBytes.coerceAtLeast(0) },
+                            )
+                        }
+                        .sortedByDescending { it.bytes }
+                        .take(5),
             )
         }
 

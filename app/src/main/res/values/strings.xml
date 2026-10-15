@@ -322,4 +322,13 @@ feat/update-backup
     <string name="settings_app_lock">App lock</string>
     <string name="settings_app_lock_hint">Require fingerprint or screen lock to open Arc</string>
 feat/applock
+    <!-- Statistics -->
+    <string name="stats_title">Statistics</string>
+    <string name="stats_completed">Completed</string>
+    <string name="stats_failed">Failed</string>
+    <string name="stats_total_downloaded">Total downloaded</string>
+    <string name="stats_last_7_days">Last 7 days</string>
+    <string name="stats_top_hosts">Top hosts</string>
+    <string name="stats_empty">No completed downloads yet</string>
+    <string name="stats_refresh">Refresh statistics</string>
 </resources>
