@@ -138,14 +138,14 @@ class TorrentEngine
             return result ?: emptyList()
         }
 
-        /** Includes/excludes one file from the download (Priority.DEFAULT vs Priority.IGNORE). */
+        /** Includes/excludes one file from the download (Priority.NORMAL vs Priority.IGNORE). */
         fun setFilePriority(
             magnetUri: String,
             index: Int,
             include: Boolean,
         ) {
             withHandle(magnetUri) { handle ->
-                handle.filePriority(index, if (include) Priority.DEFAULT else Priority.IGNORE)
+                handle.filePriority(index, if (include) Priority.NORMAL else Priority.IGNORE)
             }
         }
 

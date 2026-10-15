@@ -11,8 +11,8 @@ import com.arc.downloadmanager.domain.model.DownloadRequest
 import com.arc.downloadmanager.domain.model.DownloadSource
 import com.arc.downloadmanager.util.LinkText
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Invisible pass-through target for the system share sheet: receives ACTION_SEND text from

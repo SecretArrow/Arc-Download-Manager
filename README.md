@@ -60,6 +60,20 @@ inline (`sftp://user:pass@host/path`).
   scanning every known network — downloads no longer appear "Wi-Fi only" while the Wi-Fi-only
   switch is off. Tasks genuinely held by the Wi-Fi-only switch now say "Waiting for Wi-Fi"
   instead of the misleading "Waiting for network".
+- **Share & paste (v2.3)**: "Share to Arc" from any app's share sheet plus a Paste & download
+  quick action on Home; per-task User-Agent presets (Desktop/Android/iPhone/custom).
+- **HLS / m3u8 downloads (v2.3)**: master-playlist variant selection, ordered segment fetch
+  into a single stream file, pause/cancel/auto-retry aware (encrypted streams reported as
+  unsupported).
+- **Torrent file selection (v2.3)**: list a magnet's files once metadata arrives and
+  include/exclude each one via priorities.
+- **Browser media capture (v2.3)**: detected page media (video/audio/direct links) appears
+  as a badge; one tap adds it as a session-aware download.
+- **Update checker (v2.3)**: compares GitHub Releases with the installed version and links
+  straight to the release page; task-list export/import (JSON) for device migration.
+- **Security & network (v2.3)**: optional biometric App lock (auto-relock after 30 s in
+  background), per-network speed limits (separate mobile-data cap), and a full Statistics
+  screen (7-day chart, top hosts, all-time totals). Full **Bahasa Indonesia** localization.
 - Automatic retry with exponential backoff + jitter, `Retry-After` awareness and adaptive
   parallelism when servers rate-limit (HTTP 429/503).
 - **Large-file safe**: the whole pipeline is streaming — bounded 128 KiB network buffers, a

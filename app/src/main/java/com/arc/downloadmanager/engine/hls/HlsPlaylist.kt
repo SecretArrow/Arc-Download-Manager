@@ -19,7 +19,7 @@ data class HlsSegment(
     val durationSec: Double,
 )
 
-data class HlsPlaylist(
+data class HlsPlaylistData(
     val segments: List<HlsSegment>,
     val isMaster: Boolean,
     val nextPlaylistUri: String?,
@@ -30,7 +30,7 @@ object HlsPlaylist {
     private const val MAX_SEGMENTS = 5000
 
     /** Parses an m3u8 body into a [HlsPlaylist] (master or media). */
-    fun parse(text: String): HlsPlaylist = if (text.contains("#EXT-X-STREAM-INF")) parseMaster(text) else parseMedia(text)
+    fun parse(text: String): HlsPlaylistData = if (text.contains("#EXT-X-STREAM-INF")) parseMaster(text) else parseMedia(text)
 
     /** Absolutizes a relative segment/variant [uri] against the playlist [base] URL. */
     fun resolve(
@@ -38,7 +38,7 @@ object HlsPlaylist {
         uri: String,
     ): String = runCatching { java.net.URI(base).resolve(uri).toString() }.getOrElse { base }
 
-    private fun parseMaster(text: String): HlsPlaylist {
+    private fun parseMaster(text: String): HlsPlaylistData {
         val lines = text.lines()
         var bestBandwidth = -1L
         var bestUri: String? = null
@@ -60,10 +60,10 @@ object HlsPlaylist {
             }
             i++
         }
-        return HlsPlaylist(segments = emptyList(), isMaster = true, nextPlaylistUri = bestUri)
+        return HlsPlaylistData(segments = emptyList(), isMaster = true, nextPlaylistUri = bestUri)
     }
 
-    private fun parseMedia(text: String): HlsPlaylist {
+    private fun parseMedia(text: String): HlsPlaylistData {
         val segments = ArrayList<HlsSegment>()
         var pendingDuration: Double? = null
         for (raw in text.lines()) {
@@ -80,7 +80,7 @@ object HlsPlaylist {
                     val method =
                         Regex("METHOD=([A-Za-z0-9-]+)").find(line)?.groupValues?.get(1)?.uppercase() ?: "NONE"
                     if (method != "NONE") {
-                        return HlsPlaylist(segments = emptyList(), isMaster = false, nextPlaylistUri = null)
+                        return HlsPlaylistData(segments = emptyList(), isMaster = false, nextPlaylistUri = null)
                     }
                 }
                 line.isEmpty() || line.startsWith("#") -> Unit // any other tag/comment is ignored
@@ -92,6 +92,6 @@ object HlsPlaylist {
                 }
             }
         }
-        return HlsPlaylist(segments = segments, isMaster = false, nextPlaylistUri = null)
+        return HlsPlaylistData(segments = segments, isMaster = false, nextPlaylistUri = null)
     }
 }

@@ -11,7 +11,8 @@ import org.junit.Test
 class HlsPlaylistTest {
     @Test
     fun masterPlaylist_picksHighestBandwidthVariantAndResolvesItsUri() {
-        val text = """
+        val text =
+            """
             #EXTM3U
             #EXT-X-STREAM-INF:BANDWIDTH=1280000,RESOLUTION=640x360
             video-low.m3u8
@@ -19,7 +20,7 @@ class HlsPlaylistTest {
             video-high.m3u8
             #EXT-X-STREAM-INF:BANDWIDTH=2560000,RESOLUTION=1280x720
             video-mid.m3u8
-        """.trimIndent()
+            """.trimIndent()
         val playlist = HlsPlaylist.parse(text)
         assertTrue(playlist.isMaster)
         assertTrue(playlist.segments.isEmpty())
@@ -38,7 +39,8 @@ class HlsPlaylistTest {
 
     @Test
     fun mediaPlaylist_parsesExtinfUriPairs() {
-        val text = """
+        val text =
+            """
             #EXTM3U
             #EXT-X-VERSION:3
             #EXT-X-TARGETDURATION:10
@@ -49,7 +51,7 @@ class HlsPlaylistTest {
             #EXTINF:8.5,
             https://cdn.example.com/other/seg-3.ts
             #EXT-X-ENDLIST
-        """.trimIndent()
+            """.trimIndent()
         val playlist = HlsPlaylist.parse(text)
         assertFalse(playlist.isMaster)
         assertNull(playlist.nextPlaylistUri)
@@ -89,13 +91,14 @@ class HlsPlaylistTest {
 
     @Test
     fun encryptedPlaylist_yieldsEmptySegments() {
-        val text = """
+        val text =
+            """
             #EXTM3U
             #EXT-X-VERSION:3
             #EXT-X-KEY:METHOD=AES-128,URI="key.bin",IV=0x9c7db8778570d05c3177c349fd9236aa
             #EXTINF:9.009,
             seg-1.ts
-        """.trimIndent()
+            """.trimIndent()
         val playlist = HlsPlaylist.parse(text)
         assertFalse(playlist.isMaster)
         assertTrue(playlist.segments.isEmpty())
@@ -104,12 +107,13 @@ class HlsPlaylistTest {
 
     @Test
     fun methodNoneKeyPlaylist_isTreatedAsUnencrypted() {
-        val text = """
+        val text =
+            """
             #EXTM3U
             #EXT-X-KEY:METHOD=NONE
             #EXTINF:9.009,
             seg-1.ts
-        """.trimIndent()
+            """.trimIndent()
         val playlist = HlsPlaylist.parse(text)
         assertEquals(1, playlist.segments.size)
         assertEquals("seg-1.ts", playlist.segments[0].uri)

@@ -64,7 +64,10 @@ class UpdateChecker
             private const val USER_AGENT = "Arc-Download-Manager"
 
             /** Component-wise numeric version comparison; missing components count as 0. */
-            fun isNewer(remote: String, local: String): Boolean {
+            fun isNewer(
+                remote: String,
+                local: String,
+            ): Boolean {
                 val remoteParts = parts(remote)
                 val localParts = parts(local)
                 for (i in 0 until maxOf(remoteParts.size, localParts.size)) {
@@ -75,7 +78,6 @@ class UpdateChecker
                 return false
             }
 
-            private fun parts(version: String): List<Int> =
-                version.trim().removePrefix("v").removePrefix("V").split('.').map { it.toIntOrNull() ?: 0 }
+            private fun parts(version: String): List<Int> = version.trim().removePrefix("v").removePrefix("V").split('.').map { it.toIntOrNull() ?: 0 }
         }
     }

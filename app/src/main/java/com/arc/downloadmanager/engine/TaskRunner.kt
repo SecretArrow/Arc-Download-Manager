@@ -5,6 +5,7 @@ import com.arc.downloadmanager.data.db.SegmentEntity
 import com.arc.downloadmanager.data.settings.EngineSettings
 import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.engine.hls.HlsPlaylist
+import com.arc.downloadmanager.engine.hls.HlsPlaylistData
 import com.arc.downloadmanager.engine.store.DownloadStore
 import com.arc.downloadmanager.engine.torrent.TorrentEngine
 import com.arc.downloadmanager.engine.torrent.TorrentFiles
@@ -646,7 +647,7 @@ class TaskRunner
 
             // Fetch + parse, following master playlists (max 2 hops).
             var playlistUrl = entity.url
-            var playlist: HlsPlaylist? = null
+            var playlist: HlsPlaylistData? = null
             var hops = 0
             while (true) {
                 val fetched =

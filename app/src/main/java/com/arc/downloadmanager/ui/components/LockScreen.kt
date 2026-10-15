@@ -90,7 +90,10 @@ fun showBiometricPrompt(
                     onSuccess()
                 }
 
-                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                override fun onAuthenticationError(
+                    errorCode: Int,
+                    errString: CharSequence,
+                ) {
                     onError(errorCode, errString)
                 }
             },
