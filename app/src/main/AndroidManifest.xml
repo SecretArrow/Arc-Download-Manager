@@ -36,6 +36,23 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ShareReceiverActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Arc.Translucent">
+            <!-- Shares carrying text/plain (the common case) -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <!-- ACTION_SEND without a MIME type but with EXTRA_TEXT -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <service
             android:name=".service.DownloadService"
             android:exported="false"

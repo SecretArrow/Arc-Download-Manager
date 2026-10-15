@@ -2,6 +2,8 @@
 
 package com.arc.downloadmanager.ui.home
 
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
@@ -85,7 +87,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -96,12 +97,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arc.downloadmanager.R
 import com.arc.downloadmanager.data.settings.OverwritePolicy
-import com.arc.downloadmanager.domain.model.DownloadRequest
-import com.arc.downloadmanager.engine.CookieScopePolicy
 import com.arc.downloadmanager.ui.components.DownloadRow
 import com.arc.downloadmanager.ui.downloads.AddDownloadSheet
 import com.arc.downloadmanager.ui.theme.ArcHeroBrush
 import com.arc.downloadmanager.util.Format
+import com.arc.downloadmanager.util.LinkText
 import kotlinx.coroutines.launch
 
 @Composable
@@ -115,6 +115,7 @@ fun HomeScreen(
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val pendingDuplicate by viewModel.pendingDuplicate.collectAsStateWithLifecycle()
     var showAdd by rememberSaveable { mutableStateOf(false) }
+    var addSheetUrl by rememberSaveable { mutableStateOf("") }
     var viewMode by rememberSaveable { mutableIntStateOf(1) } // 0 compact, 1 detailed
     var showSearch by rememberSaveable { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -122,7 +123,11 @@ fun HomeScreen(
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
-    val clipboard = LocalClipboardManager.current
+    // Single entry point for opening the add sheet: the URL field it is pre-filled with.
+    val openAddSheet = { url: String ->
+        addSheetUrl = url
+        showAdd = true
+    }
 
     Scaffold(
         // WindowInsets(0): insets are applied exactly once — status bar by the TopAppBar below,
@@ -183,7 +188,7 @@ fun HomeScreen(
                 exit = fadeOut() + slideOutVertically { it },
             ) {
                 ExtendedFloatingActionButton(
-                    onClick = { showAdd = true },
+                    onClick = { openAddSheet("") },
                     icon = { Icon(Icons.Filled.Add, contentDescription = null) },
                     text = { Text(stringResource(R.string.action_add_download)) },
                 )
@@ -229,18 +234,12 @@ fun HomeScreen(
             if (!ui.inSelectionMode) {
                 item {
                     QuickActions(
-                        onAdd = { showAdd = true },
+                        onAdd = { openAddSheet("") },
                         onPaste = {
-                            clipboard.getText()?.toString()?.let { pasted ->
-                                if (CookieScopePolicy.isSupportedUrl(pasted.trim())) {
-                                    viewModel.add(DownloadRequest(url = pasted.trim()))
-                                    showAdd = false
-                                } else {
-                                    showAdd = true
-                                }
-                            }
+                            // Paste & go: pre-fill the sheet, the confirm button stays the only add path.
+                            openAddSheet(LinkText.firstUrl(readClipboardText(context)) ?: "")
                         },
-                        onBatch = { showAdd = true },
+                        onBatch = { openAddSheet("") },
                         onBrowser = onOpenBrowser,
                         onClearFinished =
                             if (ui.completedCount > 0) {
@@ -287,7 +286,7 @@ fun HomeScreen(
                         )
                     } else if (ui.downloads.isEmpty()) {
                         EmptyDownloads(
-                            onAdd = { showAdd = true },
+                            onAdd = { openAddSheet("") },
                             onBrowser = onOpenBrowser,
                         )
                     } else {
@@ -369,6 +368,7 @@ fun HomeScreen(
                     callback(result.started, result.invalid)
                 }
             },
+            initialUrl = addSheetUrl,
         )
     }
 
@@ -405,6 +405,13 @@ fun HomeScreen(
         )
     }
 }
+
+/** Plain text from the system clipboard; null on any failure (some OEM clipboard impls throw). */
+private fun readClipboardText(context: Context): String? =
+    runCatching {
+        val manager = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+        manager?.primaryClip?.getItemAt(0)?.coerceToText(context)?.toString()
+    }.getOrNull()
 
 /** Click handler shared by rows: toggle selection in selection mode, open detail otherwise. */
 private fun rowClick(
@@ -847,7 +854,7 @@ private fun QuickActions(
     ) {
         AssistChip(
             onClick = onPaste,
-            label = { Text(stringResource(R.string.action_paste_url)) },
+            label = { Text(stringResource(R.string.share_paste_download)) },
             leadingIcon = { Icon(Icons.Filled.ContentPaste, contentDescription = null, modifier = Modifier.size(17.dp)) },
         )
         AssistChip(

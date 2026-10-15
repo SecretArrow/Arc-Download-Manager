@@ -7,4 +7,11 @@
 
         <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="28">never</item>
     </style>
+
+    <!-- Invisible share-sheet receiver: blends into the calling app, never draws its own UI -->
+    <style name="Theme.Arc.Translucent" parent="Theme.Arc">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
 </resources>

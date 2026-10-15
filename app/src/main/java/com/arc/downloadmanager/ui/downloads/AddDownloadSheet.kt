@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.arc.downloadmanager.R
 import com.arc.downloadmanager.domain.model.Destination
@@ -81,6 +83,8 @@ fun AddDownloadSheet(
     var wifiOnly by rememberSaveable { mutableStateOf(false) }
     var checksum by rememberSaveable { mutableStateOf("") }
     var advanced by rememberSaveable { mutableStateOf(false) }
+    var userAgentChoice by rememberSaveable { mutableIntStateOf(0) }
+    var customUa by rememberSaveable { mutableStateOf("") }
     var destination by rememberSaveable { mutableStateOf(initialDestination) }
     var batchText by rememberSaveable { mutableStateOf("") }
     var batchMessage by rememberSaveable { mutableStateOf("") }
@@ -184,6 +188,10 @@ fun AddDownloadSheet(
                     Text(stringResource(R.string.add_wifi_only), modifier = Modifier.weight(1f))
                     Switch(checked = wifiOnly, onCheckedChange = { wifiOnly = it })
                 }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(R.string.ua_advanced_options), modifier = Modifier.weight(1f))
+                    Switch(checked = advanced, onCheckedChange = { advanced = it })
+                }
                 if (advanced) {
                     HorizontalDivider()
                     OutlinedTextField(
@@ -193,6 +201,57 @@ fun AddDownloadSheet(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
+                    Text(stringResource(R.string.ua_label), style = MaterialTheme.typography.labelMedium)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    ) {
+                        FilterChip(
+                            selected = userAgentChoice == UA_CHOICE_DEFAULT,
+                            onClick = { userAgentChoice = UA_CHOICE_DEFAULT },
+                            label = { Text(stringResource(R.string.ua_preset_default)) },
+                        )
+                        FilterChip(
+                            selected = userAgentChoice == UA_CHOICE_DESKTOP,
+                            onClick = { userAgentChoice = UA_CHOICE_DESKTOP },
+                            label = { Text(stringResource(R.string.ua_preset_desktop)) },
+                        )
+                        FilterChip(
+                            selected = userAgentChoice == UA_CHOICE_ANDROID,
+                            onClick = { userAgentChoice = UA_CHOICE_ANDROID },
+                            label = { Text(stringResource(R.string.ua_preset_android)) },
+                        )
+                        FilterChip(
+                            selected = userAgentChoice == UA_CHOICE_IPHONE,
+                            onClick = { userAgentChoice = UA_CHOICE_IPHONE },
+                            label = { Text(stringResource(R.string.ua_preset_iphone)) },
+                        )
+                        FilterChip(
+                            selected = userAgentChoice == UA_CHOICE_CUSTOM,
+                            onClick = { userAgentChoice = UA_CHOICE_CUSTOM },
+                            label = { Text(stringResource(R.string.ua_preset_custom)) },
+                        )
+                    }
+                    when (userAgentChoice) {
+                        UA_CHOICE_DESKTOP, UA_CHOICE_ANDROID, UA_CHOICE_IPHONE ->
+                            Text(
+                                text = resolvedUserAgent(userAgentChoice, customUa).orEmpty(),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        UA_CHOICE_CUSTOM ->
+                            OutlinedTextField(
+                                value = customUa,
+                                onValueChange = { customUa = it },
+                                label = { Text(stringResource(R.string.ua_custom_hint)) },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        else -> Unit
+                    }
                 }
                 Button(
                     onClick = {
@@ -207,6 +266,7 @@ fun AddDownloadSheet(
                                     segments = segments,
                                     priority = Priority.fromValue(priority),
                                     wifiOnly = wifiOnly.takeIf { it },
+                                    userAgent = resolvedUserAgent(userAgentChoice, customUa),
                                     checksum = checksum.ifBlank { null },
                                 ),
                             )
@@ -370,3 +430,33 @@ private fun PriorityRow(
         }
     }
 }
+
+// User-agent presets for the advanced section: Default keeps the engine's own UA.
+private const val UA_CHOICE_DEFAULT = 0
+private const val UA_CHOICE_DESKTOP = 1
+private const val UA_CHOICE_ANDROID = 2
+private const val UA_CHOICE_IPHONE = 3
+private const val UA_CHOICE_CUSTOM = 4
+
+private const val UA_DESKTOP =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+
+private const val UA_ANDROID =
+    "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36"
+
+private const val UA_IPHONE =
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) " +
+        "Version/17.5 Mobile/15E148 Safari/604.1"
+
+/** Maps the advanced-section preset choice to the UA header sent (null = engine default). */
+private fun resolvedUserAgent(
+    choice: Int,
+    custom: String,
+): String? =
+    when (choice) {
+        UA_CHOICE_DESKTOP -> UA_DESKTOP
+        UA_CHOICE_ANDROID -> UA_ANDROID
+        UA_CHOICE_IPHONE -> UA_IPHONE
+        UA_CHOICE_CUSTOM -> custom.ifBlank { null }
+        else -> null
+    }
