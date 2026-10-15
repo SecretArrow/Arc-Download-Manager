@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -55,7 +56,9 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -79,6 +82,7 @@ import com.arc.downloadmanager.R
 import com.arc.downloadmanager.data.settings.OverwritePolicy
 import com.arc.downloadmanager.data.settings.ThemeMode
 import com.arc.downloadmanager.data.update.UpdateInfo
+import com.arc.downloadmanager.engine.ScheduleWindow
 import com.arc.downloadmanager.ui.components.showBiometricPrompt
 import com.arc.downloadmanager.ui.theme.ArcHeroBrush
 import kotlinx.coroutines.launch
@@ -91,6 +95,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var showStartPicker by rememberSaveable { mutableStateOf(false) }
+    var showEndPicker by rememberSaveable { mutableStateOf(false) }
     val updateInfo by viewModel.updateInfo.collectAsStateWithLifecycle()
     val updateChecking by viewModel.checking.collectAsStateWithLifecycle()
     val updateDismissed by viewModel.updateDismissed.collectAsStateWithLifecycle()
@@ -254,6 +260,25 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+
+                // Scheduled downloads ("night quota"): gate automatic starts to a time window.
+                SwitchRow(stringResource(R.string.settings_schedule), settings.scheduleEnabled, viewModel::setScheduleEnabled)
+                Text(
+                    stringResource(R.string.settings_schedule_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                TimeRow(
+                    label = stringResource(R.string.settings_schedule_start),
+                    value = ScheduleWindow.formatMinute(settings.scheduleStartMin),
+                    onClick = { showStartPicker = true },
+                )
+                TimeRow(
+                    label = stringResource(R.string.settings_schedule_end),
+                    value = ScheduleWindow.formatMinute(settings.scheduleEndMin),
+                    onClick = { showEndPicker = true },
+                )
+
                 NumberRow(
                     label = stringResource(R.string.settings_connect_timeout),
                     value = settings.connectTimeoutSec,
@@ -265,6 +290,27 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     value = settings.readTimeoutSec,
                     range = 5f..600f,
                     onCommit = viewModel::setReadTimeout,
+                )
+            }
+
+            if (showStartPicker) {
+                ScheduleTimePicker(
+                    initialMinute = settings.scheduleStartMin,
+                    onConfirm = {
+                        viewModel.setScheduleStart(it)
+                        showStartPicker = false
+                    },
+                    onDismiss = { showStartPicker = false },
+                )
+            }
+            if (showEndPicker) {
+                ScheduleTimePicker(
+                    initialMinute = settings.scheduleEndMin,
+                    onConfirm = {
+                        viewModel.setScheduleEnd(it)
+                        showEndPicker = false
+                    },
+                    onDismiss = { showEndPicker = false },
                 )
             }
 
@@ -629,6 +675,48 @@ private fun SwitchRow(
         Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
         Switch(checked = checked, onCheckedChange = onChange)
     }
+}
+
+@Composable
+private fun TimeRow(
+    label: String,
+    value: String,
+    onClick: () -> Unit,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        TextButton(onClick = onClick) { Text(value) }
+    }
+}
+
+/** Material3 time picker dialog for the schedule window boundaries (always 24 h "HH:mm"). */
+@Composable
+private fun ScheduleTimePicker(
+    initialMinute: Int,
+    onConfirm: (Int) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val clamped = ScheduleWindow.clamp(initialMinute)
+    val state =
+        rememberTimePickerState(
+            initialHour = clamped / 60,
+            initialMinute = clamped % 60,
+            is24Hour = true,
+        )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = { onConfirm(state.hour * 60 + state.minute) }) {
+                Text(stringResource(R.string.action_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        },
+        text = { TimePicker(state = state) },
+    )
 }
 
 @Composable

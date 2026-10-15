@@ -136,6 +136,7 @@ class DownloadEngine
                             DownloadStatus.CANCELED,
                             DownloadStatus.WAITING_NETWORK,
                             DownloadStatus.WAITING_STORAGE,
+                            DownloadStatus.WAITING_SCHEDULED,
                         )
                 if (resumable) {
                     store.updateStatus(id, DownloadStatus.QUEUED, null, null)
@@ -312,7 +313,8 @@ class DownloadEngine
                                     it.status == DownloadStatus.AUTH_REQUIRED ||
                                     it.status == DownloadStatus.CANCELED ||
                                     it.status == DownloadStatus.WAITING_NETWORK ||
-                                    it.status == DownloadStatus.WAITING_STORAGE
+                                    it.status == DownloadStatus.WAITING_STORAGE ||
+                                    it.status == DownloadStatus.WAITING_SCHEDULED
                             )
                     }
                     .forEach { resume(it.id) }
@@ -408,6 +410,21 @@ class DownloadEngine
                 }
                 return false
             }
+            if (settings.scheduleEnabled &&
+                !ScheduleWindow.activeNow(
+                    enabled = settings.scheduleEnabled,
+                    startMinuteOfDay = settings.scheduleStartMin,
+                    endMinuteOfDay = settings.scheduleEndMin,
+                    nowMinuteOfDay = ScheduleWindow.nowMinuteOfDay(),
+                )
+            ) {
+                // Night quota: persist WHY the task is held ("Waiting for schedule") without
+                // flip-flopping the database — only write when the hold is not already recorded.
+                if (task.status != DownloadStatus.WAITING_SCHEDULED || task.errorCode != null) {
+                    scope.launch { store.updateStatus(task.id, DownloadStatus.WAITING_SCHEDULED, null, null) }
+                }
+                return false
+            }
             return true
         }
 
@@ -485,13 +502,27 @@ class DownloadEngine
             store.getAllNow().forEach { entity ->
                 if (entity.archivedAt != null) return@forEach
                 val waiting =
-                    entity.status == DownloadStatus.WAITING_NETWORK || entity.status == DownloadStatus.WAITING_STORAGE
+                    entity.status == DownloadStatus.WAITING_NETWORK ||
+                        entity.status == DownloadStatus.WAITING_STORAGE ||
+                        entity.status == DownloadStatus.WAITING_SCHEDULED
                 if (!waiting) return@forEach
                 val notBefore = retryNotBefore[entity.id] ?: 0L
                 if (now < notBefore) return@forEach
                 if (entity.status == DownloadStatus.WAITING_NETWORK) {
                     if (!online) return@forEach
                     if ((entity.wifiOnly || settings.wifiOnly) && !onWifi) return@forEach
+                }
+                if (entity.status == DownloadStatus.WAITING_SCHEDULED) {
+                    // The 15 s ticker re-checks the settings snapshot: wake only once the
+                    // schedule window is active again (or the feature was switched off).
+                    val windowActive =
+                        ScheduleWindow.activeNow(
+                            enabled = settings.scheduleEnabled,
+                            startMinuteOfDay = settings.scheduleStartMin,
+                            endMinuteOfDay = settings.scheduleEndMin,
+                            nowMinuteOfDay = ScheduleWindow.nowMinuteOfDay(),
+                        )
+                    if (!windowActive) return@forEach
                 }
                 store.updateStatus(entity.id, DownloadStatus.QUEUED, null, null)
             }

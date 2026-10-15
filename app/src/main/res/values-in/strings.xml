@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Arc Download Manager</string>
-
-    <!-- Navigation -->
     <string name="nav_home">Beranda</string>
     <string name="nav_browser">Browser</string>
     <string name="nav_files">File</string>
     <string name="nav_settings">Setelan</string>
-
-    <!-- Download statuses -->
     <string name="status_queued">Antre</string>
     <string name="status_connecting">Menyambungkan…</string>
     <string name="status_downloading">Mengunduh</string>
@@ -22,9 +18,8 @@
     <string name="status_waiting_network">Menunggu jaringan</string>
     <string name="status_waiting_wifi">Menunggu Wi-Fi</string>
     <string name="status_waiting_storage">Menunggu penyimpanan</string>
+    <string name="status_waiting_schedule">Menunggu jadwal</string>
     <string name="status_auth_required">Perlu masuk</string>
-
-    <!-- Actions -->
     <string name="action_add_download">Tambah unduhan</string>
     <string name="action_batch_download">Unduh massal</string>
     <string name="action_paste_url">Tempel URL</string>
@@ -49,8 +44,6 @@
     <string name="action_reload">Muat ulang</string>
     <string name="action_save">Simpan</string>
     <string name="action_copy">Salin</string>
-
-    <!-- Add download -->
     <string name="add_url_hint">URL unduhan</string>
     <string name="add_filename_hint">Nama file</string>
     <string name="add_batch_hint">Satu URL per baris…</string>
@@ -63,12 +56,10 @@
     <string name="add_invalid_url">URL tidak valid</string>
     <string name="add_empty_url">Masukkan URL untuk memulai</string>
     <string name="add_url_unsupported">Protokol ini tidak didukung. Gunakan tautan HTTPS, HTTP, FTP, FTPS, SFTP, atau magnet.</string>
-    <string name="add_supported_protocols">HTTPS \u00B7 HTTP \u00B7 FTP \u00B7 FTPS \u00B7 SFTP \u00B7 Magnet</string>
+    <string name="add_supported_protocols">HTTPS \\u00B7 HTTP \\u00B7 FTP \\u00B7 FTPS \\u00B7 SFTP \\u00B7 Magnet</string>
     <string name="add_remote_credentials_hint">Server privat? Sertakan kredensial di URL: ftp://user:pass@host/path</string>
     <string name="add_started">Unduhan dimulai</string>
     <string name="add_batch_started">%1$d unduhan diantrekan, %2$d entri tidak valid dilewati</string>
-
-    <!-- Home -->
     <string name="home_active_downloads">Unduhan aktif</string>
     <string name="home_queue_count">%1$d aktif • %2$d antre • %3$d gagal</string>
     <string name="home_recent_files">File terbaru</string>
@@ -85,8 +76,6 @@
     <string name="hero_failed_count">%1$d gagal</string>
     <string name="view_compact">Ringkas</string>
     <string name="view_detailed">Rinci</string>
-
-    <!-- Files -->
     <string name="files_category_all">Semua</string>
     <string name="files_category_images">Gambar</string>
     <string name="files_category_videos">Video</string>
@@ -98,8 +87,6 @@
     <string name="files_empty">Belum ada file yang diunduh.</string>
     <string name="files_search_hint">Cari file</string>
     <string name="files_deleted">File dihapus</string>
-
-    <!-- Details -->
     <string name="details_segments">Segmen</string>
     <string name="details_speed_avg">Kecepatan rata-rata</string>
     <string name="details_time_remaining">Sisa waktu</string>
@@ -114,8 +101,6 @@
     <string name="details_completed_at">Selesai</string>
     <string name="empty_state_title">Belum ada apa pun di sini</string>
     <string name="empty_state_subtitle">Tempel tautan atau jelajahi web untuk memulai unduhan pertama Anda.</string>
-
-    <!-- Browser -->
     <string name="browser_address_hint">Telusuri atau masukkan alamat</string>
     <string name="browser_menu">Opsi lainnya</string>
     <string name="browser_tabs">Tab</string>
@@ -136,8 +121,6 @@
     <string name="browser_clear_data">Hapus data penjelajahan</string>
     <string name="browser_cleared">Data penjelajahan dihapus</string>
     <string name="browser_loading">Memuat halaman…</string>
-
-    <!-- Settings -->
     <string name="settings_downloads">Unduhan</string>
     <string name="settings_network">Jaringan</string>
     <string name="settings_browser">Browser &amp; privasi</string>
@@ -178,8 +161,6 @@
     <string name="settings_overwrite_rename">Ganti nama salinan</string>
     <string name="settings_overwrite_skip">Lewati</string>
     <string name="settings_overwrite_replace">Ganti</string>
-
-    <!-- Notifications -->
     <string name="notif_channel_downloads">Unduhan</string>
     <string name="notif_channel_downloads_desc">Progres unduhan aktif</string>
     <string name="notif_channel_status">Status</string>
@@ -192,8 +173,6 @@
     <string name="notif_failed">Unduhan gagal</string>
     <string name="notif_quota_paused_title">Unduhan dijeda</string>
     <string name="notif_quota_paused_text">Android menghentikan unduhan latar belakang setelah batas harian. Buka Arc untuk terus mengunduh.</string>
-
-    <!-- Errors -->
     <string name="error_network">Tidak ada koneksi jaringan</string>
     <string name="error_server">Galat server (HTTP %1$d)</string>
     <string name="error_auth">Perlu masuk. Buka browser, masuk ke akun, lalu coba lagi.</string>
@@ -210,31 +189,26 @@
     <string name="error_checksum">Checksum tidak cocok. File mungkin rusak.</string>
     <string name="error_invalid_url">URL tidak valid</string>
     <string name="error_page_not_file">Tautan ini adalah halaman web, bukan file yang dapat diunduh. Di halaman rilis GitHub, ketuk tautan file aset yang tepat.</string>
+    <string name="error_hls_live">Ini adalah siaran langsung — Arc hanya dapat mengunduh siaran yang sudah selesai (VOD).</string>
+    <string name="error_hls_unsupported">Siaran HLS ini menggunakan format yang tidak didukung (misalnya enkripsi SAMPLE-AES).</string>
+    <string name="error_hls_segment">Segmen video gagal diunduh setelah beberapa kali percobaan. Periksa koneksi Anda dan coba lagi.</string>
     <string name="error_protocol_unsupported">Tidak dapat mengunduh tautan ini: protokolnya tidak didukung. Gunakan tautan HTTPS, HTTP, FTP, FTPS, SFTP, atau magnet.</string>
     <string name="error_canceled">Unduhan dibatalkan</string>
     <string name="error_unknown">Galat tak terduga: %1$s</string>
-
-    <!-- Duplicate dialog -->
     <string name="duplicate_title">Unduhan sudah ada</string>
     <string name="duplicate_message">URL ini sudah ada di daftar unduhan Anda. Apa yang ingin Anda lakukan?</string>
     <string name="duplicate_skip">Lewati</string>
     <string name="duplicate_new_copy">Unduh salinan lain</string>
     <string name="duplicate_replace">Ganti yang sudah ada</string>
-
-    <!-- Misc -->
     <string name="speed_format">%1$s/s</string>
     <string name="eta_format">Sekitar %1$s lagi</string>
     <string name="permission_notif_rationale">Arc memerlukan izin notifikasi untuk menampilkan progres unduhan dan notifikasi saat unduhan selesai.</string>
     <string name="segments_active">%1$d dari %2$d koneksi</string>
-
-    <!-- Widget & Quick Settings tile -->
     <string name="widget_status_idle">Tidak ada unduhan aktif</string>
     <string name="widget_desc">Progres unduhan dengan kontrol jeda/lanjutkan</string>
     <string name="tile_label">Unduhan Arc</string>
     <string name="tile_pause_all">Ketuk untuk menjeda semua</string>
     <string name="tile_resume_all">Ketuk untuk melanjutkan semua</string>
-
-    <!-- Task management: edit / delete / archive / selection -->
     <string name="action_edit">Edit</string>
     <string name="action_archive">Arsipkan</string>
     <string name="action_unarchive">Batal arsipkan</string>
@@ -249,14 +223,12 @@
     <string name="edit_hint">Mengubah URL akan membuang progres sebagian untuk tugas ini.</string>
     <string name="edit_rejected">Tugas ini tidak dapat diedit saat ini. Jeda terlebih dahulu (tugas yang selesai tidak dapat diedit).</string>
     <string name="delete_task_title">Hapus tugas</string>
-    <string name="delete_task_message">Hapus \u201C%s\u201D dari daftar?</string>
+    <string name="delete_task_message">Hapus \\u201C%s\\u201D dari daftar?</string>
     <string name="delete_selection_title">Hapus tugas terpilih</string>
     <string name="delete_selection_message">Hapus tugas yang dipilih dari daftar?</string>
     <string name="delete_also_file">Juga hapus file yang sudah diunduh</string>
     <string name="selection_count">%1$d dipilih</string>
     <string name="clear_finished_done">%1$d tugas selesai telah dihapus</string>
-
-    <!-- Search / filter / sort -->
     <string name="search_hint">Cari tugas dan tautan</string>
     <string name="filter_all">Semua</string>
     <string name="filter_running">Berjalan (%1$d)</string>
@@ -266,28 +238,24 @@
     <string name="sort_by">Urutkan</string>
     <string name="sort_date_newest">Terbaru dulu</string>
     <string name="sort_date_oldest">Terlama dulu</string>
-    <string name="sort_name">Nama (A\u2013Z)</string>
+    <string name="sort_name">Nama (A\\u2013Z)</string>
     <string name="sort_size">Terbesar dulu</string>
-
-    <!-- Empty states -->
     <string name="home_archived_downloads">Diarsipkan</string>
     <string name="archived_empty_title">Belum ada yang diarsipkan</string>
-    <string name="archived_empty_subtitle">Arsipkan tugas yang selesai agar antrean tetap rapi \u2014 tugas terarsip tidak pernah dilanjutkan otomatis.</string>
+    <string name="archived_empty_subtitle">Arsipkan tugas yang selesai agar antrean tetap rapi \\u2014 tugas terarsip tidak pernah dilanjutkan otomatis.</string>
     <string name="no_results_title">Tidak ada tugas yang cocok</string>
     <string name="no_results_subtitle">Coba penelusuran atau filter lain.</string>
-    <string name="add_magnet_hint">Tautan magnet BitTorrent \u2014 peer ditemukan melalui DHT dan tracker yang tertanam di tautan. Ketersediaan bergantung pada seeder.</string>
+    <string name="add_magnet_hint">Tautan magnet BitTorrent \\u2014 peer ditemukan melalui DHT dan tracker yang tertanam di tautan. Ketersediaan bergantung pada seeder.</string>
     <string name="details_torrent_state">Torrent</string>
     <string name="details_torrent_peers">Peer</string>
-    <string name="torrent_peers_value">%1$d tersambung \u00B7 %2$d seeder</string>
-    <string name="torrent_state_metadata">Mencari peer\u2026</string>
-    <string name="torrent_state_checking">Memeriksa file\u2026</string>
+    <string name="torrent_peers_value">%1$d tersambung \\u00B7 %2$d seeder</string>
+    <string name="torrent_state_metadata">Mencari peer\\u2026</string>
+    <string name="torrent_state_checking">Memeriksa file\\u2026</string>
     <string name="torrent_state_downloading">Mengunduh melalui BitTorrent</string>
     <string name="torrent_state_finished">Selesai</string>
-    <string name="torrent_state_unknown">Menyiapkan\u2026</string>
-    <string name="error_torrent_metadata_timeout">Tidak menemukan peer untuk torrent ini \u2014 mungkin tidak ada seeder aktif saat ini. Coba lagi nanti.</string>
+    <string name="torrent_state_unknown">Menyiapkan\\u2026</string>
+    <string name="error_torrent_metadata_timeout">Tidak menemukan peer untuk torrent ini \\u2014 mungkin tidak ada seeder aktif saat ini. Coba lagi nanti.</string>
     <string name="error_torrent_failed">Mesin BitTorrent mengalami galat. Periksa tautan magnet lalu coba lagi.</string>
-
-    <!-- Share & UA features -->
     <string name="share_paste_download">Tempel &amp; unduh</string>
     <string name="share_added">Ditambahkan ke Arc</string>
     <string name="share_duplicate">Sudah ada di unduhan Anda</string>
@@ -301,7 +269,6 @@
     <string name="ua_preset_iphone">iPhone</string>
     <string name="ua_preset_custom">Kustom</string>
     <string name="ua_custom_hint">String user agent kustom</string>
-    <!-- Update & backup features -->
     <string name="update_available">Pembaruan tersedia: %1$s</string>
     <string name="update_open_release">Ketuk untuk membuka halaman rilis</string>
     <string name="update_check">Periksa pembaruan</string>
@@ -309,9 +276,8 @@
     <string name="backup_export">Ekspor daftar tugas</string>
     <string name="backup_import">Impor daftar tugas</string>
     <string name="backup_exported">%1$d tugas diekspor</string>
-    <string name="backup_imported">Diimpor %1$d \u00B7 dilewati %2$d</string>
-    <string name="backup_failed">Pencadangan gagal \u2014 tidak dapat mengakses file</string>
-    <!-- App lock -->
+    <string name="backup_imported">Diimpor %1$d \\u00B7 dilewati %2$d</string>
+    <string name="backup_failed">Pencadangan gagal \\u2014 tidak dapat mengakses file</string>
     <string name="lock_title">Buka kunci Arc</string>
     <string name="lock_subtitle">Terkunci</string>
     <string name="lock_unlock">Buka kunci</string>
@@ -320,7 +286,6 @@
     <string name="settings_security">Keamanan</string>
     <string name="settings_app_lock">Kunci aplikasi</string>
     <string name="settings_app_lock_hint">Wajibkan sidik jari atau kunci layar untuk membuka Arc</string>
-    <!-- Statistics -->
     <string name="stats_title">Statistik</string>
     <string name="stats_completed">Selesai</string>
     <string name="stats_failed">Gagal</string>
@@ -329,19 +294,20 @@
     <string name="stats_top_hosts">Host teratas</string>
     <string name="stats_empty">Belum ada unduhan yang selesai</string>
     <string name="stats_refresh">Segarkan statistik</string>
-    <!-- Media capture -->
     <string name="media_badge_n">Media</string>
     <string name="media_sheet_title">Media terdeteksi di halaman</string>
     <string name="media_add">Unduh</string>
     <string name="media_added">Ditambahkan ke Arc</string>
     <string name="media_empty">Tidak ada media yang terdeteksi di halaman ini.</string>
-    <!-- Torrent files -->
     <string name="torrent_files">File</string>
-    <string name="torrent_waiting_metadata">Menunggu metadata\u2026</string>
+    <string name="torrent_waiting_metadata">Menunggu metadata\\u2026</string>
     <string name="torrent_selected_summary">%1$d/%2$d dipilih</string>
     <string name="torrent_at_least_one">Disarankan memilih minimal satu file</string>
-    <!-- Network limits -->
     <string name="netlimit_cellular_title">Batas kecepatan di data seluler (KB/s)</string>
     <string name="netlimit_cellular_hint">0 = tanpa batas. Berlaku saat Wi-Fi nonaktif.</string>
+    <string name="settings_schedule">Unduhan terjadwal</string>
+    <string name="settings_schedule_hint">Unduhan hanya dimulai di dalam jendela waktu, misalnya semalaman pada jaringan tanpa kuota. Melanjutkan secara manual di luar jendela waktu akan menunggu hingga jendela terbuka.</string>
+    <string name="settings_schedule_start">Waktu mulai</string>
+    <string name="settings_schedule_end">Waktu selesai</string>
     <string name="netlimit_unlimited">Tanpa batas</string>
 </resources>

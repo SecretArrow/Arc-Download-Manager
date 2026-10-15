@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.arc.downloadmanager.engine.ScheduleWindow
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -37,6 +38,9 @@ class SettingsRepository
             val READ_TIMEOUT = intPreferencesKey("read_timeout_sec")
             val BANDWIDTH_LIMIT = longPreferencesKey("bandwidth_limit_kbps")
             val CELLULAR_LIMIT = longPreferencesKey("cellular_limit_kbps")
+            val SCHEDULE_ENABLED = booleanPreferencesKey("schedule_enabled")
+            val SCHEDULE_START = intPreferencesKey("schedule_start_min")
+            val SCHEDULE_END = intPreferencesKey("schedule_end_min")
             val MIN_FREE_SPACE = longPreferencesKey("min_free_space_mb")
             val OVERWRITE_POLICY = stringPreferencesKey("overwrite_policy")
             val THEME = stringPreferencesKey("theme")
@@ -66,6 +70,9 @@ class SettingsRepository
                     readTimeoutSec = p[Keys.READ_TIMEOUT] ?: 30,
                     bandwidthLimitKBps = p[Keys.BANDWIDTH_LIMIT] ?: 0L,
                     cellularLimitKBps = p[Keys.CELLULAR_LIMIT] ?: 0L,
+                    scheduleEnabled = p[Keys.SCHEDULE_ENABLED] ?: false,
+                    scheduleStartMin = ScheduleWindow.clamp(p[Keys.SCHEDULE_START] ?: 1320),
+                    scheduleEndMin = ScheduleWindow.clamp(p[Keys.SCHEDULE_END] ?: 360),
                     minFreeSpaceMB = p[Keys.MIN_FREE_SPACE] ?: 200L,
                     overwritePolicy =
                         p[Keys.OVERWRITE_POLICY]?.let { runCatching { OverwritePolicy.valueOf(it) }.getOrNull() }
@@ -108,6 +115,12 @@ class SettingsRepository
         suspend fun setBandwidthLimit(kbps: Long) = edit { it[Keys.BANDWIDTH_LIMIT] = kbps.coerceAtLeast(0) }
 
         suspend fun setCellularLimitKBps(kbps: Long) = edit { it[Keys.CELLULAR_LIMIT] = kbps.coerceAtLeast(0) }
+
+        suspend fun setScheduleEnabled(value: Boolean) = edit { it[Keys.SCHEDULE_ENABLED] = value }
+
+        suspend fun setScheduleStart(minute: Int) = edit { it[Keys.SCHEDULE_START] = ScheduleWindow.clamp(minute) }
+
+        suspend fun setScheduleEnd(minute: Int) = edit { it[Keys.SCHEDULE_END] = ScheduleWindow.clamp(minute) }
 
         suspend fun setMinFreeSpace(mb: Long) = edit { it[Keys.MIN_FREE_SPACE] = mb.coerceAtLeast(50) }
 

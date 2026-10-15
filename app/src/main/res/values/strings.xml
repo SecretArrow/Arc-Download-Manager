@@ -22,6 +22,7 @@
     <string name="status_waiting_network">Waiting for network</string>
     <string name="status_waiting_wifi">Waiting for Wi-Fi</string>
     <string name="status_waiting_storage">Waiting for storage</string>
+    <string name="status_waiting_schedule">Waiting for schedule</string>
     <string name="status_auth_required">Sign-in required</string>
 
     <!-- Actions -->
@@ -210,6 +211,9 @@
     <string name="error_checksum">Checksum mismatch. The file may be corrupted.</string>
     <string name="error_invalid_url">The URL is not valid</string>
     <string name="error_page_not_file">This link is a web page, not a downloadable file. On GitHub release pages, tap the exact asset file link.</string>
+    <string name="error_hls_live">This is a live stream \u2014 Arc can only download finished (VOD) streams.</string>
+    <string name="error_hls_unsupported">This HLS stream uses an unsupported format (e.g. SAMPLE-AES encryption).</string>
+    <string name="error_hls_segment">A video segment failed to download after several retries. Check your connection and try again.</string>
     <string name="error_protocol_unsupported">Can\u2019t download this link: its protocol isn\u2019t supported. Use HTTPS, HTTP, FTP, FTPS, SFTP or magnet links.</string>
     <string name="error_canceled">Download canceled</string>
     <string name="error_unknown">Unexpected error: %1$s</string>
@@ -343,5 +347,9 @@
     <!-- Network limits -->
     <string name="netlimit_cellular_title">Speed limit on mobile data (KB/s)</string>
     <string name="netlimit_cellular_hint">0 = unlimited. Applies when Wi-Fi is off.</string>
+    <string name="settings_schedule">Scheduled downloads</string>
+    <string name="settings_schedule_hint">Only start downloads inside the time window, e.g. overnight on an unmetered line. Manually resuming outside the window waits until it opens.</string>
+    <string name="settings_schedule_start">Start time</string>
+    <string name="settings_schedule_end">End time</string>
     <string name="netlimit_unlimited">Unlimited</string>
 </resources>

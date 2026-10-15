@@ -47,6 +47,9 @@ class StorageManager
 
         override fun torrentDir(downloadId: String): File = File(torrentRoot, downloadId).apply { mkdirs() }
 
+        /** Lives under the per-task temp dir so [cleanup] removes finished HLS segments. */
+        override fun hlsDir(downloadId: String): File = File(tempDirFor(downloadId), "hls").apply { mkdirs() }
+
         override fun partFile(
             downloadId: String,
             index: Int,

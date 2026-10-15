@@ -62,9 +62,10 @@ inline (`sftp://user:pass@host/path`).
   instead of the misleading "Waiting for network".
 - **Share & paste (v2.3)**: "Share to Arc" from any app's share sheet plus a Paste & download
   quick action on Home; per-task User-Agent presets (Desktop/Android/iPhone/custom).
-- **HLS / m3u8 downloads (v2.3)**: master-playlist variant selection, ordered segment fetch
-  into a single stream file, pause/cancel/auto-retry aware (encrypted streams reported as
-  unsupported).
+- **HLS / m3u8 downloads (v2.4 upgrade)**: best-variant selection, 3-way parallel segment
+  download, transparent **AES-128 decryption** (IV attribute or sequence-derived), per-segment
+  resume, fMP4 (EXT-X-MAP) support and ordered merge into a playable `.ts`/`.mp4`. Live
+  playlists are rejected honestly ("Arc can only download finished streams").
 - **Torrent file selection (v2.3)**: list a magnet's files once metadata arrives and
   include/exclude each one via priorities.
 - **Browser media capture (v2.3)**: detected page media (video/audio/direct links) appears
@@ -73,7 +74,14 @@ inline (`sftp://user:pass@host/path`).
   straight to the release page; task-list export/import (JSON) for device migration.
 - **Security & network (v2.3)**: optional biometric App lock (auto-relock after 30 s in
   background), per-network speed limits (separate mobile-data cap), and a full Statistics
-  screen (7-day chart, top hosts, all-time totals). Full **Bahasa Indonesia** localization.
+  screen (7-day chart, top hosts, all-time totals).
+- **Scheduled downloads (v2.4)**: restrict automatic starts to a time window — e.g. 22:00-06:00
+  overnight on an unmetered line. Tasks held outside the window show "Waiting for schedule" and
+  wake within seconds of the window opening (midnight-wrapping windows supported).
+- **25 languages (v2.4)**: English, Indonesian, Spanish, Portuguese, French, Italian, German,
+  Dutch, Polish, Russian, Ukrainian, Simplified & Traditional Chinese, Japanese, Korean,
+  Vietnamese, Thai, Turkish, Malay, Arabic, Hindi, Bengali, Urdu, Tamil and Persian — with full
+  right-to-left support for Arabic, Urdu and Persian.
 - Automatic retry with exponential backoff + jitter, `Retry-After` awareness and adaptive
   parallelism when servers rate-limit (HTTP 429/503).
 - **Large-file safe**: the whole pipeline is streaming — bounded 128 KiB network buffers, a

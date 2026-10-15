@@ -16,6 +16,12 @@ data class EngineSettings(
     val readTimeoutSec: Int = 30,
     val bandwidthLimitKBps: Long = 0L,
     val cellularLimitKBps: Long = 0L,
+    /** Scheduled downloads ("night quota"): only start inside the [scheduleStartMin, scheduleEndMin) window. */
+    val scheduleEnabled: Boolean = false,
+    /** Window start in minutes-of-day (default 22:00). */
+    val scheduleStartMin: Int = 1320,
+    /** Window end in minutes-of-day (default 06:00); may wrap past midnight. */
+    val scheduleEndMin: Int = 360,
     val minFreeSpaceMB: Long = 200L,
     val overwritePolicy: OverwritePolicy = OverwritePolicy.RENAME,
     val theme: ThemeMode = ThemeMode.SYSTEM,

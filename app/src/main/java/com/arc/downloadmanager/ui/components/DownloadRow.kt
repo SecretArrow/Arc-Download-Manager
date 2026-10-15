@@ -78,6 +78,7 @@ fun statusLabelRes(
                 com.arc.downloadmanager.R.string.status_waiting_network
             }
         DownloadStatus.WAITING_STORAGE -> com.arc.downloadmanager.R.string.status_waiting_storage
+        DownloadStatus.WAITING_SCHEDULED -> com.arc.downloadmanager.R.string.status_waiting_schedule
         DownloadStatus.AUTH_REQUIRED -> com.arc.downloadmanager.R.string.status_auth_required
     }
 
@@ -85,7 +86,10 @@ fun statusColor(status: DownloadStatus): Color =
     when (status) {
         DownloadStatus.COMPLETED -> Color(0xFF2E7D32)
         DownloadStatus.FAILED, DownloadStatus.AUTH_REQUIRED -> Color(0xFFC62828)
-        DownloadStatus.PAUSED, DownloadStatus.CANCELED, DownloadStatus.WAITING_NETWORK, DownloadStatus.WAITING_STORAGE -> Color(0xFF9E6400)
+        DownloadStatus.PAUSED, DownloadStatus.CANCELED, DownloadStatus.WAITING_NETWORK, DownloadStatus.WAITING_STORAGE, DownloadStatus.WAITING_SCHEDULED ->
+            Color(
+                0xFF9E6400,
+            )
         else -> Color.Unspecified
     }
 
@@ -256,7 +260,7 @@ fun DownloadRow(
                                     )
                                 }
                             status == DownloadStatus.PAUSED || status == DownloadStatus.WAITING_NETWORK ||
-                                status == DownloadStatus.WAITING_STORAGE ->
+                                status == DownloadStatus.WAITING_STORAGE || status == DownloadStatus.WAITING_SCHEDULED ->
                                 IconButton(onClick = onPauseResume) {
                                     Icon(
                                         Icons.Filled.PlayCircle,

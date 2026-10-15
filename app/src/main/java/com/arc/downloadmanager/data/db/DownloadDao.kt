@@ -29,7 +29,7 @@ interface DownloadDao {
     suspend fun getByUrl(url: String): List<DownloadEntity>
 
     @Query(
-        "SELECT * FROM downloads WHERE status IN ('QUEUED','WAITING_NETWORK','WAITING_STORAGE') AND archivedAt IS NULL ORDER BY priority DESC, createdAt ASC",
+        "SELECT * FROM downloads WHERE status IN ('QUEUED','WAITING_NETWORK','WAITING_STORAGE','WAITING_SCHEDULED') AND archivedAt IS NULL ORDER BY priority DESC, createdAt ASC",
     )
     suspend fun pending(): List<DownloadEntity>
 

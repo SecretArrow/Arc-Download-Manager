@@ -14,6 +14,7 @@ enum class DownloadStatus {
     CANCELED,
     WAITING_NETWORK,
     WAITING_STORAGE,
+    WAITING_SCHEDULED,
     AUTH_REQUIRED,
     ;
 
@@ -21,7 +22,7 @@ enum class DownloadStatus {
         get() = this == CONNECTING || this == DOWNLOADING || this == PAUSING || this == MERGING || this == VERIFYING
 
     val isRunningCandidate: Boolean
-        get() = this == QUEUED || this == WAITING_NETWORK || this == WAITING_STORAGE
+        get() = this == QUEUED || this == WAITING_NETWORK || this == WAITING_STORAGE || this == WAITING_SCHEDULED
 
     val isTerminal: Boolean
         get() = this == COMPLETED || this == FAILED || this == CANCELED

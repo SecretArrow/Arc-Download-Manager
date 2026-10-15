@@ -20,6 +20,9 @@ interface TaskStorage {
     /** Per-task directory where a BitTorrent payload is assembled in place. */
     fun torrentDir(downloadId: String): File
 
+    /** Per-task directory where HLS media segments are staged before the merge. */
+    fun hlsDir(downloadId: String): File
+
     fun reconcilePart(
         downloadId: String,
         index: Int,

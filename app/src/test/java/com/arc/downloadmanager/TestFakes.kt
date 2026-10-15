@@ -190,6 +190,8 @@ class FakeTaskStorage(private val root: File) : TaskStorage {
 
     override fun torrentDir(downloadId: String): File = File(File(root, "torrents").apply { mkdirs() }, downloadId).apply { mkdirs() }
 
+    override fun hlsDir(downloadId: String): File = File(File(root, downloadId).apply { mkdirs() }, "hls").apply { mkdirs() }
+
     override fun reconcilePart(
         downloadId: String,
         index: Int,
