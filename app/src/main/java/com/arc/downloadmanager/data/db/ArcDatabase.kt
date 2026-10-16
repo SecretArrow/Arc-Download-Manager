@@ -9,8 +9,9 @@ import androidx.room.RoomDatabase
         SegmentEntity::class,
         BookmarkEntity::class,
         HistoryEntity::class,
+        VaultFileEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class ArcDatabase : RoomDatabase() {
@@ -21,4 +22,6 @@ abstract class ArcDatabase : RoomDatabase() {
     abstract fun bookmarkDao(): BookmarkDao
 
     abstract fun historyDao(): HistoryDao
+
+    abstract fun vaultFileDao(): VaultFileDao
 }

@@ -3,6 +3,7 @@ package com.arc.downloadmanager.ui.downloads
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.arc.downloadmanager.R
 import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.data.db.SegmentEntity
 import com.arc.downloadmanager.data.repository.DownloadRepository
@@ -37,6 +38,7 @@ class DownloadDetailViewModel
         private val repository: DownloadRepository,
         store: DownloadStore,
         private val torrentEngine: TorrentEngine,
+        private val vaultRepository: com.arc.downloadmanager.data.vault.VaultRepository,
     ) : ViewModel() {
         private val id: String = savedStateHandle.get<String>("id") ?: ""
         private val speedTracker = SpeedTracker()
@@ -119,6 +121,33 @@ class DownloadDetailViewModel
         fun restart() = repository.restart(id)
 
         fun archive() = repository.archive(listOf(id), archived = true)
+
+        /** "Save to Vault" for a completed download; navigates when locked/unset. */
+        fun saveToVault(
+            entity: DownloadEntity,
+            onNavigate: () -> Unit,
+            onResult: (res: Int, arg: String?) -> Unit,
+        ) {
+            val uri = entity.finalUri ?: return onResult(R.string.vault_import_failed, null)
+            viewModelScope.launch {
+                when (
+                    val r =
+                        vaultRepository.saveFromExternal(
+                            android.net.Uri.parse(uri),
+                            entity.filename,
+                            entity.mimeType,
+                        )
+                ) {
+                    is com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.Done ->
+                        onResult(R.string.vault_saved_to_vault, r.name)
+                    com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.Failed ->
+                        onResult(R.string.vault_import_failed, null)
+                    com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.NeedsSetup,
+                    com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.NeedsUnlock,
+                    -> onNavigate()
+                }
+            }
+        }
 
         fun restore() = repository.archive(listOf(id), archived = false)
 

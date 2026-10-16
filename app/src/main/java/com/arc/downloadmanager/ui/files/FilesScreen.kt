@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DriveFileRenameOutline
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -56,7 +57,10 @@ import com.arc.downloadmanager.ui.theme.categoryAccent
 import com.arc.downloadmanager.util.Format
 
 @Composable
-fun FilesScreen(viewModel: FilesViewModel = hiltViewModel()) {
+fun FilesScreen(
+    viewModel: FilesViewModel = hiltViewModel(),
+    onOpenVault: () -> Unit = {},
+) {
     val files by viewModel.files.collectAsStateWithLifecycle()
     val category by viewModel.category.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
@@ -154,6 +158,7 @@ fun FilesScreen(viewModel: FilesViewModel = hiltViewModel()) {
                             },
                             onDelete = { viewModel.delete(item) },
                             onRename = { newName -> viewModel.rename(item, newName) { } },
+                            onSaveToVault = { viewModel.saveToVault(item, onOpenVault) },
                         )
                     }
                 }
@@ -169,6 +174,7 @@ private fun FileRow(
     onShare: () -> Unit,
     onDelete: () -> Unit,
     onRename: (String) -> Unit,
+    onSaveToVault: () -> Unit,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     var renaming by remember { mutableStateOf(false) }
@@ -219,6 +225,14 @@ private fun FileRow(
                     Icon(Icons.Filled.MoreVert, contentDescription = null)
                 }
                 DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.action_save_to_vault)) },
+                        onClick = {
+                            menuOpen = false
+                            onSaveToVault()
+                        },
+                        leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null) },
+                    )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.action_rename)) },
                         onClick = {

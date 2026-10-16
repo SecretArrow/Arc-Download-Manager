@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -68,6 +69,7 @@ import com.arc.downloadmanager.util.Format
 fun DownloadDetailScreen(
     downloadId: String,
     onBack: () -> Unit,
+    onOpenVault: () -> Unit = {},
     viewModel: DownloadDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.detail.collectAsStateWithLifecycle()
@@ -117,7 +119,7 @@ fun DownloadDetailScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             ProgressCard(entity, state.segments, state.speedBps)
-            ActionRow(entity, viewModel, context, onEdit = { showEditDialog = true })
+            ActionRow(entity, viewModel, context, onEdit = { showEditDialog = true }, onOpenVault = onOpenVault)
             InfoSection(entity, state.torrent)
             if (entity.url.startsWith("magnet:")) {
                 TorrentFilesCard(files = torrentFiles, onToggle = viewModel::setTorrentFileIncluded)
@@ -263,6 +265,7 @@ private fun ActionRow(
     viewModel: DownloadDetailViewModel,
     context: android.content.Context,
     onEdit: () -> Unit,
+    onOpenVault: () -> Unit,
 ) {
     val active = entity.status.isActive
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -339,6 +342,21 @@ private fun ActionRow(
                 Icon(Icons.Filled.Share, contentDescription = null)
                 Text(stringResource(R.string.action_share), Modifier.padding(start = 4.dp))
             }
+        }
+        OutlinedButton(
+            onClick = {
+                viewModel.saveToVault(
+                    entity,
+                    onNavigate = onOpenVault,
+                ) { res, arg ->
+                    val msg =
+                        if (arg != null) context.getString(res, arg) else context.getString(res)
+                    android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
+                }
+            },
+        ) {
+            Icon(Icons.Filled.Lock, contentDescription = null)
+            Text(stringResource(R.string.action_save_to_vault), Modifier.padding(start = 4.dp))
         }
     }
     if (entity.status == DownloadStatus.AUTH_REQUIRED) {

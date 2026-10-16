@@ -30,13 +30,33 @@ object DatabaseModule {
             }
         }
 
+    /** v2 -> v3: encrypted vault file index. Data-preserving. */
+    private val MIGRATION_2_3 =
+        object : androidx.room.migration.Migration(2, 3) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `vault_files` (" +
+                        "`id` TEXT NOT NULL PRIMARY KEY, " +
+                        "`name` TEXT NOT NULL, " +
+                        "`mimeType` TEXT, " +
+                        "`category` TEXT NOT NULL, " +
+                        "`sizeBytes` INTEGER NOT NULL, " +
+                        "`encSizeBytes` INTEGER NOT NULL, " +
+                        "`blobPath` TEXT NOT NULL, " +
+                        "`addedAt` INTEGER NOT NULL, " +
+                        "`lastOpenedAt` INTEGER DEFAULT NULL" +
+                        ")",
+                )
+            }
+        }
+
     @Provides
     @Singleton
     fun provideDatabase(
         @ApplicationContext context: Context,
     ): ArcDatabase =
         Room.databaseBuilder(context, ArcDatabase::class.java, "arc_downloads.db")
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
 
     @Provides
@@ -50,6 +70,9 @@ object DatabaseModule {
 
     @Provides
     fun provideHistoryDao(db: ArcDatabase): com.arc.downloadmanager.data.db.HistoryDao = db.historyDao()
+
+    @Provides
+    fun provideVaultFileDao(db: ArcDatabase): com.arc.downloadmanager.data.db.VaultFileDao = db.vaultFileDao()
 }
 
 @Module

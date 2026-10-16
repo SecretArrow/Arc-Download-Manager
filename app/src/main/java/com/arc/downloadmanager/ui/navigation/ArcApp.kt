@@ -14,10 +14,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
@@ -48,11 +50,13 @@ import com.arc.downloadmanager.ui.files.FilesScreen
 import com.arc.downloadmanager.ui.home.HomeScreen
 import com.arc.downloadmanager.ui.settings.SettingsScreen
 import com.arc.downloadmanager.ui.stats.StatsScreen
+import com.arc.downloadmanager.ui.vault.VaultScreen
 
 object Routes {
     const val HOME = "home"
     const val BROWSER = "browser"
     const val FILES = "files"
+    const val VAULT = "vault"
     const val SETTINGS = "settings"
     const val DOWNLOAD_DETAIL = "download/{id}"
     const val STATS = "stats"
@@ -75,6 +79,7 @@ fun ArcApp() {
             Destination(Routes.HOME, R.string.nav_home, Icons.Filled.Home, Icons.Outlined.Home),
             Destination(Routes.BROWSER, R.string.nav_browser, Icons.Filled.Public, Icons.Outlined.Public),
             Destination(Routes.FILES, R.string.nav_files, Icons.Filled.Description, Icons.Outlined.Description),
+            Destination(Routes.VAULT, R.string.nav_vault, Icons.Filled.Lock, Icons.Outlined.Lock),
             Destination(Routes.SETTINGS, R.string.nav_settings, Icons.Filled.Settings, Icons.Outlined.Settings),
         )
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -187,7 +192,10 @@ private fun ArcNavHost(
                 BrowserScreen()
             }
             composable(Routes.FILES) {
-                FilesScreen()
+                FilesScreen(onOpenVault = { navigateTo(navController, Routes.VAULT) })
+            }
+            composable(Routes.VAULT) {
+                VaultScreen()
             }
             composable(Routes.SETTINGS) {
                 SettingsScreen()
@@ -197,6 +205,7 @@ private fun ArcNavHost(
                 DownloadDetailScreen(
                     downloadId = id,
                     onBack = { navController.popBackStack() },
+                    onOpenVault = { navigateTo(navController, Routes.VAULT) },
                 )
             }
             composable(Routes.STATS) {

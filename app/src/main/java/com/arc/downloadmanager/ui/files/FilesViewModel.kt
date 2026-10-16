@@ -1,12 +1,18 @@
 package com.arc.downloadmanager.ui.files
 
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.arc.downloadmanager.R
 import com.arc.downloadmanager.data.repository.FileCategory
 import com.arc.downloadmanager.data.repository.FileItem
 import com.arc.downloadmanager.data.repository.FileRepository
+import com.arc.downloadmanager.data.vault.VaultRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +23,9 @@ import javax.inject.Inject
 class FilesViewModel
     @Inject
     constructor(
+        @ApplicationContext private val appContext: Context,
         private val fileRepository: FileRepository,
+        private val vaultRepository: VaultRepository,
     ) : ViewModel() {
         private val _files = MutableStateFlow<List<FileItem>>(emptyList())
         val files: StateFlow<List<FileItem>> = _files.asStateFlow()
@@ -82,4 +90,24 @@ class FilesViewModel
                 putExtra(Intent.EXTRA_STREAM, android.net.Uri.parse(item.uri))
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
+
+        /** "Save to Vault": encrypt a downloaded file into the private vault. */
+        fun saveToVault(
+            item: FileItem,
+            onNavigate: () -> Unit,
+        ) {
+            viewModelScope.launch {
+                when (
+                    val r = vaultRepository.saveFromExternal(Uri.parse(item.uri), item.name, item.mime)
+                ) {
+                    is VaultRepository.ExternalSaveResult.Done ->
+                        Toast.makeText(appContext, appContext.getString(R.string.vault_saved_to_vault, r.name), Toast.LENGTH_LONG).show()
+                    VaultRepository.ExternalSaveResult.Failed ->
+                        Toast.makeText(appContext, R.string.vault_import_failed, Toast.LENGTH_LONG).show()
+                    VaultRepository.ExternalSaveResult.NeedsSetup,
+                    VaultRepository.ExternalSaveResult.NeedsUnlock,
+                    -> onNavigate()
+                }
+            }
+        }
     }

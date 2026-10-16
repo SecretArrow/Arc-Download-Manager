@@ -62,6 +62,11 @@ inline (`sftp://user:pass@host/path`).
   instead of the misleading "Waiting for network".
 - **Share & paste (v2.3)**: "Share to Arc" from any app's share sheet plus a Paste & download
   quick action on Home; per-task User-Agent presets (Desktop/Android/iPhone/custom).
+- **Encrypted Vault (v2.5)**: a private safe for your files — AES-256-GCM encryption before
+  anything touches disk, invisible to the gallery and other apps. Password/PIN with a one-time
+  recovery key (no escrow — lose both and the data is gone), optional biometric unlock, auto-lock
+  on background/idle, brute-force throttling, "Save to Vault" on finished downloads and files,
+  open/export/delete/rename with search & sort, and password change without re-encrypting files.
 - **HLS / m3u8 downloads (v2.4 upgrade)**: best-variant selection, 3-way parallel segment
   download, transparent **AES-128 decryption** (IV attribute or sequence-derived), per-segment
   resume, fMP4 (EXT-X-MAP) support and ordered merge into a playable `.ts`/`.mp4`. Live

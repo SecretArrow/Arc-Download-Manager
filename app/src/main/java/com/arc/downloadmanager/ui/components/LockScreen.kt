@@ -103,6 +103,29 @@ fun showBiometricPrompt(
 }
 
 /**
+ * Brand tile shared by the app lock screen and the vault lock screens: the
+ * hero-gradient rounded square with the white-tinted logo mark.
+ */
+@Composable
+fun LockTile(modifier: Modifier = Modifier) {
+    Box(
+        modifier =
+            modifier
+                .size(96.dp)
+                .clip(RoundedCornerShape(28.dp))
+                .background(ArcHeroBrush),
+        contentAlignment = Alignment.Center,
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_logo),
+            contentDescription = null,
+            colorFilter = ColorFilter.tint(Color.White),
+            modifier = Modifier.size(44.dp),
+        )
+    }
+}
+
+/**
  * Full-screen gate shown instead of the app while app lock is enabled and the
  * session is locked. Brand tile reuses the hero gradient ([ArcHeroBrush]) with
  * the white-tinted logo mark (the raw vector strokes are white, same treatment
@@ -128,21 +151,7 @@ fun LockScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(32.dp),
         ) {
-            Box(
-                modifier =
-                    Modifier
-                        .size(96.dp)
-                        .clip(RoundedCornerShape(28.dp))
-                        .background(ArcHeroBrush),
-                contentAlignment = Alignment.Center,
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.ic_logo),
-                    contentDescription = null,
-                    colorFilter = ColorFilter.tint(Color.White),
-                    modifier = Modifier.size(44.dp),
-                )
-            }
+            LockTile()
             Spacer(Modifier.height(24.dp))
             Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(4.dp))
