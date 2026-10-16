@@ -1,24 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Rounded download arc + arrow -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,30 L54,62 M54,62 L40,48 M54,62 L68,48"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="7"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
+    <!-- Open arc ring (brand "Arc"): 300 degree sweep, gap framing the arrow -->
     <path
         android:fillColor="#00000000"
-        android:pathData="M32,58 L32,70 A6,6 0 0 0 38,76 L70,76 A6,6 0 0 0 76,70 L76,58"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="7"
-        android:strokeLineCap="round" />
+        android:pathData="M67.5,30.6 A27,27 0 1 1 40.5,30.6"
+        android:strokeLineCap="round"
+        android:strokeWidth="5.5">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="0"
+                android:startY="0"
+                android:endX="108"
+                android:endY="108">
+                <item android:offset="0.0" android:color="#FF22D3EE" />
+                <item android:offset="1.0" android:color="#FFF0ABFC" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Download arrow dropping through the arc opening -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,30 m-7,0 a7,7 0 1 1 14,0 a7,7 0 1 1 -14,0" />
+        android:fillColor="#00000000"
+        android:pathData="M54,39 L54,61.5 M45,52.5 L54,61.5 L63,52.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="7.5" />
+    <!-- Tray -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M44,71 L64,71"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeWidth="7.5" />
 </vector>
