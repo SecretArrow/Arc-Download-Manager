@@ -60,6 +60,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arc.downloadmanager.R
 import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.domain.model.DownloadStatus
+import com.arc.downloadmanager.engine.FilenameDetector
 import com.arc.downloadmanager.engine.torrent.TorrentFileInfo
 import com.arc.downloadmanager.ui.components.statusColor
 import com.arc.downloadmanager.ui.components.statusLabelRes
@@ -316,7 +317,10 @@ private fun ActionRow(
                         val uri = android.net.Uri.parse(entity.finalUri)
                         val intent =
                             Intent(Intent.ACTION_VIEW).apply {
-                                setDataAndType(uri, entity.mimeType ?: "*/*")
+                                setDataAndType(
+                                    uri,
+                                    FilenameDetector.guessMime(entity.filename) ?: entity.mimeType ?: "*/*",
+                                )
                                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             }
                         context.startActivity(intent)
@@ -331,7 +335,7 @@ private fun ActionRow(
                     runCatching {
                         val intent =
                             Intent(Intent.ACTION_SEND).apply {
-                                type = entity.mimeType ?: "*/*"
+                                type = FilenameDetector.guessMime(entity.filename) ?: entity.mimeType ?: "*/*"
                                 putExtra(Intent.EXTRA_STREAM, android.net.Uri.parse(entity.finalUri))
                                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             }

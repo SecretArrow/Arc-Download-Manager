@@ -149,4 +149,53 @@ object FilenameDetector {
             counter++
         }
     }
+
+    /** Extension → MIME map for completed files on disk. The file extension is the ground
+     *  truth once the file is final; server-provided content types are often generic
+     *  (e.g. GitHub serves .apk as application/octet-stream), which breaks MIME-based
+     *  dispatch such as the Android package installer. */
+    private val EXTENSION_MIME =
+        mapOf(
+            "apk" to "application/vnd.android.package-archive",
+            "mp4" to "video/mp4",
+            "m4v" to "video/mp4",
+            "mkv" to "video/x-matroska",
+            "avi" to "video/avi",
+            "mov" to "video/quicktime",
+            "webm" to "video/webm",
+            "ts" to "video/mp2t",
+            "mp3" to "audio/mpeg",
+            "flac" to "audio/flac",
+            "ogg" to "audio/ogg",
+            "opus" to "audio/ogg",
+            "wav" to "audio/wav",
+            "m4a" to "audio/mp4",
+            "pdf" to "application/pdf",
+            "zip" to "application/zip",
+            "rar" to "application/x-rar-compressed",
+            "7z" to "application/x-7z-compressed",
+            "tar" to "application/x-tar",
+            "gz" to "application/gzip",
+            "iso" to "application/x-iso9660-image",
+            "epub" to "application/epub+zip",
+            "jpg" to "image/jpeg",
+            "jpeg" to "image/jpeg",
+            "png" to "image/png",
+            "gif" to "image/gif",
+            "webp" to "image/webp",
+            "svg" to "image/svg+xml",
+            "txt" to "text/plain",
+            "nfo" to "text/plain",
+            "csv" to "text/csv",
+            "html" to "text/html",
+            "htm" to "text/html",
+            "srt" to "application/x-subrip",
+        )
+
+    /** Best-effort MIME type derived from the file name extension (case-insensitive). */
+    fun guessMime(name: String): String? {
+        val ext = name.substringAfterLast('.', "").lowercase(Locale.US)
+        if (ext.isEmpty()) return null
+        return EXTENSION_MIME[ext]
+    }
 }

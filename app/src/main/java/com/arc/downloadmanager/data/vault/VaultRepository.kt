@@ -7,6 +7,7 @@ import androidx.core.content.FileProvider
 import com.arc.downloadmanager.data.db.VaultFileDao
 import com.arc.downloadmanager.data.db.VaultFileEntity
 import com.arc.downloadmanager.data.repository.FileRepository
+import com.arc.downloadmanager.engine.FilenameDetector
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -359,7 +360,7 @@ class VaultRepository
                 session.touch()
                 val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", out)
                 Intent(Intent.ACTION_VIEW).apply {
-                    setDataAndType(uri, file.mimeType ?: "*/*")
+                    setDataAndType(uri, FilenameDetector.guessMime(file.name) ?: file.mimeType ?: "*/*")
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
             } catch (t: Throwable) {

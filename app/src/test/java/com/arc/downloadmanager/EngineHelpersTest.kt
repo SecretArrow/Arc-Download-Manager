@@ -125,6 +125,28 @@ class FilenameDetectorTest {
         val existing = setOf("a.txt", "a (1).txt")
         assertEquals("a (2).txt", FilenameDetector.uniqueName("a.txt") { it in existing })
     }
+
+    @Test
+    fun `guessMime maps apk to package archive`() {
+        assertEquals("application/vnd.android.package-archive", FilenameDetector.guessMime("app-release.apk"))
+        assertEquals("application/vnd.android.package-archive", FilenameDetector.guessMime("ARC.Flux.APK"))
+    }
+
+    @Test
+    fun `guessMime maps common media extensions`() {
+        assertEquals("video/mp4", FilenameDetector.guessMime("clip.MP4"))
+        assertEquals("video/mp2t", FilenameDetector.guessMime("stream.ts"))
+        assertEquals("audio/mpeg", FilenameDetector.guessMime("song.mp3"))
+        assertEquals("application/pdf", FilenameDetector.guessMime("doc.pdf"))
+        assertEquals("image/jpeg", FilenameDetector.guessMime("photo.jpeg"))
+    }
+
+    @Test
+    fun `guessMime returns null for unknown or missing extensions`() {
+        assertEquals(null, FilenameDetector.guessMime("mystery.xyz"))
+        assertEquals(null, FilenameDetector.guessMime("noextension"))
+        assertEquals(null, FilenameDetector.guessMime(""))
+    }
 }
 
 class BackoffPolicyTest {

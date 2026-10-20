@@ -154,7 +154,10 @@ class StorageManager
             entity: DownloadEntity,
             staged: File,
         ): String {
-            val mime = entity.mimeType ?: "application/octet-stream"
+            val mime =
+                FilenameDetector.guessMime(entity.filename)
+                    ?: entity.mimeType
+                    ?: "application/octet-stream"
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val resolver = context.contentResolver
                 val values =
@@ -189,7 +192,10 @@ class StorageManager
             val tree =
                 DocumentFile.fromTreeUri(context, treeUri)
                     ?: throw IOException("Destination folder is no longer accessible")
-            val mime = entity.mimeType ?: "application/octet-stream"
+            val mime =
+                FilenameDetector.guessMime(entity.filename)
+                    ?: entity.mimeType
+                    ?: "application/octet-stream"
             val existing = tree.findFile(entity.filename)
             val doc =
                 if (existing != null && existing.isFile) {

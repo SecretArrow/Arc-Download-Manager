@@ -77,6 +77,17 @@ jobs:
           ARC_KEY_PASSWORD: ${{ secrets.ARC_KEY_PASSWORD }}
         run: ./gradlew :app:assembleRelease --stacktrace
 
+      - name: Verify signed APK (safety net)
+        if: steps.meta.outputs.exists == 'false'
+        run: |
+          APK=app/build/outputs/apk/release/app-release.apk
+          test -f "$APK"
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          ZIPALIGN=$(ls "$ANDROID_HOME"/build-tools/*/zipalign | sort -V | tail -1)
+          "$APKSIGNER" verify "$APK"
+          "$ZIPALIGN" -c 4 "$APK"
+          echo "APK signature and alignment verified"
+
       - name: Generate release notes
         if: steps.meta.outputs.exists == 'false'
         env:
@@ -100,6 +111,24 @@ jobs:
 
           ### Changes
           $LOG
+          NOTES
+
+      - name: Append APK checksum to release notes
+        if: steps.meta.outputs.exists == 'false'
+        run: |
+          APK=app/build/outputs/apk/release/app-release.apk
+          SHA=$(sha256sum "$APK" | cut -d' ' -f1)
+          SIZE=$(stat -c%s "$APK")
+          cat >> release_notes.md <<NOTES
+
+          ### APK details
+          - File: app-release.apk (size: $SIZE bytes)
+          - SHA-256: $SHA
+          - Requires Android 8.0+ (API 26)
+
+          > If the installer says the package is invalid, re-download the file completely and
+          > compare the SHA-256 above (via a hash checker app or your browser's download
+          > manager) before installing. A partial/interrupted download is the most common cause.
           NOTES
 
       - name: Create GitHub release with APK
