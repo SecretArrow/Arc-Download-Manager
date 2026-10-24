@@ -373,4 +373,6 @@
     <string name="vault_open_failed">Impossible d\'ouvrir le fichier</string>
     <string name="vault_lock_now">Verrouiller le coffre-fort</string>
     <string name="vault_total_n_files">%1$d fichiers • %2$s</string>
+    <string name="update_download_apk">Télécharger l\'APK</string>
+    <string name="update_queued">Mise à jour ajoutée à la file de téléchargement</string>
 </resources>

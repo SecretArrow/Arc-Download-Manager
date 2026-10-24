@@ -373,4 +373,6 @@
     <string name="vault_open_failed">No se pudo abrir el archivo</string>
     <string name="vault_lock_now">Bloquear la bóveda ahora</string>
     <string name="vault_total_n_files">%1$d archivos • %2$s</string>
+    <string name="update_download_apk">Descargar APK</string>
+    <string name="update_queued">Actualización añadida a la cola de descargas</string>
 </resources>

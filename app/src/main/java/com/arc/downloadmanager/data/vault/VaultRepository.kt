@@ -382,7 +382,20 @@ class VaultRepository
             fileId: String,
             newName: String,
         ) {
-            dao.rename(fileId, newName.trim().ifBlank { "file" })
+            val entity = dao.getById(fileId)
+            val cleaned = newName.trim().ifBlank { "file" }
+            // Keep the extension: viewers/installers dispatch on it when the decrypted
+            // temp copy is opened, and a renamed "movie" without ".mp4" confuses them.
+            val final =
+                if (entity != null &&
+                    !cleaned.contains('.') &&
+                    entity.name.contains('.')
+                ) {
+                    cleaned + entity.name.substring(entity.name.lastIndexOf('.'))
+                } else {
+                    cleaned
+                }
+            dao.rename(fileId, final)
             session.touch()
         }
 

@@ -372,4 +372,6 @@
     <string name="vault_open_failed">Не удалось открыть файл</string>
     <string name="vault_lock_now">Заблокировать хранилище сейчас</string>
     <string name="vault_total_n_files">Файлов: %1$d • %2$s</string>
+    <string name="update_download_apk">Скачать APK</string>
+    <string name="update_queued">Обновление добавлено в очередь загрузок</string>
 </resources>

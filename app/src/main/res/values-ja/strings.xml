@@ -372,4 +372,6 @@
     <string name="vault_open_failed">ファイルを開けませんでした</string>
     <string name="vault_lock_now">今すぐ保管庫をロック</string>
     <string name="vault_total_n_files">ファイル %1$d 件 • %2$s</string>
+    <string name="update_download_apk">APKをダウンロード</string>
+    <string name="update_queued">アップデートをダウンロードキューに追加しました</string>
 </resources>

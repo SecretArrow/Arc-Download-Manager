@@ -373,4 +373,6 @@
     <string name="vault_open_failed">Datei konnte nicht geöffnet werden</string>
     <string name="vault_lock_now">Vault jetzt sperren</string>
     <string name="vault_total_n_files">%1$d Dateien • %2$s</string>
+    <string name="update_download_apk">APK herunterladen</string>
+    <string name="update_queued">Update zur Download-Warteschlange hinzugefügt</string>
 </resources>

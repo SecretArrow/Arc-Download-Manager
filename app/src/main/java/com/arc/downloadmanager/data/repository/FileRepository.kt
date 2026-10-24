@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.documentfile.provider.DocumentFile
+import com.arc.downloadmanager.engine.FilenameDetector
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -185,15 +186,38 @@ class FileRepository
             withContext(Dispatchers.IO) {
                 runCatching {
                     val uri = Uri.parse(uriString)
+                    // Sanitize (path traversal on file:// URIs) and keep the original
+                    // extension when the new name has none, so viewers keep working.
+                    val safeBase = FilenameDetector.sanitize(newName)
+                    if (safeBase.isBlank()) return@runCatching false
+                    val currentName =
+                        when (uri.scheme) {
+                            "content" ->
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && uri.authority == "media") {
+                                    context.contentResolver
+                                        .query(uri, arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null)
+                                        ?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
+                                } else {
+                                    DocumentFile.fromSingleUri(context, uri)?.name
+                                }
+                            "file" -> File(uri.path!!).name
+                            else -> null
+                        }
+                    val target =
+                        if (currentName != null && !safeBase.contains('.') && currentName.contains('.')) {
+                            safeBase + currentName.substring(currentName.lastIndexOf('.'))
+                        } else {
+                            safeBase
+                        }
                     when (uri.scheme) {
                         "content" ->
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && uri.authority == "media") {
-                                val values = ContentValues().apply { put(MediaStore.MediaColumns.DISPLAY_NAME, newName) }
+                                val values = ContentValues().apply { put(MediaStore.MediaColumns.DISPLAY_NAME, target) }
                                 context.contentResolver.update(uri, values, null, null) > 0
                             } else {
-                                DocumentFile.fromSingleUri(context, uri)?.renameTo(newName) == true
+                                DocumentFile.fromSingleUri(context, uri)?.renameTo(target) == true
                             }
-                        "file" -> File(uri.path!!).renameTo(File(File(uri.path!!).parent, newName))
+                        "file" -> File(uri.path!!).renameTo(File(File(uri.path!!).parent, target))
                         else -> false
                     }
                 }.getOrDefault(false)

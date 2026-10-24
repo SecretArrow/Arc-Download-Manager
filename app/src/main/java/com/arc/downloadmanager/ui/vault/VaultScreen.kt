@@ -106,7 +106,7 @@ fun VaultScreen(viewModel: VaultViewModel = hiltViewModel()) {
 
     var pendingExportId by remember { mutableStateOf<String?>(null) }
     val exportLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
+        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { uri ->
             val id = pendingExportId
             if (uri != null && id != null) viewModel.exportTo(id, uri)
             pendingExportId = null

@@ -77,16 +77,18 @@ jobs:
           ARC_KEY_PASSWORD: ${{ secrets.ARC_KEY_PASSWORD }}
         run: ./gradlew :app:assembleRelease --stacktrace
 
-      - name: Verify signed APK (safety net)
+      - name: Verify signed APKs (safety net)
         if: steps.meta.outputs.exists == 'false'
         run: |
-          APK=app/build/outputs/apk/release/app-release.apk
-          test -f "$APK"
           APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
           ZIPALIGN=$(ls "$ANDROID_HOME"/build-tools/*/zipalign | sort -V | tail -1)
-          "$APKSIGNER" verify "$APK"
-          "$ZIPALIGN" -c 4 "$APK"
-          echo "APK signature and alignment verified"
+          for APK in app/build/outputs/apk/release/*.apk; do
+            test -f "$APK"
+            echo "Verifying $APK"
+            "$APKSIGNER" verify "$APK"
+            "$ZIPALIGN" -c 4 "$APK"
+          done
+          echo "All APK signatures and alignments verified"
 
       - name: Generate release notes
         if: steps.meta.outputs.exists == 'false'
@@ -113,37 +115,50 @@ jobs:
           $LOG
           NOTES
 
-      - name: Append APK checksum to release notes
+      - name: Append APK checksums to release notes
         if: steps.meta.outputs.exists == 'false'
         run: |
-          APK=app/build/outputs/apk/release/app-release.apk
-          SHA=$(sha256sum "$APK" | cut -d' ' -f1)
-          SIZE=$(stat -c%s "$APK")
-          cat >> release_notes.md <<NOTES
+          cat >> release_notes.md <<'NOTES'
 
-          ### APK details
-          - File: app-release.apk (size: $SIZE bytes)
-          - SHA-256: $SHA
-          - Requires Android 8.0+ (API 26)
+          ### APK downloads
+          Pick the APK matching your phone's CPU (arm64-v8a fits most modern phones;
+          when unsure, use the universal one):
+          - app-universal-release.apk — every device
+          - app-arm64-v8a-release.apk — most phones since 2016 (smallest recommended)
+          - app-armeabi-v7a-release.apk — older/32-bit phones
+          - app-x86_64-release.apk — emulators, Chromebooks, x86 tablets
+          - app-x86-release.apk — rare 32-bit x86 devices
 
-          > If the installer says the package is invalid, re-download the file completely and
-          > compare the SHA-256 above (via a hash checker app or your browser's download
-          > manager) before installing. A partial/interrupted download is the most common cause.
+          Requires Android 8.0+ (API 26).
+
+          ### Checksums (SHA-256)
+          If the installer says the package is invalid, re-download the file completely
+          and compare its SHA-256 below (via a hash checker app or your browser's
+          download manager). A partial/interrupted download is the most common cause.
           NOTES
+          for APK in app/build/outputs/apk/release/*.apk; do
+            SHA=$(sha256sum "$APK" | cut -d' ' -f1)
+            SIZE=$(stat -c%s "$APK")
+            echo "- $(basename "$APK") (size: $SIZE bytes): $SHA" >> release_notes.md
+          done
 
-      - name: Create GitHub release with APK
+      - name: Create GitHub release with APKs
         if: steps.meta.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.meta.outputs.tag }}
         run: |
           gh release create "$TAG" \
-            app/build/outputs/apk/release/app-release.apk \
+            app/build/outputs/apk/release/app-universal-release.apk \
+            app/build/outputs/apk/release/app-arm64-v8a-release.apk \
+            app/build/outputs/apk/release/app-armeabi-v7a-release.apk \
+            app/build/outputs/apk/release/app-x86_64-release.apk \
+            app/build/outputs/apk/release/app-x86-release.apk \
             --repo "$GITHUB_REPOSITORY" \
             --title "Arc Download Manager ${{ steps.meta.outputs.version }}" \
             --notes-file release_notes.md
 
-      - name: Upload release APK artifact
+      - name: Upload release APK artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:

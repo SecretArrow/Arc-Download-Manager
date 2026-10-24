@@ -134,7 +134,7 @@ fun FilesScreen(
             }
             val visible =
                 files
-                    .filter { category == FileCategory.OTHER || it.category == category }
+                    .filter { category == null || it.category == category }
                     .filter { query.isBlank() || it.name.contains(query, ignoreCase = true) }
             if (visible.isEmpty()) {
                 Column(

@@ -372,4 +372,6 @@
     <string name="vault_open_failed">เปิดไฟล์ไม่สำเร็จ</string>
     <string name="vault_lock_now">ล็อกตู้เซฟทันที</string>
     <string name="vault_total_n_files">%1$d ไฟล์ • %2$s</string>
+    <string name="update_download_apk">ดาวน์โหลด APK</string>
+    <string name="update_queued">เพิ่มอัปเดตลงคิวดาวน์โหลดแล้ว</string>
 </resources>

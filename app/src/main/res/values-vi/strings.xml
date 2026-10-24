@@ -372,4 +372,6 @@
     <string name="vault_open_failed">Không thể mở tệp</string>
     <string name="vault_lock_now">Khóa két sắt ngay</string>
     <string name="vault_total_n_files">%1$d tệp • %2$s</string>
+    <string name="update_download_apk">Tải APK</string>
+    <string name="update_queued">Đã thêm bản cập nhật vào hàng đợi tải xuống</string>
 </resources>

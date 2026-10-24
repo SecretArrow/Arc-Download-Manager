@@ -77,6 +77,13 @@ inline (`sftp://user:pass@host/path`).
   as a badge; one tap adds it as a session-aware download.
 - **Update checker (v2.3)**: compares GitHub Releases with the installed version and links
   straight to the release page; task-list export/import (JSON) for device migration.
+- **In-app update download (v2.6)**: the update banner can enqueue the latest signed APK
+  directly into Arc's own download queue (permanent "latest" URL, correct installer MIME) —
+  install it right from the Files screen or the notification.
+- **Per-ABI APK releases (v2.6)**: every release ships `arm64-v8a`, `armeabi-v7a`, `x86_64`,
+  `x86` and `universal` APKs — pick the one matching your phone (arm64-v8a for most phones
+  since 2016) for a much smaller download; each asset's SHA-256 is published in the release
+  notes.
 - **Security & network (v2.3)**: optional biometric App lock (auto-relock after 30 s in
   background), per-network speed limits (separate mobile-data cap), and a full Statistics
   screen (7-day chart, top hosts, all-time totals).

@@ -372,4 +372,6 @@
     <string name="vault_open_failed">Tidak dapat membuka fail</string>
     <string name="vault_lock_now">Kunci vault sekarang</string>
     <string name="vault_total_n_files">%1$d fail • %2$s</string>
+    <string name="update_download_apk">Muat turun APK</string>
+    <string name="update_queued">Kemas kini ditambah ke baris gilir muat turun</string>
 </resources>

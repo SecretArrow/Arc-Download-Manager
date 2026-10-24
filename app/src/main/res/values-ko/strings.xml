@@ -372,4 +372,6 @@
     <string name="vault_open_failed">파일을 열 수 없습니다</string>
     <string name="vault_lock_now">지금 보관함 잠그기</string>
     <string name="vault_total_n_files">파일 %1$d개 • %2$s</string>
+    <string name="update_download_apk">APK 다운로드</string>
+    <string name="update_queued">업데이트가 다운로드 대기열에 추가되었습니다</string>
 </resources>

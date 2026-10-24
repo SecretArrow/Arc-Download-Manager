@@ -3,4 +3,6 @@
     <files-path name="final_staging" path="final/" />
     <external-files-path name="external" path="." />
     <cache-path name="cache" path="." />
+    <!-- Legacy (API 26-28) finalize target: Environment.getExternalStoragePublicDirectory(DIRECTORY_DOWNLOADS)/Arc -->
+    <external-path name="public_downloads_arc" path="Download/Arc/" />
 </paths>

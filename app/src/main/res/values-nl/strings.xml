@@ -372,4 +372,6 @@
     <string name="vault_open_failed">Kan het bestand niet openen</string>
     <string name="vault_lock_now">Kluis nu vergrendelen</string>
     <string name="vault_total_n_files">%1$d bestanden • %2$s</string>
+    <string name="update_download_apk">APK downloaden</string>
+    <string name="update_queued">Update toegevoegd aan de downloadwachtrij</string>
 </resources>

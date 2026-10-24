@@ -2,6 +2,7 @@ package com.arc.downloadmanager.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.arc.downloadmanager.data.repository.DownloadRepository
 import com.arc.downloadmanager.data.repository.ExportResult
 import com.arc.downloadmanager.data.repository.ImportResult
 import com.arc.downloadmanager.data.repository.TaskBackup
@@ -27,6 +28,7 @@ class SettingsViewModel
         private val settingsRepository: SettingsRepository,
         private val updateChecker: UpdateChecker,
         private val taskBackup: TaskBackup,
+        private val downloadRepository: DownloadRepository,
     ) : ViewModel() {
         val settings: StateFlow<EngineSettings> =
             settingsRepository.settings
@@ -54,6 +56,34 @@ class SettingsViewModel
 
         fun dismissUpdate() {
             _updateDismissed.value = true
+        }
+
+        /** True right after the update APK has been queued as a regular download. */
+        private val _updateQueued = MutableStateFlow(false)
+        val updateQueued: StateFlow<Boolean> = _updateQueued.asStateFlow()
+
+        /**
+         * Enqueues the latest release APK as a regular download via the engine, using the
+         * permanent "latest" URL (redirects to the newest universal APK asset). The engine's
+         * tested GitHub release flow (302 -> CDN re-resolve) handles the redirect chain.
+         */
+        fun downloadUpdate(tag: String) {
+            if (_updateQueued.value) return
+            viewModelScope.launch {
+                val request =
+                    com.arc.downloadmanager.domain.model.DownloadRequest(
+                        url = "https://github.com/SecretArrow/Arc-Download-Manager/releases/latest/download/app-universal-release.apk",
+                        filename = "Arc-$tag.apk",
+                        source = com.arc.downloadmanager.domain.model.DownloadSource.MANUAL,
+                    )
+                val result = runCatching { downloadRepository.add(request) }
+                when (result.getOrNull()) {
+                    is com.arc.downloadmanager.data.repository.AddResult.Started,
+                    is com.arc.downloadmanager.data.repository.AddResult.Duplicate,
+                    -> _updateQueued.value = true
+                    else -> Unit
+                }
+            }
         }
 
         private fun refreshUpdate(manual: Boolean) {

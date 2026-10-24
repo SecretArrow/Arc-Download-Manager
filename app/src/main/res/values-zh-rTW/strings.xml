@@ -372,4 +372,6 @@
     <string name="vault_open_failed">無法開啟檔案</string>
     <string name="vault_lock_now">立即鎖定保險庫</string>
     <string name="vault_total_n_files">%1$d 個檔案 • %2$s</string>
+    <string name="update_download_apk">下載 APK</string>
+    <string name="update_queued">已將更新加入下載佇列</string>
 </resources>

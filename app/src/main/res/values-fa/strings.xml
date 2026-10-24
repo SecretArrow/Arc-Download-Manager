@@ -373,4 +373,6 @@
     <string name="vault_open_failed">باز کردن فایل ممکن نشد</string>
     <string name="vault_lock_now">قفل فوری گاوصندوق</string>
     <string name="vault_total_n_files">%1$d فایل • %2$s</string>
+    <string name="update_download_apk">دانلود APK</string>
+    <string name="update_queued">به‌روزرسانی به صف دانلود اضافه شد</string>
 </resources>

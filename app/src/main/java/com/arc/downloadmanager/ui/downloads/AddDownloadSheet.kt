@@ -310,7 +310,7 @@ fun AddDownloadSheet(
                             urls
                                 .filter { CookieScopePolicy.isSupportedUrl(it) }
                                 .map { DownloadRequest(url = it, source = com.arc.downloadmanager.domain.model.DownloadSource.BATCH) }
-                        val template = context.getString(R.string.add_batch_started, 0, 0)
+                        val template = context.getString(R.string.add_batch_started)
                         onAddBatch(requests) { started, invalid ->
                             batchMessage =
                                 template

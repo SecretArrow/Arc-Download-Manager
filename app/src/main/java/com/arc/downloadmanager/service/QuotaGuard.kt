@@ -40,6 +40,18 @@ class QuotaGuard
             prefs.edit().putLong(KEY_EXHAUSTED_AT, System.currentTimeMillis()).apply()
         }
 
+        /**
+         * Defers start attempts until the app is next foregrounded WITHOUT recording a
+         * quota exhaustion. Used when a start is rejected merely because the app is in
+         * the background (e.g. boot recovery pumping downloads before the user opens
+         * the app): pausing everything and posting a "quota paused" notification there
+         * would be false — downloads simply keep running headless and get their
+         * foreground service on the next foreground.
+         */
+        fun deferStarts() {
+            skipStarts = true
+        }
+
         /** True when a timeout was recorded within the rolling 24-hour window and no reset happened yet. */
         fun isExhausted(): Boolean {
             val at = prefs.getLong(KEY_EXHAUSTED_AT, 0L)

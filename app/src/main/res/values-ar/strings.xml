@@ -373,4 +373,6 @@
     <string name="vault_open_failed">تعذّر فتح الملف</string>
     <string name="vault_lock_now">قفل الخزنة الآن</string>
     <string name="vault_total_n_files">%1$d من الملفات • %2$s</string>
+    <string name="update_download_apk">تنزيل ملف APK</string>
+    <string name="update_queued">تمت إضافة التحديث إلى قائمة التنزيلات</string>
 </resources>

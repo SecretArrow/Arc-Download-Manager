@@ -101,6 +101,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val updateChecking by viewModel.checking.collectAsStateWithLifecycle()
     val updateDismissed by viewModel.updateDismissed.collectAsStateWithLifecycle()
     val upToDateTick by viewModel.upToDateTick.collectAsStateWithLifecycle()
+    val updateQueued by viewModel.updateQueued.collectAsStateWithLifecycle()
 
     // One-shot "you're up to date" toast after a manual update check.
     LaunchedEffect(upToDateTick) {
@@ -399,8 +400,10 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 updateInfo = updateInfo,
                 updateDismissed = updateDismissed,
                 checking = updateChecking,
+                updateQueued = updateQueued,
                 onCheckNow = viewModel::checkNow,
                 onDismissUpdate = viewModel::dismissUpdate,
+                onDownloadUpdate = viewModel::downloadUpdate,
             )
             Spacer(Modifier.height(32.dp))
         }
@@ -413,8 +416,10 @@ private fun AboutCard(
     updateInfo: UpdateInfo?,
     updateDismissed: Boolean,
     checking: Boolean,
+    updateQueued: Boolean,
     onCheckNow: () -> Unit,
     onDismissUpdate: () -> Unit,
+    onDownloadUpdate: (String) -> Unit,
 ) {
     val context = LocalContext.current
     Card(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge) {
@@ -528,6 +533,7 @@ private fun AboutCard(
                 updateInfo?.takeIf { !updateDismissed }?.let { info ->
                     UpdateBanner(
                         info = info,
+                        queued = updateQueued,
                         onOpen = { url ->
                             runCatching {
                                 context.startActivity(
@@ -535,6 +541,7 @@ private fun AboutCard(
                                 )
                             }
                         },
+                        onDownload = onDownloadUpdate,
                         onDismiss = onDismissUpdate,
                     )
                     Spacer(Modifier.height(12.dp))
@@ -558,7 +565,9 @@ private fun AboutCard(
 @Composable
 private fun UpdateBanner(
     info: UpdateInfo,
+    queued: Boolean,
     onOpen: (String) -> Unit,
+    onDownload: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
     Card(
@@ -588,10 +597,18 @@ private fun UpdateBanner(
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
                 Text(
-                    stringResource(R.string.update_open_release),
+                    if (queued) stringResource(R.string.update_queued) else stringResource(R.string.update_open_release),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
+            }
+            if (!queued) {
+                TextButton(onClick = { onDownload(info.tag) }) {
+                    Text(
+                        stringResource(R.string.update_download_apk),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                }
             }
             IconButton(onClick = onDismiss) {
                 Icon(

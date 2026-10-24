@@ -17,8 +17,8 @@ android {
         applicationId = "com.arc.downloadmanager"
         minSdk = 26
         targetSdk = 35
-        versionCode = 20
-        versionName = "2.5.1"
+        versionCode = 21
+        versionName = "2.6.0"
 
         testInstrumentationRunner = "com.arc.downloadmanager.HiltTestRunner"
         vectorDrawables {
@@ -51,6 +51,17 @@ android {
             )
             val envSigning = !System.getenv("ARC_STORE_FILE").isNullOrBlank()
             signingConfig = if (envSigning) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
+        }
+    }
+
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            // Universal APK ships alongside the per-ABI ones; per-ABI APKs are much
+            // smaller because jlibtorrent native libraries dominate the download size.
+            isUniversalApk = true
         }
     }
 

@@ -414,4 +414,6 @@
     <string name="vault_open_failed">Could not open the file</string>
     <string name="vault_lock_now">Lock vault now</string>
     <string name="vault_total_n_files">%1$d files • %2$s</string>
+    <string name="update_download_apk">Download APK</string>
+    <string name="update_queued">Update added to the download queue</string>
 </resources>

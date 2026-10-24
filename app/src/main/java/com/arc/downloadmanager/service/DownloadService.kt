@@ -272,10 +272,14 @@ class DownloadServiceController
             try {
                 DownloadService.start(context)
             } catch (rejected: IllegalStateException) {
-                // Includes ForegroundServiceStartNotAllowedException on API 31+.
-                onForegroundStartRejected()
+                // Includes ForegroundServiceStartNotAllowedException on API 31+ and the
+                // classic background-service restriction: this happens when the engine
+                // pumps downloads while the app is in the background (e.g. boot
+                // recovery). That is NOT quota exhaustion — defer FGS starts until the
+                // next foreground instead of pausing everything with a false notice.
+                quotaGuard.deferStarts()
             } catch (rejected: SecurityException) {
-                onForegroundStartRejected()
+                quotaGuard.deferStarts()
             }
         }
 

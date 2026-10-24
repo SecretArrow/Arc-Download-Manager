@@ -170,8 +170,15 @@ class StorageManager
                 val uri =
                     resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
                         ?: throw IOException("MediaStore rejected the download")
-                resolver.openOutputStream(uri)?.use { out -> staged.inputStream().use { it.copyTo(out) } }
-                    ?: throw IOException("Cannot open MediaStore output stream")
+                try {
+                    resolver.openOutputStream(uri)?.use { out -> staged.inputStream().use { it.copyTo(out) } }
+                        ?: throw IOException("Cannot open MediaStore output stream")
+                } catch (t: Throwable) {
+                    // Don't leave an orphaned IS_PENDING row behind (it breaks MediaStore
+                    // name dedupe and accumulates invisibly).
+                    runCatching { resolver.delete(uri, null, null) }
+                    throw t
+                }
                 val done = ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }
                 resolver.update(uri, done, null, null)
                 return uri.toString()
@@ -249,8 +256,13 @@ class StorageManager
                     val uri =
                         resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
                             ?: throw IOException("MediaStore rejected the torrent file")
-                    resolver.openOutputStream(uri)?.use { out -> file.inputStream().use { it.copyTo(out) } }
-                        ?: throw IOException("Cannot open MediaStore output stream")
+                    try {
+                        resolver.openOutputStream(uri)?.use { out -> file.inputStream().use { it.copyTo(out) } }
+                            ?: throw IOException("Cannot open MediaStore output stream")
+                    } catch (t: Throwable) {
+                        runCatching { resolver.delete(uri, null, null) }
+                        throw t
+                    }
                     resolver.update(uri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null)
                     uris += uri.toString()
                 }

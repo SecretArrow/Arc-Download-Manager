@@ -44,6 +44,7 @@ sealed class VaultLockState {
 class VaultSession
     @Inject
     constructor(
+        @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
         private val envelopeStore: VaultEnvelopeStore,
     ) : DefaultLifecycleObserver {
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -70,6 +71,10 @@ class VaultSession
         /** Called once from [com.arc.downloadmanager.ArcApp] to hook process lifecycle. */
         fun attach(owner: LifecycleOwner) {
             owner.lifecycle.addObserver(this)
+            // A previous process may have died with decrypted files still in the open cache
+            // (in-memory temp tracking dies with the process) — sweep them before anything
+            // can observe them.
+            runCatching { java.io.File(context.cacheDir, "vault_open").deleteRecursively() }
             scope.launch {
                 refreshAutoLock()
                 _state.value =

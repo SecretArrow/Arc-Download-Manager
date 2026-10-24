@@ -372,4 +372,6 @@
     <string name="vault_open_failed">Impossibile aprire il file</string>
     <string name="vault_lock_now">Blocca ora la cassaforte</string>
     <string name="vault_total_n_files">%1$d file • %2$s</string>
+    <string name="update_download_apk">Scarica APK</string>
+    <string name="update_queued">Aggiornamento aggiunto alla coda di download</string>
 </resources>

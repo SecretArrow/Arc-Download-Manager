@@ -122,29 +122,45 @@ class DownloadDetailViewModel
 
         fun archive() = repository.archive(listOf(id), archived = true)
 
-        /** "Save to Vault" for a completed download; navigates when locked/unset. */
+        /** "Save to Vault" for a completed download; navigates when locked/unset.
+         *  Multi-file torrents store several URIs (newline-joined); all of them are vaulted. */
         fun saveToVault(
             entity: DownloadEntity,
             onNavigate: () -> Unit,
             onResult: (res: Int, arg: String?) -> Unit,
         ) {
-            val uri = entity.finalUri ?: return onResult(R.string.vault_import_failed, null)
+            val uris = com.arc.downloadmanager.util.ShareUris.split(entity.finalUri)
+            if (uris.isEmpty()) return onResult(R.string.vault_import_failed, null)
             viewModelScope.launch {
-                when (
-                    val r =
-                        vaultRepository.saveFromExternal(
-                            android.net.Uri.parse(uri),
-                            entity.filename,
-                            entity.mimeType,
-                        )
-                ) {
-                    is com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.Done ->
-                        onResult(R.string.vault_saved_to_vault, r.name)
-                    com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.Failed ->
-                        onResult(R.string.vault_import_failed, null)
-                    com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.NeedsSetup,
-                    com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.NeedsUnlock,
-                    -> onNavigate()
+                var saved = 0
+                var firstName: String? = null
+                for (uri in uris) {
+                    when (
+                        val r =
+                            vaultRepository.saveFromExternal(
+                                uri,
+                                entity.filename,
+                                entity.mimeType,
+                            )
+                    ) {
+                        is com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.Done -> {
+                            saved++
+                            if (firstName == null) firstName = r.name
+                        }
+                        com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.Failed -> Unit
+                        com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.NeedsSetup,
+                        com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.NeedsUnlock,
+                        -> {
+                            onNavigate()
+                            return@launch
+                        }
+                    }
+                }
+                if (saved == 0 || firstName == null) {
+                    onResult(R.string.vault_import_failed, null)
+                } else {
+                    val label = if (saved > 1) "$firstName (+${saved - 1})" else firstName
+                    onResult(R.string.vault_saved_to_vault, label)
                 }
             }
         }

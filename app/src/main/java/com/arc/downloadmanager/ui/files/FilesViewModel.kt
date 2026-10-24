@@ -56,7 +56,7 @@ class FilesViewModel
 
         fun visibleFiles(): List<FileItem> =
             _files.value
-                .filter { _category.value == FileCategory.OTHER || it.category == _category.value || _category.value == FileCategory.values().first() }
+                .filter { _category.value == null || it.category == _category.value }
                 .filter { _query.value.isBlank() || it.name.contains(_query.value, ignoreCase = true) }
 
         fun delete(item: FileItem) {
@@ -80,14 +80,15 @@ class FilesViewModel
 
         fun openIntent(item: FileItem): Intent =
             Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(android.net.Uri.parse(item.uri), item.mime ?: "*/*")
+                val uri = com.arc.downloadmanager.util.ShareUris.accessible(appContext, android.net.Uri.parse(item.uri))
+                setDataAndType(uri, item.mime ?: "*/*")
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
 
         fun shareIntent(item: FileItem): Intent =
             Intent(Intent.ACTION_SEND).apply {
                 type = item.mime ?: "*/*"
-                putExtra(Intent.EXTRA_STREAM, android.net.Uri.parse(item.uri))
+                putExtra(Intent.EXTRA_STREAM, com.arc.downloadmanager.util.ShareUris.accessible(appContext, android.net.Uri.parse(item.uri)))
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
 

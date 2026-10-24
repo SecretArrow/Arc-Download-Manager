@@ -373,4 +373,6 @@
     <string name="vault_open_failed">ফাইলটি খোলা যায়নি</string>
     <string name="vault_lock_now">ভল্ট এখনই লক করুন</string>
     <string name="vault_total_n_files">%1$dটি ফাইল • %2$s</string>
+    <string name="update_download_apk">APK ডাউনলোড করুন</string>
+    <string name="update_queued">আপডেট ডাউনলোড সারিতে যোগ করা হয়েছে</string>
 </resources>

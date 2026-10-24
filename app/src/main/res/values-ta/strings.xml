@@ -372,4 +372,6 @@
     <string name="vault_open_failed">கோப்பைத் திறக்க முடியவில்லை</string>
     <string name="vault_lock_now">களஞ்சியத்தை இப்போதே பூட்டு</string>
     <string name="vault_total_n_files">%1$d கோப்புகள் • %2$s</string>
+    <string name="update_download_apk">APK பதிவிறக்கவும்</string>
+    <string name="update_queued">புதுப்பிப்பு பதிவிறக்க வரிசையில் சேர்க்கப்பட்டது</string>
 </resources>

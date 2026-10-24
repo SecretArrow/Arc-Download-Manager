@@ -65,6 +65,7 @@ import com.arc.downloadmanager.engine.torrent.TorrentFileInfo
 import com.arc.downloadmanager.ui.components.statusColor
 import com.arc.downloadmanager.ui.components.statusLabelRes
 import com.arc.downloadmanager.util.Format
+import com.arc.downloadmanager.util.ShareUris
 
 @Composable
 fun DownloadDetailScreen(
@@ -314,12 +315,17 @@ private fun ActionRow(
             Button(
                 onClick = {
                     runCatching {
-                        val uri = android.net.Uri.parse(entity.finalUri)
+                        // Multi-file torrents store several URIs (newline-joined); open the first.
+                        val uri = ShareUris.split(entity.finalUri).firstOrNull() ?: return@runCatching
+                        val safe = ShareUris.accessible(context, uri)
                         val intent =
                             Intent(Intent.ACTION_VIEW).apply {
                                 setDataAndType(
-                                    uri,
-                                    FilenameDetector.guessMime(entity.filename) ?: entity.mimeType ?: "*/*",
+                                    safe,
+                                    FilenameDetector.guessMime(entity.filename)
+                                        ?: FilenameDetector.guessMime(safe.lastPathSegment ?: "")
+                                        ?: entity.mimeType
+                                        ?: "*/*",
                                 )
                                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             }
@@ -333,11 +339,22 @@ private fun ActionRow(
             OutlinedButton(
                 onClick = {
                     runCatching {
+                        val uris = ShareUris.split(entity.finalUri).map { ShareUris.accessible(context, it) }
+                        if (uris.isEmpty()) return@runCatching
+                        val mime = FilenameDetector.guessMime(entity.filename) ?: entity.mimeType ?: "*/*"
                         val intent =
-                            Intent(Intent.ACTION_SEND).apply {
-                                type = FilenameDetector.guessMime(entity.filename) ?: entity.mimeType ?: "*/*"
-                                putExtra(Intent.EXTRA_STREAM, android.net.Uri.parse(entity.finalUri))
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            if (uris.size == 1) {
+                                Intent(Intent.ACTION_SEND).apply {
+                                    type = mime
+                                    putExtra(Intent.EXTRA_STREAM, uris.first())
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                            } else {
+                                Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+                                    type = mime
+                                    putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
                             }
                         context.startActivity(Intent.createChooser(intent, null))
                     }

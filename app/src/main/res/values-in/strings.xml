@@ -373,4 +373,6 @@
     <string name="vault_open_failed">Tidak dapat membuka file</string>
     <string name="vault_lock_now">Kunci brankas sekarang</string>
     <string name="vault_total_n_files">%1$d file • %2$s</string>
+    <string name="update_download_apk">Unduh APK</string>
+    <string name="update_queued">Pembaruan ditambahkan ke antrean unduhan</string>
 </resources>

@@ -372,4 +372,6 @@
     <string name="vault_open_failed">Não foi possível abrir o arquivo</string>
     <string name="vault_lock_now">Bloquear cofre agora</string>
     <string name="vault_total_n_files">%1$d arquivos • %2$s</string>
+    <string name="update_download_apk">Baixar APK</string>
+    <string name="update_queued">Atualização adicionada à fila de downloads</string>
 </resources>
