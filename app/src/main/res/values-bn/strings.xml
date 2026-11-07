@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">এড়িয়ে যান</string>
     <string name="settings_overwrite_replace">প্রতিস্থাপন</string>
     <string name="settings_auto_rename">ডুপ্লিকেটের নাম স্বয়ংক্রিয়ভাবে বদলান</string>
-    <string name="settings_auto_rename_hint">বন্ধ থাকলে, গন্তব্য ফোল্ডারে নাম আগে থেকে থাকলে Arc জিজ্ঞাস কरবে</string>
+    <string name="settings_auto_rename_hint">"Rename" সব ফাইল রাখে এবং "নাম (1).ext" নামে নতুন কপি সংরক্ষণ করে; "Skip" জিজ্ঞাস করে কী করতে হবে; "Replace" পুরানো ফাইলের ওপর লেখে দেয়</string>
     <string name="notif_channel_downloads">ডাউনলোড</string>
     <string name="notif_channel_downloads_desc">সক্রিয় ডাউনলোডের অগ্রগতি</string>
     <string name="notif_channel_status">স্ট্যাটাস</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">এড়িয়ে যান</string>
     <string name="duplicate_new_copy">আরেকটি কপি ডাউনলোড করুন</string>
     <string name="duplicate_replace">বিদ্যমানটি প্রতিস্থাপন করুন</string>
+    <string name="duplicate_skipped">আপনার ডাউনলোডে ইতিমধ্যে আছে – এড়িয়ে গেছে</string>
     <string name="conflict_title">ফাইলের নাম আগেই ব্যবহৃত</string>
     <string name="conflict_message">%1$s গন্তব্য ফোল্ডারে আগেই আছে। Arc কী করবে?</string>
     <string name="conflict_overwrite">পুরনো ফাইলের বদলে লেখো</string>

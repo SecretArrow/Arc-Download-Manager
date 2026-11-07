@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">Pomiń</string>
     <string name="settings_overwrite_replace">Zastąp</string>
     <string name="settings_auto_rename">Automatycznie zmieniaj nazwy duplikatów</string>
-    <string name="settings_auto_rename_hint">Wyłączone: Arc pyta za każdym razem, gdy nazwa już istnieje w folderze docelowym</string>
+    <string name="settings_auto_rename_hint">"Zmień nazwę" zachowuje każdy plik i zapisuje kopię ("nazwa (1).ext"); "Pomiń" pyta, co zrobić; "Zamień" nadpisuje stary plik</string>
     <string name="notif_channel_downloads">Pobieranie</string>
     <string name="notif_channel_downloads_desc">Postęp aktywnych pobrań</string>
     <string name="notif_channel_status">Stan</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">Pomiń</string>
     <string name="duplicate_new_copy">Pobierz drugą kopię</string>
     <string name="duplicate_replace">Zastąp istniejące</string>
+    <string name="duplicate_skipped">Już jest na liście pobrań – pominięto</string>
     <string name="conflict_title">Nazwa pliku jest już zajęta</string>
     <string name="conflict_message">%1$s już istnieje w folderze docelowym. Co zrobić?</string>
     <string name="conflict_overwrite">Zastąp stary plik</string>

@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">Пропустить</string>
     <string name="settings_overwrite_replace">Заменить</string>
     <string name="settings_auto_rename">Автопереименование дубликатов</string>
-    <string name="settings_auto_rename_hint">Если выключено, Arc спрашивает, когда имя уже есть в папке назначения</string>
+    <string name="settings_auto_rename_hint">"Переименовать" сохраняет все файлы и записывает копию ("имя (1).ext"); "Пропустить" спрашивает, что делать; "Заменить" перезаписывает старый файл</string>
     <string name="notif_channel_downloads">Загрузки</string>
     <string name="notif_channel_downloads_desc">Прогресс активных загрузок</string>
     <string name="notif_channel_status">Статус</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">Пропустить</string>
     <string name="duplicate_new_copy">Скачать ещё одну копию</string>
     <string name="duplicate_replace">Заменить существующую</string>
+    <string name="duplicate_skipped">Уже есть в загрузках — пропущено</string>
     <string name="conflict_title">Имя файла уже занято</string>
     <string name="conflict_message">%1$s уже существует в папке назначения. Что делать?</string>
     <string name="conflict_overwrite">Заменить старый файл</string>

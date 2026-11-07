@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">Pular</string>
     <string name="settings_overwrite_replace">Substituir</string>
     <string name="settings_auto_rename">Renomear duplicados automaticamente</string>
-    <string name="settings_auto_rename_hint">Desativado: o Arc pergunta sempre que o nome já existe na pasta de destino</string>
+    <string name="settings_auto_rename_hint">"Renomear" mantém todos os arquivos e salva uma cópia ("nome (1).ext"); "Pular" pergunta o que fazer; "Substituir" sobrescreve o arquivo antigo</string>
     <string name="notif_channel_downloads">Downloads</string>
     <string name="notif_channel_downloads_desc">Progresso dos downloads ativos</string>
     <string name="notif_channel_status">Status</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">Pular</string>
     <string name="duplicate_new_copy">Baixar outra cópia</string>
     <string name="duplicate_replace">Substituir existente</string>
+    <string name="duplicate_skipped">Já está nos seus downloads – ignorado</string>
     <string name="conflict_title">Nome de arquivo já em uso</string>
     <string name="conflict_message">%1$s já existe na pasta de destino. O que o Arc deve fazer?</string>
     <string name="conflict_overwrite">Substituir o arquivo antigo</string>

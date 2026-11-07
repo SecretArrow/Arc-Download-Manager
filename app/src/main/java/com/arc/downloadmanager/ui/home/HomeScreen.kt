@@ -75,6 +75,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -97,7 +98,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arc.downloadmanager.R
-import com.arc.downloadmanager.data.settings.OverwritePolicy
 import com.arc.downloadmanager.domain.model.ConflictAction
 import com.arc.downloadmanager.ui.components.DownloadRow
 import com.arc.downloadmanager.ui.downloads.AddDownloadSheet
@@ -116,7 +116,7 @@ fun HomeScreen(
 ) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
-    val pendingDuplicate by viewModel.pendingDuplicate.collectAsStateWithLifecycle()
+    val duplicateSkipped by viewModel.duplicateSkipped.collectAsStateWithLifecycle()
     val activeConflict by viewModel.activeConflict.collectAsStateWithLifecycle()
     var showAdd by rememberSaveable { mutableStateOf(false) }
     var addSheetUrl by rememberSaveable { mutableStateOf("") }
@@ -127,6 +127,12 @@ fun HomeScreen(
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
+    // Skip policy silently ignored a re-added URL: tell the user instead of failing silently.
+    LaunchedEffect(duplicateSkipped) {
+        if (duplicateSkipped > 0) {
+            snackbar.showSnackbar(context.getString(R.string.duplicate_skipped))
+        }
+    }
     // Single entry point for opening the add sheet: the URL field it is pre-filled with.
     val openAddSheet = { url: String ->
         addSheetUrl = url
@@ -401,29 +407,6 @@ fun HomeScreen(
             onConfirm = { deleteFiles ->
                 viewModel.deleteSelected(deleteFiles)
                 showDeleteDialog = false
-            },
-        )
-    }
-
-    pendingDuplicate?.let { request ->
-        AlertDialog(
-            onDismissRequest = viewModel::dismissDuplicate,
-            title = { Text(stringResource(R.string.duplicate_title)) },
-            text = { Text(stringResource(R.string.duplicate_message)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.resolveDuplicate(request, OverwritePolicy.REPLACE)
-                }) { Text(stringResource(R.string.duplicate_replace)) }
-            },
-            dismissButton = {
-                Row {
-                    TextButton(onClick = viewModel::dismissDuplicate) {
-                        Text(stringResource(R.string.duplicate_skip))
-                    }
-                    TextButton(onClick = {
-                        viewModel.resolveDuplicate(request, OverwritePolicy.RENAME)
-                    }) { Text(stringResource(R.string.duplicate_new_copy)) }
-                }
             },
         )
     }

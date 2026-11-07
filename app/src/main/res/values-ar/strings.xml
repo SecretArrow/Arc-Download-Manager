@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">تخطي</string>
     <string name="settings_overwrite_replace">استبدال</string>
     <string name="settings_auto_rename">إعادة تسمية المكررات تلقائيًا</string>
-    <string name="settings_auto_rename_hint">عند الإيقاف، يسأل Arc في كل مرة يكون فيها الاسم موجودًا بالفعل في مجلد الوجهة</string>
+    <string name="settings_auto_rename_hint">يحتفظ خيار "إعادة التسمية" بكل ملف ويحفظ نسخة جديدة باسم "الاسم (1).ext"؛ ويسألك خيار "تخطي" ماذا تفعل؛ ويكتب خيار "استبدال" فوق الملف القديم</string>
     <string name="notif_channel_downloads">التنزيلات</string>
     <string name="notif_channel_downloads_desc">تقدّم التنزيلات النشطة</string>
     <string name="notif_channel_status">الحالة</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">تخطي</string>
     <string name="duplicate_new_copy">تنزيل نسخة أخرى</string>
     <string name="duplicate_replace">استبدال الموجود</string>
+    <string name="duplicate_skipped">موجود بالفعل في تنزيلاتك – تم التخطي</string>
     <string name="conflict_title">اسم الملف مستخدم بالفعل</string>
     <string name="conflict_message">%1$s موجود بالفعل في مجلد الوجهة. ماذا يفعل Arc؟</string>
     <string name="conflict_overwrite">استبدال الملف القديم</string>

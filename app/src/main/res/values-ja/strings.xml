@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">スキップ</string>
     <string name="settings_overwrite_replace">上書き</string>
     <string name="settings_auto_rename">重複ファイルを自動リネーム</string>
-    <string name="settings_auto_rename_hint">オフの場合、保存先に同名ファイルがあると Arc が確認します</string>
+    <string name="settings_auto_rename_hint">「名前を変更」はすべてのファイルを残して新しいコピー（"名前 (1).ext"）を保存します。「スキップ」は操作を確認し、「置き換え」は古いファイルに上書きします</string>
     <string name="notif_channel_downloads">ダウンロード</string>
     <string name="notif_channel_downloads_desc">実行中のダウンロードの進行状況</string>
     <string name="notif_channel_status">ステータス</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">スキップ</string>
     <string name="duplicate_new_copy">別のコピーをダウンロード</string>
     <string name="duplicate_replace">既存のファイルを置き換える</string>
+    <string name="duplicate_skipped">すでにダウンロード済みのためスキップしました</string>
     <string name="conflict_title">ファイル名はすでに使用されています</string>
     <string name="conflict_message">%1$s は保存先フォルダにすでに存在します。どうしますか？</string>
     <string name="conflict_overwrite">古いファイルに上書き</string>

@@ -62,6 +62,11 @@ inline (`sftp://user:pass@host/path`).
   instead of the misleading "Waiting for network".
 - **Share & paste (v2.3)**: "Share to Arc" from any app's share sheet plus a Paste & download
   quick action on Home; per-task User-Agent presets (Desktop/Android/iPhone/custom).
+- **Filename collisions, one honest policy (v2.8)**: the Settings radio governs every collision —
+  **Rename** (default) never destroys anything and silently saves "name (1).ext"; **Replace**
+  overwrites the old artifact only after the new download actually finishes; **Skip** ignores
+  re-added URLs and asks per task when a finished name is taken (conflict dialog: overwrite /
+  save a fresh copy / move the old file aside).
 - **Encrypted Vault (v2.5)**: a private safe for your files — AES-256-GCM encryption before
   anything touches disk, invisible to the gallery and other apps. Password/PIN with a one-time
   recovery key (no escrow — lose both and the data is gone), optional biometric unlock, auto-lock

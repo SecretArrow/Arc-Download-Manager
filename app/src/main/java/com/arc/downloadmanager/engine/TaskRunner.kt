@@ -1334,12 +1334,18 @@ class TaskRunner
 
         // region Finalization
 
+        /**
+         * Publishes the staged bytes under the policy chosen in Settings — the SAME radio
+         * that governs enqueue duplicates, so the app can never act against the visible
+         * setting: RENAME keeps every file ("name (1).ext"), REPLACE overwrites, SKIP asks
+         * via the CONFLICT dialog. [userDecidedOverwrite] short-circuits the policy when the
+         * user already picked a resolution in the dialog.
+         */
         private suspend fun finalizeDownload(
             entity: DownloadEntity,
             staged: File,
             settings: EngineSettings,
-            conflictCheck: Boolean = true,
-            overwrite: Boolean = false,
+            userDecidedOverwrite: Boolean? = null,
         ): TaskOutcome {
             store.updateStatus(entity.id, DownloadStatus.VERIFYING)
             val expected = entity.expectedSha256?.let { Checksum.normalize(it) }
@@ -1356,13 +1362,32 @@ class TaskRunner
                 computed = runCatching { Checksum.sha256(staged) }.getOrNull()
             }
             return try {
-                if (conflictCheck && !settings.autoRenameDuplicates && storage.destinationConflict(entity)) {
-                    // The staged bytes stay safe on internal storage; the user decides what to
-                    // do with the collision (overwrite / rename new / rename old / discard).
-                    store.updateStatus(entity.id, DownloadStatus.CONFLICT, DownloadError.FILE_EXISTS.name, null)
-                    return TaskOutcome.Conflict
-                }
-                val finalUri = storage.finalize(entity, staged, overwrite)
+                val decision =
+                    when {
+                        userDecidedOverwrite != null ->
+                            if (userDecidedOverwrite) CollisionPolicy.Finalize.OVERWRITE else CollisionPolicy.Finalize.RENAME_NEW
+                        // The task is re-publishing its own previous artifact (restart/retry of
+                        // a completed task): redoing a download replaces its own bytes instead
+                        // of forking a "(1)" copy or asking about its own file.
+                        entity.finalUri != null -> CollisionPolicy.Finalize.OVERWRITE
+                        else ->
+                            CollisionPolicy.finalizeDecision(
+                                policy = settings.overwritePolicy,
+                                legacyAutoRename = settings.autoRenameDuplicates,
+                                destinationTaken = storage.destinationConflict(entity),
+                            )
+                    }
+                val finalUri =
+                    when (decision) {
+                        CollisionPolicy.Finalize.ASK -> {
+                            // The staged bytes stay safe on internal storage; the user decides
+                            // what to do with the collision (overwrite / rename new / rename old).
+                            store.updateStatus(entity.id, DownloadStatus.CONFLICT, DownloadError.FILE_EXISTS.name, null)
+                            return TaskOutcome.Conflict
+                        }
+                        CollisionPolicy.Finalize.OVERWRITE -> storage.finalize(entity, staged, overwrite = true)
+                        CollisionPolicy.Finalize.RENAME_NEW -> storage.finalize(entity, staged, overwrite = false)
+                    }
                 val done = store.getById(entity.id) ?: return TaskOutcome.Canceled
                 store.update(
                     done.copy(
@@ -1409,8 +1434,7 @@ class TaskRunner
                     settings,
                     // The user already decided how to handle the collision; the storage layer
                     // enforces it (overwrite / fresh name) without re-asking.
-                    conflictCheck = false,
-                    overwrite = overwrite,
+                    userDecidedOverwrite = overwrite,
                 )
             return outcome == TaskOutcome.Completed
         }

@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">رد کردن</string>
     <string name="settings_overwrite_replace">جایگزینی</string>
     <string name="settings_auto_rename">تغییر نام خودکار فایل‌های تکراری</string>
-    <string name="settings_auto_rename_hint">در حالت خاموش، هر بار که نام در پوشه مقصد موجود باشد Arc می‌پرسد</string>
+    <string name="settings_auto_rename_hint">گزینه "تغییر نام" همه فایل‌ها را نگه می‌دارد و کپی جدیدی با نام "نام (1).ext" ذخیره می‌کند؛ "رد کردن" می‌پرسد چه کنید؛ و "جایگزینی" روی فایل قدیمی می‌نویسد</string>
     <string name="notif_channel_downloads">دانلودها</string>
     <string name="notif_channel_downloads_desc">پیشرفت دانلودهای فعال</string>
     <string name="notif_channel_status">وضعیت</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">رد کردن</string>
     <string name="duplicate_new_copy">دانلود یک نسخه دیگر</string>
     <string name="duplicate_replace">جایگزینی فایل موجود</string>
+    <string name="duplicate_skipped">قبلاً در دانلود‌های شما هست – رد شد</string>
     <string name="conflict_title">نام فایل قبلاً استفاده شده است</string>
     <string name="conflict_message">%1$s از قبل در پوشه مقصد وجود دارد. Arc چه کاری انجام دهد؟</string>
     <string name="conflict_overwrite">بازنویسی فایل قدیمی</string>

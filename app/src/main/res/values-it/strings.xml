@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">Salta</string>
     <string name="settings_overwrite_replace">Sostituisci</string>
     <string name="settings_auto_rename">Rinomina automaticamente i duplicati</string>
-    <string name="settings_auto_rename_hint">Se disattivato, Arc chiede ogni volta che il nome esiste già nella cartella di destinazione</string>
+    <string name="settings_auto_rename_hint">"Rinomina" conserva ogni file e salva una copia ("nome (1).ext"); "Salta" chiede cosa fare; "Sostituisci" sovrascrive il vecchio file</string>
     <string name="notif_channel_downloads">Download</string>
     <string name="notif_channel_downloads_desc">Avanzamento dei download attivi</string>
     <string name="notif_channel_status">Stato</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">Salta</string>
     <string name="duplicate_new_copy">Scarica un\\u2019altra copia</string>
     <string name="duplicate_replace">Sostituisci esistente</string>
+    <string name="duplicate_skipped">Già nei tuoi download – ignorato</string>
     <string name="conflict_title">Nome file già usato</string>
     <string name="conflict_message">%1$s esiste già nella cartella di destinazione. Cosa deve fare Arc?</string>
     <string name="conflict_overwrite">Sovrascrivi il file esistente</string>

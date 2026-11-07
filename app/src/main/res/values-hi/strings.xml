@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">छोड़ें</string>
     <string name="settings_overwrite_replace">बदलें</string>
     <string name="settings_auto_rename">डुप्लिकेट का नाम अपने आप बदलें</string>
-    <string name="settings_auto_rename_hint">बंद होने पर, जब नाम गंतव्य फ़ोल्डर में पहले से मौजूद हो तो Arc पूछेगा</string>
+    <string name="settings_auto_rename_hint">"रीनेम" हर फ़ाइल रखता है और "नाम (1).ext" नाम से नई कॉपी सेव करता है; "स्किप" पूछता है कि क्या करना है; "बदलें" पुरानी फ़ाइल को अधिलेखित कर देता है</string>
     <string name="notif_channel_downloads">डाउनलोड</string>
     <string name="notif_channel_downloads_desc">चालू डाउनलोड की प्रगति</string>
     <string name="notif_channel_status">स्थिति</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">छोड़ें</string>
     <string name="duplicate_new_copy">एक और कॉपी डाउनलोड करें</string>
     <string name="duplicate_replace">मौजूदा बदलें</string>
+    <string name="duplicate_skipped">पहले से आपके डाउनलोड में है – छोड़ दिया</string>
     <string name="conflict_title">फ़ाइल का नाम पहले से उपयोग में है</string>
     <string name="conflict_message">%1$s गंतव्य फ़ोल्डर में पहले से मौजूद है। Arc क्या करे?</string>
     <string name="conflict_overwrite">पुरानी फ़ाइल बदल दें</string>

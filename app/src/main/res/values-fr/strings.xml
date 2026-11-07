@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">Ignorer</string>
     <string name="settings_overwrite_replace">Remplacer</string>
     <string name="settings_auto_rename">Renommer automatiquement les doublons</string>
-    <string name="settings_auto_rename_hint">Désactivé : Arc demande quoi faire chaque fois que le nom existe déjà dans le dossier de destination</string>
+    <string name="settings_auto_rename_hint">"Renommer" conserve chaque fichier et enregistre une copie ("nom (1).ext") ; "Ignorer" demande quoi faire ; "Remplacer" écrase l\'ancien fichier</string>
     <string name="notif_channel_downloads">Téléchargements</string>
     <string name="notif_channel_downloads_desc">Progression des téléchargements actifs</string>
     <string name="notif_channel_status">État</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">Ignorer</string>
     <string name="duplicate_new_copy">Télécharger une autre copie</string>
     <string name="duplicate_replace">Remplacer l\\u2019existant</string>
+    <string name="duplicate_skipped">Déjà dans vos téléchargements – ignoré</string>
     <string name="conflict_title">Nom de fichier déjà utilisé</string>
     <string name="conflict_message">%1$s existe déjà dans le dossier de destination. Que faut-il faire ?</string>
     <string name="conflict_overwrite">Remplacer le fichier existant</string>

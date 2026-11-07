@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">Overslaan</string>
     <string name="settings_overwrite_replace">Vervangen</string>
     <string name="settings_auto_rename">Duplicaten automatisch hernoemen</string>
-    <string name="settings_auto_rename_hint">Uit: Arc vraagt elke keer wanneer de naam al bestaat in de doelmap</string>
+    <string name="settings_auto_rename_hint">"Hernoemen" bewaart elk bestand en slaat een kopie op ("naam (1).ext"); "Overslaan" vraagt wat te doen; "Vervangen" overschrijft het oude bestand</string>
     <string name="notif_channel_downloads">Downloads</string>
     <string name="notif_channel_downloads_desc">Voortgang van actieve downloads</string>
     <string name="notif_channel_status">Status</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">Overslaan</string>
     <string name="duplicate_new_copy">Nog een kopie downloaden</string>
     <string name="duplicate_replace">Bestaande vervangen</string>
+    <string name="duplicate_skipped">Staat al in je downloads – overgeslagen</string>
     <string name="conflict_title">Bestandsnaam al in gebruik</string>
     <string name="conflict_message">%1$s bestaat al in de doelmap. Wat moet Arc doen?</string>
     <string name="conflict_overwrite">Oude bestand overschrijven</string>

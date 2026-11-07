@@ -17,8 +17,8 @@ android {
         applicationId = "com.arc.downloadmanager"
         minSdk = 26
         targetSdk = 35
-        versionCode = 23
-        versionName = "2.7.0"
+        versionCode = 24
+        versionName = "2.8.0"
 
         testInstrumentationRunner = "com.arc.downloadmanager.HiltTestRunner"
         vectorDrawables {

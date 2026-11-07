@@ -8,10 +8,10 @@ import com.arc.downloadmanager.domain.model.ConflictAction
 import com.arc.downloadmanager.domain.model.DownloadRequest
 import com.arc.downloadmanager.domain.model.DownloadSource
 import com.arc.downloadmanager.domain.model.DownloadStatus
+import com.arc.downloadmanager.engine.CollisionPolicy
 import com.arc.downloadmanager.engine.CookieScopePolicy
 import com.arc.downloadmanager.engine.DownloadEngine
 import com.arc.downloadmanager.engine.FilenameDetector
-import com.arc.downloadmanager.engine.StorageManager
 import com.arc.downloadmanager.engine.store.DownloadStore
 import java.time.Instant
 import java.time.ZoneId
@@ -62,8 +62,13 @@ class DownloadRepository
         private val engine: DownloadEngine,
         private val store: DownloadStore,
         private val settingsRepository: SettingsRepository,
-        private val storageManager: StorageManager,
     ) {
+        /**
+         * Adds a download request. The overwrite policy is the single decision maker:
+         * SKIP ignores re-added URLs (the UI toasts), RENAME and REPLACE both enqueue and
+         * let the engine apply the same policy to the artifacts at finalize time. Files are
+         * NEVER deleted here — a replacement happens only when the new download completes.
+         */
         suspend fun add(
             request: DownloadRequest,
             policyOverride: OverwritePolicy? = null,
@@ -74,19 +79,16 @@ class DownloadRepository
             val policy = policyOverride ?: settings.overwritePolicy
 
             val existing = store.getByUrl(url).filter { !it.status.isTerminal || it.status == DownloadStatus.COMPLETED }
-            if (existing.isNotEmpty() && policy == OverwritePolicy.SKIP && request.source != DownloadSource.BROWSER) {
-                return AddResult.Duplicate(existing.first().id)
-            }
-            if (existing.isNotEmpty() && policy != OverwritePolicy.SKIP && request.source == DownloadSource.MANUAL) {
-                // Let the UI decide when the policy is RENAME (ask) — REPLACE proceeds below.
-                if (policy == OverwritePolicy.RENAME && policyOverride == null) {
-                    return AddResult.Duplicate(existing.first().id)
-                }
+            when (CollisionPolicy.enqueueDecision(policy, existing.isNotEmpty(), request.source)) {
+                CollisionPolicy.Enqueue.SKIP_DUPLICATE -> return AddResult.Duplicate(existing.first().id)
+                CollisionPolicy.Enqueue.ADD -> Unit
             }
             if (policy == OverwritePolicy.REPLACE && existing.isNotEmpty()) {
+                // Re-downloads reuse the destination name: drop the stale rows so the list
+                // keeps one entry per artifact, but keep the files on disk — the engine
+                // overwrites the artifact only once the new download actually finishes.
                 existing.forEach { old ->
-                    if (old.status == DownloadStatus.COMPLETED) storageManager.deleteFinal(old.finalUri)
-                    engine.cancel(old.id)
+                    if (!old.status.isTerminal) engine.cancel(old.id)
                     store.delete(old.id)
                 }
             }

@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">跳过</string>
     <string name="settings_overwrite_replace">替换</string>
     <string name="settings_auto_rename">自动重命名重复文件</string>
-    <string name="settings_auto_rename_hint">关闭时，若目标文件夹已存在同名文件，Arc 会询问如何处理</string>
+    <string name="settings_auto_rename_hint">“重命名”会保留所有文件并另存副本（“文件名 (1).ext”）；“跳过”会询问如何处理；“替换”会覆盖旧文件</string>
     <string name="notif_channel_downloads">下载</string>
     <string name="notif_channel_downloads_desc">进行中下载的进度</string>
     <string name="notif_channel_status">状态</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">跳过</string>
     <string name="duplicate_new_copy">再下载一份</string>
     <string name="duplicate_replace">替换现有文件</string>
+    <string name="duplicate_skipped">已在下载列表中 – 已跳过</string>
     <string name="conflict_title">文件名已被使用</string>
     <string name="conflict_message">目标文件夹中已存在 %1$s。要如何处理？</string>
     <string name="conflict_overwrite">覆盖旧文件</string>

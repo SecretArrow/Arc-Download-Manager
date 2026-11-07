@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">Bỏ qua</string>
     <string name="settings_overwrite_replace">Thay thế</string>
     <string name="settings_auto_rename">Tự động đổi tên tệp trùng</string>
-    <string name="settings_auto_rename_hint">Khi tắt, Arc sẽ hỏi mỗi khi tên đã tồn tại trong thư mục đích</string>
+    <string name="settings_auto_rename_hint">"Đổi tên" giữ lại mọi tệp và lưu bản sao mới ("tên (1).ext"); "Bỏ qua" sẽ hỏi bạn muốn làm gì; "Thay thế" ghi đè lên tệp cũ</string>
     <string name="notif_channel_downloads">Tải xuống</string>
     <string name="notif_channel_downloads_desc">Tiến độ của các lượt tải xuống đang chạy</string>
     <string name="notif_channel_status">Trạng thái</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">Bỏ qua</string>
     <string name="duplicate_new_copy">Tải xuống một bản sao khác</string>
     <string name="duplicate_replace">Thay thế tệp hiện có</string>
+    <string name="duplicate_skipped">Đã có trong mục tải xuống của bạn – đã bỏ qua</string>
     <string name="conflict_title">Tên tệp đã được sử dụng</string>
     <string name="conflict_message">%1$s đã tồn tại trong thư mục đích. Bạn muốn làm gì?</string>
     <string name="conflict_overwrite">Ghi đè tệp cũ</string>

@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">Langkau</string>
     <string name="settings_overwrite_replace">Ganti</string>
     <string name="settings_auto_rename">Namakan semula pendua secara automatik</string>
-    <string name="settings_auto_rename_hint">Apabila dimatikan, Arc bertanya setiap kali nama sudah wujud dalam folder destinasi</string>
+    <string name="settings_auto_rename_hint">"Namakan semula" menyimpan semua fail dan menyimpan salinan baharu ("nama (1).ext"); "Langkau" bertanya apa yang perlu dilakukan; "Ganti" menimpa fail lama</string>
     <string name="notif_channel_downloads">Muat turun</string>
     <string name="notif_channel_downloads_desc">Kemajuan muat turun aktif</string>
     <string name="notif_channel_status">Status</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">Langkau</string>
     <string name="duplicate_new_copy">Muat turun salinan lain</string>
     <string name="duplicate_replace">Ganti yang sedia ada</string>
+    <string name="duplicate_skipped">Sudah ada dalam muat turun anda – dilangkau</string>
     <string name="conflict_title">Nama fail sudah digunakan</string>
     <string name="conflict_message">%1$s sudah wujud dalam folder destinasi. Apa yang perlu Arc buat?</string>
     <string name="conflict_overwrite">Tulis ganti fail lama</string>

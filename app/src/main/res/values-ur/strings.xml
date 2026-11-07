@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">چھوڑیں</string>
     <string name="settings_overwrite_replace">بدل دیں</string>
     <string name="settings_auto_rename">ڈپلیکٹ کا نام خودکار بدلیں</string>
-    <string name="settings_auto_rename_hint">بند ہونے پر، جب نام منزل کے فولڈر میں پہلے سے موجود ہو تو Arc پوچھے گا</string>
+    <string name="settings_auto_rename_hint">"نام تبدیل کریں" ہر فائل محفوظ رکتا ہے اور "نام (1).ext" کی نئی کاپی محفوظ کرتا ہے؛ "چھوڑیں" پوچھتا ہے کہ کیا کرنا ہے؛ اور "بدلیں" پرانی فائل کے اوپر لکھ دیتا ہے</string>
     <string name="notif_channel_downloads">ڈاؤن لوڈز</string>
     <string name="notif_channel_downloads_desc">فعال ڈاؤن لوڈز کی پیش رفت</string>
     <string name="notif_channel_status">حالت</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">چھوڑ دیں</string>
     <string name="duplicate_new_copy">ایک اور کاپی ڈاؤن لوڈ کریں</string>
     <string name="duplicate_replace">موجودہ کو بدل دیں</string>
+    <string name="duplicate_skipped">پہلے سے آپ کے ڈاؤن لوڈز میں ہے – چھوڑ دیا گیا</string>
     <string name="conflict_title">فائل کا نام پہلے سے استعمال میں ہے</string>
     <string name="conflict_message">%1$s منزل کے فولڈر میں پہلے سے موجود ہے۔ Arc کیا کرے؟</string>
     <string name="conflict_overwrite">پرانی فائل کے اوپر لکھیں</string>

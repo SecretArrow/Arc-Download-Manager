@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">Atla</string>
     <string name="settings_overwrite_replace">Değiştir</string>
     <string name="settings_auto_rename">Yinelenenleri otomatik yeniden adlandır</string>
-    <string name="settings_auto_rename_hint">Kapalıyken, ad hedef klasörde zaten varsa Arc ne yapılacağını sorar</string>
+    <string name="settings_auto_rename_hint">"Yeniden adlandır" her dosyayı korur ve yeni bir kopya kaydeder ("ad (1).ext"); "Atla" ne yapılacağını sorar; "Değiştir" eski dosyanın üzerine yazar</string>
     <string name="notif_channel_downloads">İndirmeler</string>
     <string name="notif_channel_downloads_desc">Etkin indirmelerin ilerlemesi</string>
     <string name="notif_channel_status">Durum</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">Atla</string>
     <string name="duplicate_new_copy">Başka bir kopya indir</string>
     <string name="duplicate_replace">Mevcut olanı değiştir</string>
+    <string name="duplicate_skipped">Zaten indirmelerinizde – atlandı</string>
     <string name="conflict_title">Dosya adı zaten kullanılıyor</string>
     <string name="conflict_message">%1$s hedef klasörde zaten var. Arc ne yapsın?</string>
     <string name="conflict_overwrite">Eski dosyanın üzerine yaz</string>

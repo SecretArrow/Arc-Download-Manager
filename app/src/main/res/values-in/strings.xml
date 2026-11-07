@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">Lewati</string>
     <string name="settings_overwrite_replace">Ganti</string>
     <string name="settings_auto_rename">Ganti nama otomatis bila duplikat</string>
-    <string name="settings_auto_rename_hint">Jika nonaktif, Arc akan bertanya setiap kali nama unduhan sudah ada di folder tujuan</string>
+    <string name="settings_auto_rename_hint">"Ganti nama" menyimpan semua file dan membuat salinan baru ("nama (1).ext"); "Lewati" menanyakan apa yang harus dilakukan; "Ganti" menimpa file lama</string>
     <string name="notif_channel_downloads">Unduhan</string>
     <string name="notif_channel_downloads_desc">Progres unduhan aktif</string>
     <string name="notif_channel_status">Status</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">Lewati</string>
     <string name="duplicate_new_copy">Unduh salinan lain</string>
     <string name="duplicate_replace">Ganti yang sudah ada</string>
+    <string name="duplicate_skipped">Sudah ada di unduhan Anda – dilewati</string>
     <string name="conflict_title">Nama file sudah dipakai</string>
     <string name="conflict_message">%1$s sudah ada di folder tujuan. Apa yang harus dilakukan?</string>
     <string name="conflict_overwrite">Timpa file lama</string>

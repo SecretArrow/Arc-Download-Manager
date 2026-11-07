@@ -23,6 +23,8 @@ data class EngineSettings(
     /** Window end in minutes-of-day (default 06:00); may wrap past midnight. */
     val scheduleEndMin: Int = 360,
     val minFreeSpaceMB: Long = 200L,
+    /** The single collision policy (Settings radio): RENAME saves "name (1).ext" silently,
+     *  REPLACE overwrites the old artifact, SKIP parks the task in CONFLICT and asks. */
     val overwritePolicy: OverwritePolicy = OverwritePolicy.RENAME,
     val theme: ThemeMode = ThemeMode.SYSTEM,
     val dynamicColor: Boolean = true,
@@ -33,9 +35,9 @@ data class EngineSettings(
     val computeSha256: Boolean = false,
     val autoCleanupTemp: Boolean = true,
     /**
-     * When true a filename collision at the destination is resolved automatically
-     * ("name (1).ext") without asking. When false the download parks in CONFLICT
-     * and the user decides (overwrite / rename new / rename old).
+     * Retired per-switch toggle, kept only as a legacy alias: users who enabled it keep the
+     * silent "name (1).ext" behavior (OR-ed into [overwritePolicy] by [com.arc.downloadmanager.engine.CollisionPolicy]).
+     * The Settings UI no longer exposes it — the policy radio is the single control.
      */
     val autoRenameDuplicates: Boolean = false,
     val appLock: Boolean = false,

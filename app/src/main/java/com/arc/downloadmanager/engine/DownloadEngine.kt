@@ -219,7 +219,9 @@ class DownloadEngine
                         errorMessage = null,
                         retryCount = 0,
                         resumable = false,
-                        finalUri = null,
+                        // finalUri is deliberately KEPT: it points at the task's own previous
+                        // artifact, telling the finalize step that a restart replaces its own
+                        // bytes instead of forking a "(1)" copy or parking in CONFLICT.
                         completedAt = null,
                     ),
                 )

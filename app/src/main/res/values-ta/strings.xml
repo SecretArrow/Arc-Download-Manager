@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">தவிர்க்கவும்</string>
     <string name="settings_overwrite_replace">மாற்றவும்</string>
     <string name="settings_auto_rename">நகல்களுக்கு தாடாகக் கழிவு பெயர் மாற்று</string>
-    <string name="settings_auto_rename_hint">முடக்கப்பட்டிருந்தால், இலக்கு கோப்புறையில் பெயர் ஏற்கனவே இருந்தால் Arc கேட்கும்</string>
+    <string name="settings_auto_rename_hint">"மறுபெயரிட" ஒவ்வொரு கோப்பையும் வைத்து "பெயர் (1).ext" என புதிய நகலை சேமிக்கும்; "தவிர்" என்ன செய்யவேண்டும் என கேட்கும்; "மாற்று" பழைய கோப்பை மேலெழுதும்</string>
     <string name="notif_channel_downloads">பதிவிறக்கங்கள்</string>
     <string name="notif_channel_downloads_desc">செயலில் உள்ள பதிவிறக்கங்களின் முன்னேற்றம்</string>
     <string name="notif_channel_status">நிலை</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">தவிர்க்கவும்</string>
     <string name="duplicate_new_copy">மற்றொரு நகலைப் பதிவிறக்கவும்</string>
     <string name="duplicate_replace">இருப்பதை மாற்றவும்</string>
+    <string name="duplicate_skipped">உங்கள் பதிவிறக்கங்களில் ஏற்கனவே உள்ளது – தவிர்க்கப்பட்டது</string>
     <string name="conflict_title">கோப்பு பெயர் ஏற்கனவே பயன்படுத்தப்பட்டது</string>
     <string name="conflict_message">%1$s இலக்கு கோப்புறையில் ஏற்கனவே உள்ளது. Arc என்ன செய்யவேண்டும்?</string>
     <string name="conflict_overwrite">பழைய கோப்பின் மேல் எழுது</string>

@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">ข้าม</string>
     <string name="settings_overwrite_replace">แทนที่</string>
     <string name="settings_auto_rename">เปลี่ยนชื่อไฟล์ซ้ำอัตโนมัติ</string>
-    <string name="settings_auto_rename_hint">เมื่อปิดไว้ Arc จะถามทุกครั้งที่ชื่อมีอยู่แล้วในโฟลเดอร์ปลายทาง</string>
+    <string name="settings_auto_rename_hint">"เปลี่ยนชื่อ" เก็บทุกไฟล์และบันทึกสำเนาใหม่ ("ชื่อ (1).ext"); "ข้าม" จะถามว่าต้องการทำอะไร; "แทนที่" จะเขียนทับไฟล์เดิม</string>
     <string name="notif_channel_downloads">การดาวน์โหลด</string>
     <string name="notif_channel_downloads_desc">ความคืบหน้าของการดาวน์โหลดที่ใช้งานอยู่</string>
     <string name="notif_channel_status">สถานะ</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">ข้าม</string>
     <string name="duplicate_new_copy">ดาวน์โหลดสำเนาอื่น</string>
     <string name="duplicate_replace">แทนที่ไฟล์ที่มีอยู่</string>
+    <string name="duplicate_skipped">มีอยู่ในรายการดาวน์โหลดแล้ว – ข้ามแล้ว</string>
     <string name="conflict_title">ชื่อไฟล์ถูกใช้ไปแล้ว</string>
     <string name="conflict_message">%1$s มีอยู่แล้วในโฟลเดอร์ปลายทาง ต้องการให้ทำอย่างไร?</string>
     <string name="conflict_overwrite">เขียนทับไฟล์เดิม</string>

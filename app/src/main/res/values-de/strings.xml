@@ -164,7 +164,7 @@
     <string name="settings_overwrite_skip">Überspringen</string>
     <string name="settings_overwrite_replace">Ersetzen</string>
     <string name="settings_auto_rename">Duplikate automatisch umbenennen</string>
-    <string name="settings_auto_rename_hint">Aus: Arc fragt bei jedem Namenskonflikt im Zielordner, was zu tun ist</string>
+    <string name="settings_auto_rename_hint">"Umbenennen" behält jede Datei und speichert eine Kopie ("Name (1).ext"); "Überspringen" fragt, was zu tun ist; "Ersetzen" überschreibt die alte Datei</string>
     <string name="notif_channel_downloads">Downloads</string>
     <string name="notif_channel_downloads_desc">Fortschritt aktiver Downloads</string>
     <string name="notif_channel_status">Status</string>
@@ -204,6 +204,7 @@
     <string name="duplicate_skip">Überspringen</string>
     <string name="duplicate_new_copy">Weitere Kopie herunterladen</string>
     <string name="duplicate_replace">Vorhandene ersetzen</string>
+    <string name="duplicate_skipped">Bereits in deinen Downloads – übersprungen</string>
     <string name="conflict_title">Dateiname bereits vergeben</string>
     <string name="conflict_message">%1$s existiert im Zielordner bereits. Was soll Arc tun?</string>
     <string name="conflict_overwrite">Alte Datei überschreiben</string>

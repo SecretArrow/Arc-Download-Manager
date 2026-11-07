@@ -182,7 +182,7 @@
     <string name="settings_overwrite_skip">Skip</string>
     <string name="settings_overwrite_replace">Replace</string>
     <string name="settings_auto_rename">Auto-rename duplicate files</string>
-    <string name="settings_auto_rename_hint">When off, Arc asks what to do whenever the download name already exists at the destination</string>
+    <string name="settings_auto_rename_hint">Rename keeps every file and saves a fresh copy (\u201cname (1).ext\u201d); Skip asks what to do; Replace overwrites the old file</string>
 
     <!-- Notifications -->
     <string name="notif_channel_downloads">Downloads</string>
@@ -228,6 +228,7 @@
     <string name="duplicate_skip">Skip</string>
     <string name="duplicate_new_copy">Download another copy</string>
     <string name="duplicate_replace">Replace existing</string>
+    <string name="duplicate_skipped">Already in your downloads \u2013 skipped</string>
     <string name="conflict_title">File name already used</string>
     <string name="conflict_message">%1$s already exists in the destination folder. What should Arc do?</string>
     <string name="conflict_overwrite">Overwrite the old file</string>

@@ -136,8 +136,12 @@ class HomeViewModel
             settingsRepository.settings
                 .stateIn(viewModelScope, SharingStarted.Eagerly, com.arc.downloadmanager.data.settings.EngineSettings())
 
-        /** A duplicate was detected while adding: UI must ask the user what to do. */
-        val pendingDuplicate = MutableStateFlow<DownloadRequest?>(null)
+        /**
+         * Incremented whenever the Skip policy silently ignored a re-added URL — the screen
+         * shows a toast per increment. RENAME/REPLACE never stop here: they enqueue and let
+         * the engine apply the same policy to the artifacts.
+         */
+        val duplicateSkipped = MutableStateFlow(0)
 
         /**
          * A finished download hit a filename collision at the destination and is parked in
@@ -184,25 +188,11 @@ class HomeViewModel
 
         fun add(request: DownloadRequest) {
             viewModelScope.launch {
-                when (val result = repository.add(request)) {
-                    is AddResult.Duplicate -> pendingDuplicate.value = request
+                when (repository.add(request)) {
+                    is AddResult.Duplicate -> duplicateSkipped.value += 1
                     else -> Unit
                 }
             }
-        }
-
-        fun resolveDuplicate(
-            request: DownloadRequest,
-            policy: OverwritePolicy,
-        ) {
-            viewModelScope.launch {
-                repository.add(request, policyOverride = policy)
-                pendingDuplicate.value = null
-            }
-        }
-
-        fun dismissDuplicate() {
-            pendingDuplicate.value = null
         }
 
         fun addBatch(
