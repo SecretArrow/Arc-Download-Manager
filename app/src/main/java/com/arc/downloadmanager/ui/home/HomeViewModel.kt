@@ -8,9 +8,11 @@ import com.arc.downloadmanager.data.repository.BatchResult
 import com.arc.downloadmanager.data.repository.DownloadRepository
 import com.arc.downloadmanager.data.settings.OverwritePolicy
 import com.arc.downloadmanager.data.settings.SettingsRepository
+import com.arc.downloadmanager.domain.model.ConflictAction
 import com.arc.downloadmanager.domain.model.DownloadRequest
 import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.engine.StorageManager
+import com.arc.downloadmanager.ui.components.ConflictPromptPolicy
 import com.arc.downloadmanager.ui.components.PendingAction
 import com.arc.downloadmanager.ui.components.PendingActionPolicy
 import com.arc.downloadmanager.ui.components.TaskActions
@@ -136,6 +138,49 @@ class HomeViewModel
 
         /** A duplicate was detected while adding: UI must ask the user what to do. */
         val pendingDuplicate = MutableStateFlow<DownloadRequest?>(null)
+
+        /**
+         * A finished download hit a filename collision at the destination and is parked in
+         * CONFLICT: the dialog asks the user to overwrite / rename new / rename old. One at a time.
+         */
+        val activeConflict = MutableStateFlow<DownloadEntity?>(null)
+
+        /** Conflicts postponed or resolved in this session; they do not re-prompt automatically. */
+        private val resolvedConflicts = MutableStateFlow<Set<String>>(emptySet())
+
+        init {
+            viewModelScope.launch {
+                downloads.collect { list ->
+                    val next =
+                        ConflictPromptPolicy.next(
+                            list.associate { it.id to it.status },
+                            resolvedConflicts.value,
+                        )
+                    activeConflict.value = next?.let { id -> list.firstOrNull { it.id == id } }
+                }
+            }
+        }
+
+        /** Re-opens the conflict dialog for a task the user postponed (row pencil action). */
+        fun openConflict(id: String) {
+            resolvedConflicts.value = resolvedConflicts.value - id
+            activeConflict.value = downloads.value.firstOrNull { it.id == id }
+        }
+
+        fun dismissConflict(id: String) {
+            resolvedConflicts.value = resolvedConflicts.value + id
+            activeConflict.value = null
+        }
+
+        fun resolveConflict(
+            id: String,
+            action: ConflictAction,
+        ) {
+            resolvedConflicts.value = resolvedConflicts.value + id
+            activeConflict.value = null
+            recordAction(id, TaskActions.RESOLVE)
+            repository.resolveConflict(id, action)
+        }
 
         fun add(request: DownloadRequest) {
             viewModelScope.launch {

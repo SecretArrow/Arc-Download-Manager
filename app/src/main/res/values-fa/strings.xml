@@ -20,6 +20,7 @@
     <string name="status_waiting_storage">در انتظار فضای ذخیره‌سازی</string>
     <string name="status_waiting_schedule">در انتظار زمان‌بندی</string>
     <string name="status_auth_required">نیاز به ورود</string>
+    <string name="status_conflict">تداخل نام</string>
     <string name="action_add_download">افزودن دانلود</string>
     <string name="action_batch_download">دانلود گروهی</string>
     <string name="action_paste_url">جای‌گذاری URL</string>
@@ -27,6 +28,7 @@
     <string name="action_resume">از سرگیری</string>
     <string name="action_retry">تلاش مجدد</string>
     <string name="action_cancel">لغو</string>
+    <string name="action_resolve">رفع تداخل</string>
     <string name="action_delete">حذف</string>
     <string name="action_restart">شروع دوباره</string>
     <string name="action_open">باز کردن</string>
@@ -161,6 +163,8 @@
     <string name="settings_overwrite_rename">تغییر نام نسخه</string>
     <string name="settings_overwrite_skip">رد کردن</string>
     <string name="settings_overwrite_replace">جایگزینی</string>
+    <string name="settings_auto_rename">تغییر نام خودکار فایل‌های تکراری</string>
+    <string name="settings_auto_rename_hint">در حالت خاموش، هر بار که نام در پوشه مقصد موجود باشد Arc می‌پرسد</string>
     <string name="notif_channel_downloads">دانلودها</string>
     <string name="notif_channel_downloads_desc">پیشرفت دانلودهای فعال</string>
     <string name="notif_channel_status">وضعیت</string>
@@ -200,6 +204,12 @@
     <string name="duplicate_skip">رد کردن</string>
     <string name="duplicate_new_copy">دانلود یک نسخه دیگر</string>
     <string name="duplicate_replace">جایگزینی فایل موجود</string>
+    <string name="conflict_title">نام فایل قبلاً استفاده شده است</string>
+    <string name="conflict_message">%1$s از قبل در پوشه مقصد وجود دارد. Arc چه کاری انجام دهد؟</string>
+    <string name="conflict_overwrite">بازنویسی فایل قدیمی</string>
+    <string name="conflict_rename_new">ذخیره به‌عنوان نسخه جدید</string>
+    <string name="conflict_rename_old">تغییر نام فایل قدیمی</string>
+    <string name="conflict_later">بعداً تصمیم بگیر</string>
     <string name="speed_format">%1$s/s</string>
     <string name="eta_format">حدود %1$s باقی مانده</string>
     <string name="permission_notif_rationale">Arc برای نمایش پیشرفت دانلود و هشدارهای تکمیل به اجازه اعلان نیاز دارد.</string>

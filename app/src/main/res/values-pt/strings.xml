@@ -20,6 +20,7 @@
     <string name="status_waiting_storage">Aguardando armazenamento</string>
     <string name="status_waiting_schedule">Aguardando agendamento</string>
     <string name="status_auth_required">Login necessário</string>
+    <string name="status_conflict">Conflito de nome</string>
     <string name="action_add_download">Adicionar download</string>
     <string name="action_batch_download">Download em lote</string>
     <string name="action_paste_url">Colar URL</string>
@@ -27,6 +28,7 @@
     <string name="action_resume">Retomar</string>
     <string name="action_retry">Tentar novamente</string>
     <string name="action_cancel">Cancelar</string>
+    <string name="action_resolve">Resolver conflito</string>
     <string name="action_delete">Excluir</string>
     <string name="action_restart">Reiniciar</string>
     <string name="action_open">Abrir</string>
@@ -161,6 +163,8 @@
     <string name="settings_overwrite_rename">Renomear cópia</string>
     <string name="settings_overwrite_skip">Pular</string>
     <string name="settings_overwrite_replace">Substituir</string>
+    <string name="settings_auto_rename">Renomear duplicados automaticamente</string>
+    <string name="settings_auto_rename_hint">Desativado: o Arc pergunta sempre que o nome já existe na pasta de destino</string>
     <string name="notif_channel_downloads">Downloads</string>
     <string name="notif_channel_downloads_desc">Progresso dos downloads ativos</string>
     <string name="notif_channel_status">Status</string>
@@ -200,6 +204,12 @@
     <string name="duplicate_skip">Pular</string>
     <string name="duplicate_new_copy">Baixar outra cópia</string>
     <string name="duplicate_replace">Substituir existente</string>
+    <string name="conflict_title">Nome de arquivo já em uso</string>
+    <string name="conflict_message">%1$s já existe na pasta de destino. O que o Arc deve fazer?</string>
+    <string name="conflict_overwrite">Substituir o arquivo antigo</string>
+    <string name="conflict_rename_new">Salvar como nova cópia</string>
+    <string name="conflict_rename_old">Renomear o arquivo antigo</string>
+    <string name="conflict_later">Decidir depois</string>
     <string name="speed_format">%1$s/s</string>
     <string name="eta_format">Falta cerca de %1$s</string>
     <string name="permission_notif_rationale">O Arc precisa da permissão de notificações para mostrar o progresso dos downloads e alertas de conclusão.</string>

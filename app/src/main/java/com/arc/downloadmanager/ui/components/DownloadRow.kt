@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.AudioFile
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.PauseCircle
@@ -104,13 +105,20 @@ fun statusLabelRes(
         DownloadStatus.WAITING_STORAGE -> com.arc.downloadmanager.R.string.status_waiting_storage
         DownloadStatus.WAITING_SCHEDULED -> com.arc.downloadmanager.R.string.status_waiting_schedule
         DownloadStatus.AUTH_REQUIRED -> com.arc.downloadmanager.R.string.status_auth_required
+        DownloadStatus.CONFLICT -> com.arc.downloadmanager.R.string.status_conflict
     }
 
 fun statusColor(status: DownloadStatus): Color =
     when (status) {
         DownloadStatus.COMPLETED -> Color(0xFF2E7D32)
         DownloadStatus.FAILED, DownloadStatus.AUTH_REQUIRED -> Color(0xFFC62828)
-        DownloadStatus.PAUSED, DownloadStatus.CANCELED, DownloadStatus.WAITING_NETWORK, DownloadStatus.WAITING_STORAGE, DownloadStatus.WAITING_SCHEDULED ->
+        DownloadStatus.PAUSED,
+        DownloadStatus.CANCELED,
+        DownloadStatus.WAITING_NETWORK,
+        DownloadStatus.WAITING_STORAGE,
+        DownloadStatus.WAITING_SCHEDULED,
+        DownloadStatus.CONFLICT,
+        ->
             Color(
                 0xFF9E6400,
             )
@@ -150,6 +158,8 @@ fun DownloadRow(
     onPauseResume: () -> Unit,
     onCancel: () -> Unit,
     onRetry: () -> Unit,
+    /** Opens the filename-conflict dialog (task parked in CONFLICT). */
+    onResolve: (() -> Unit)? = null,
     speedBps: Long = 0,
     selected: Boolean = false,
     inSelectionMode: Boolean = false,
@@ -300,6 +310,18 @@ fun DownloadRow(
                                         androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_resume),
                                     tint = MaterialTheme.colorScheme.primary,
                                     onClick = onPauseResume,
+                                )
+                            }
+                            status == DownloadStatus.CONFLICT -> {
+                                val busy = pendingAction == TaskActions.RESOLVE
+                                ActionIconButton(
+                                    busy = busy,
+                                    busyTint = MaterialTheme.colorScheme.primary,
+                                    icon = Icons.Filled.Edit,
+                                    contentDescription =
+                                        androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_resolve),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    onClick = { onResolve?.invoke() },
                                 )
                             }
                             status.isTerminal || status == DownloadStatus.AUTH_REQUIRED -> {

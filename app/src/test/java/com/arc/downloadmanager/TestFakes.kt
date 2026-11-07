@@ -7,6 +7,7 @@ import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.engine.ConnectivityView
 import com.arc.downloadmanager.engine.CookieProvider
 import com.arc.downloadmanager.engine.EngineSettingsSource
+import com.arc.downloadmanager.engine.FilenameDetector
 import com.arc.downloadmanager.engine.TaskStorage
 import com.arc.downloadmanager.engine.store.DownloadStore
 import kotlinx.coroutines.flow.Flow
@@ -177,7 +178,11 @@ class InMemoryDownloadStore : DownloadStore {
 }
 
 /** Temp-dir based [TaskStorage] for JVM tests. */
-class FakeTaskStorage(private val root: File) : TaskStorage {
+class FakeTaskStorage(
+    private val root: File,
+    /** Injectable destination-conflict report (default: nothing ever conflicts). */
+    var conflict: (DownloadEntity) -> Boolean = { false },
+) : TaskStorage {
     override fun partFile(
         downloadId: String,
         index: Int,
@@ -216,12 +221,31 @@ class FakeTaskStorage(private val root: File) : TaskStorage {
     override suspend fun finalize(
         entity: DownloadEntity,
         staged: File,
+        overwrite: Boolean,
     ): String {
-        val dest = File(root, "final_${entity.filename}")
+        val name =
+            if (overwrite) {
+                entity.filename
+            } else {
+                FilenameDetector.uniqueName(entity.filename) { candidate -> File(root, "final_$candidate").exists() }
+            }
+        val dest = File(root, "final_$name")
         staged.copyTo(dest, overwrite = true)
         staged.delete()
         return dest.toURI().toString()
     }
+
+    override suspend fun destinationConflict(entity: DownloadEntity): Boolean = conflict(entity)
+
+    override suspend fun renameExisting(entity: DownloadEntity): Boolean {
+        val existing = File(root, "final_${entity.filename}")
+        if (!existing.exists()) return true
+        val newName =
+            FilenameDetector.uniqueName(entity.filename) { candidate -> File(root, "final_$candidate").exists() }
+        return existing.renameTo(File(root, "final_$newName"))
+    }
+
+    override fun findStagedFile(downloadId: String): File? = root.listFiles()?.firstOrNull { it.isFile && it.name.startsWith("${downloadId}_") }
 
     override suspend fun finalizeFolder(
         files: List<File>,

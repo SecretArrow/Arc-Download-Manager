@@ -20,6 +20,7 @@
     <string name="status_waiting_storage">சேமிப்பு காத்திருக்கிறது</string>
     <string name="status_waiting_schedule">அட்டவணை காத்திருக்கிறது</string>
     <string name="status_auth_required">உள்நுழைவு தேவை</string>
+    <string name="status_conflict">பெயர் மோதல்</string>
     <string name="action_add_download">பதிவிறக்கம் சேர்</string>
     <string name="action_batch_download">தொகுதி பதிவிறக்கம்</string>
     <string name="action_paste_url">URL ஒட்டவும்</string>
@@ -27,6 +28,7 @@
     <string name="action_resume">மீண்டும் தொடங்கவும்</string>
     <string name="action_retry">மீண்டும் முயற்சிக்கவும்</string>
     <string name="action_cancel">ரத்து செய்க</string>
+    <string name="action_resolve">மோதலைத் தீர்க்கவும்</string>
     <string name="action_delete">நீக்கவும்</string>
     <string name="action_restart">திரும்பத் தொடங்கவும்</string>
     <string name="action_open">திறக்கவும்</string>
@@ -161,6 +163,8 @@
     <string name="settings_overwrite_rename">பெயர் மாற்றி நகலெடு</string>
     <string name="settings_overwrite_skip">தவிர்க்கவும்</string>
     <string name="settings_overwrite_replace">மாற்றவும்</string>
+    <string name="settings_auto_rename">நகல்களுக்கு தாடாகக் கழிவு பெயர் மாற்று</string>
+    <string name="settings_auto_rename_hint">முடக்கப்பட்டிருந்தால், இலக்கு கோப்புறையில் பெயர் ஏற்கனவே இருந்தால் Arc கேட்கும்</string>
     <string name="notif_channel_downloads">பதிவிறக்கங்கள்</string>
     <string name="notif_channel_downloads_desc">செயலில் உள்ள பதிவிறக்கங்களின் முன்னேற்றம்</string>
     <string name="notif_channel_status">நிலை</string>
@@ -200,6 +204,12 @@
     <string name="duplicate_skip">தவிர்க்கவும்</string>
     <string name="duplicate_new_copy">மற்றொரு நகலைப் பதிவிறக்கவும்</string>
     <string name="duplicate_replace">இருப்பதை மாற்றவும்</string>
+    <string name="conflict_title">கோப்பு பெயர் ஏற்கனவே பயன்படுத்தப்பட்டது</string>
+    <string name="conflict_message">%1$s இலக்கு கோப்புறையில் ஏற்கனவே உள்ளது. Arc என்ன செய்யவேண்டும்?</string>
+    <string name="conflict_overwrite">பழைய கோப்பின் மேல் எழுது</string>
+    <string name="conflict_rename_new">புதிய நகலாகச் சேமி</string>
+    <string name="conflict_rename_old">பழைய கோப்புக்குப் பெயர் மாற்று</string>
+    <string name="conflict_later">பின்னர் முடிவு செய்</string>
     <string name="speed_format">%1$s/s</string>
     <string name="eta_format">சுமார் %1$s மீதமுள்ளது</string>
     <string name="permission_notif_rationale">பதிவிறக்க முன்னேற்றம் மற்றும் முடிவு எச்சரிக்கைகளைக் காட்ட, Arc க்கு அறிவிப்பு அனுமதி தேவை.</string>

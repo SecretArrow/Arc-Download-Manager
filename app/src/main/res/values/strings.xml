@@ -24,6 +24,7 @@
     <string name="status_waiting_storage">Waiting for storage</string>
     <string name="status_waiting_schedule">Waiting for schedule</string>
     <string name="status_auth_required">Sign-in required</string>
+    <string name="status_conflict">Name conflict</string>
 
     <!-- Actions -->
     <string name="action_add_download">Add download</string>
@@ -33,6 +34,7 @@
     <string name="action_resume">Resume</string>
     <string name="action_retry">Retry</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_resolve">Resolve conflict</string>
     <string name="action_delete">Delete</string>
     <string name="action_restart">Restart</string>
     <string name="action_open">Open</string>
@@ -179,6 +181,8 @@
     <string name="settings_overwrite_rename">Rename copy</string>
     <string name="settings_overwrite_skip">Skip</string>
     <string name="settings_overwrite_replace">Replace</string>
+    <string name="settings_auto_rename">Auto-rename duplicate files</string>
+    <string name="settings_auto_rename_hint">When off, Arc asks what to do whenever the download name already exists at the destination</string>
 
     <!-- Notifications -->
     <string name="notif_channel_downloads">Downloads</string>
@@ -224,6 +228,12 @@
     <string name="duplicate_skip">Skip</string>
     <string name="duplicate_new_copy">Download another copy</string>
     <string name="duplicate_replace">Replace existing</string>
+    <string name="conflict_title">File name already used</string>
+    <string name="conflict_message">%1$s already exists in the destination folder. What should Arc do?</string>
+    <string name="conflict_overwrite">Overwrite the old file</string>
+    <string name="conflict_rename_new">Save as a new copy</string>
+    <string name="conflict_rename_old">Rename the old file</string>
+    <string name="conflict_later">Decide later</string>
 
     <!-- Misc -->
     <string name="speed_format">%1$s/s</string>

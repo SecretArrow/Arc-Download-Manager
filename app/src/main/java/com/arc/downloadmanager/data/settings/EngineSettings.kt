@@ -32,6 +32,12 @@ data class EngineSettings(
     val privateByDefault: Boolean = false,
     val computeSha256: Boolean = false,
     val autoCleanupTemp: Boolean = true,
+    /**
+     * When true a filename collision at the destination is resolved automatically
+     * ("name (1).ext") without asking. When false the download parks in CONFLICT
+     * and the user decides (overwrite / rename new / rename old).
+     */
+    val autoRenameDuplicates: Boolean = false,
     val appLock: Boolean = false,
     val defaultDestinationUri: String? = null,
 )

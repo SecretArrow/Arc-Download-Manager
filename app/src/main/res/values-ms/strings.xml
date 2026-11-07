@@ -20,6 +20,7 @@
     <string name="status_waiting_storage">Menunggu storan</string>
     <string name="status_waiting_schedule">Menunggu jadual</string>
     <string name="status_auth_required">Log masuk diperlukan</string>
+    <string name="status_conflict">Konflik nama</string>
     <string name="action_add_download">Tambah muat turun</string>
     <string name="action_batch_download">Muat turun berkelompok</string>
     <string name="action_paste_url">Tampal URL</string>
@@ -27,6 +28,7 @@
     <string name="action_resume">Sambung semula</string>
     <string name="action_retry">Cuba semula</string>
     <string name="action_cancel">Batal</string>
+    <string name="action_resolve">Selesaikan konflik</string>
     <string name="action_delete">Padam</string>
     <string name="action_restart">Mula semula</string>
     <string name="action_open">Buka</string>
@@ -161,6 +163,8 @@
     <string name="settings_overwrite_rename">Namakan semula salinan</string>
     <string name="settings_overwrite_skip">Langkau</string>
     <string name="settings_overwrite_replace">Ganti</string>
+    <string name="settings_auto_rename">Namakan semula pendua secara automatik</string>
+    <string name="settings_auto_rename_hint">Apabila dimatikan, Arc bertanya setiap kali nama sudah wujud dalam folder destinasi</string>
     <string name="notif_channel_downloads">Muat turun</string>
     <string name="notif_channel_downloads_desc">Kemajuan muat turun aktif</string>
     <string name="notif_channel_status">Status</string>
@@ -200,6 +204,12 @@
     <string name="duplicate_skip">Langkau</string>
     <string name="duplicate_new_copy">Muat turun salinan lain</string>
     <string name="duplicate_replace">Ganti yang sedia ada</string>
+    <string name="conflict_title">Nama fail sudah digunakan</string>
+    <string name="conflict_message">%1$s sudah wujud dalam folder destinasi. Apa yang perlu Arc buat?</string>
+    <string name="conflict_overwrite">Tulis ganti fail lama</string>
+    <string name="conflict_rename_new">Simpan sebagai salinan baharu</string>
+    <string name="conflict_rename_old">Namakan semula fail lama</string>
+    <string name="conflict_later">Putuskan kemudian</string>
     <string name="speed_format">%1$s/s</string>
     <string name="eta_format">Kira-kira %1$s lagi</string>
     <string name="permission_notif_rationale">Arc memerlukan kebenaran pemberitahuan untuk menunjukkan kemajuan muat turun dan amaran penyelesaian.</string>

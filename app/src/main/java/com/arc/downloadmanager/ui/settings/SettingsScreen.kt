@@ -228,6 +228,12 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                         ) { Text(stringResource(label)) }
                     }
                 }
+                SwitchRow(stringResource(R.string.settings_auto_rename), settings.autoRenameDuplicates, viewModel::setAutoRenameDuplicates)
+                Text(
+                    stringResource(R.string.settings_auto_rename_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         stringResource(R.string.settings_default_destination),

@@ -20,6 +20,7 @@
     <string name="status_waiting_storage">ストレージ待機中</string>
     <string name="status_waiting_schedule">スケジュール待機中</string>
     <string name="status_auth_required">ログインが必要です</string>
+    <string name="status_conflict">名前の競合</string>
     <string name="action_add_download">ダウンロードを追加</string>
     <string name="action_batch_download">一括ダウンロード</string>
     <string name="action_paste_url">URL を貼り付け</string>
@@ -27,6 +28,7 @@
     <string name="action_resume">再開</string>
     <string name="action_retry">再試行</string>
     <string name="action_cancel">キャンセル</string>
+    <string name="action_resolve">競合を解決</string>
     <string name="action_delete">削除</string>
     <string name="action_restart">最初からやり直す</string>
     <string name="action_open">開く</string>
@@ -161,6 +163,8 @@
     <string name="settings_overwrite_rename">名前を変えて保存</string>
     <string name="settings_overwrite_skip">スキップ</string>
     <string name="settings_overwrite_replace">上書き</string>
+    <string name="settings_auto_rename">重複ファイルを自動リネーム</string>
+    <string name="settings_auto_rename_hint">オフの場合、保存先に同名ファイルがあると Arc が確認します</string>
     <string name="notif_channel_downloads">ダウンロード</string>
     <string name="notif_channel_downloads_desc">実行中のダウンロードの進行状況</string>
     <string name="notif_channel_status">ステータス</string>
@@ -200,6 +204,12 @@
     <string name="duplicate_skip">スキップ</string>
     <string name="duplicate_new_copy">別のコピーをダウンロード</string>
     <string name="duplicate_replace">既存のファイルを置き換える</string>
+    <string name="conflict_title">ファイル名はすでに使用されています</string>
+    <string name="conflict_message">%1$s は保存先フォルダにすでに存在します。どうしますか？</string>
+    <string name="conflict_overwrite">古いファイルに上書き</string>
+    <string name="conflict_rename_new">新しいコピーとして保存</string>
+    <string name="conflict_rename_old">古いファイルをリネーム</string>
+    <string name="conflict_later">後で決める</string>
     <string name="speed_format">%1$s/s</string>
     <string name="eta_format">残り約 %1$s</string>
     <string name="permission_notif_rationale">ダウンロードの進行状況と完了アラートを表示するには、Arc に通知権限が必要です。</string>

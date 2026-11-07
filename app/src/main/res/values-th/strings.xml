@@ -20,6 +20,7 @@
     <string name="status_waiting_storage">กำลังรอพื้นที่จัดเก็บ</string>
     <string name="status_waiting_schedule">กำลังรอตามกำหนดเวลา</string>
     <string name="status_auth_required">ต้องลงชื่อเข้าใช้</string>
+    <string name="status_conflict">ชื่อซ้ำกัน</string>
     <string name="action_add_download">เพิ่มการดาวน์โหลด</string>
     <string name="action_batch_download">ดาวน์โหลดเป็นชุด</string>
     <string name="action_paste_url">วาง URL</string>
@@ -27,6 +28,7 @@
     <string name="action_resume">ดำเนินการต่อ</string>
     <string name="action_retry">ลองอีกครั้ง</string>
     <string name="action_cancel">ยกเลิก</string>
+    <string name="action_resolve">แก้ไขข้อขัดแย้ง</string>
     <string name="action_delete">ลบ</string>
     <string name="action_restart">เริ่มใหม่</string>
     <string name="action_open">เปิด</string>
@@ -161,6 +163,8 @@
     <string name="settings_overwrite_rename">เปลี่ยนชื่อสำเนา</string>
     <string name="settings_overwrite_skip">ข้าม</string>
     <string name="settings_overwrite_replace">แทนที่</string>
+    <string name="settings_auto_rename">เปลี่ยนชื่อไฟล์ซ้ำอัตโนมัติ</string>
+    <string name="settings_auto_rename_hint">เมื่อปิดไว้ Arc จะถามทุกครั้งที่ชื่อมีอยู่แล้วในโฟลเดอร์ปลายทาง</string>
     <string name="notif_channel_downloads">การดาวน์โหลด</string>
     <string name="notif_channel_downloads_desc">ความคืบหน้าของการดาวน์โหลดที่ใช้งานอยู่</string>
     <string name="notif_channel_status">สถานะ</string>
@@ -200,6 +204,12 @@
     <string name="duplicate_skip">ข้าม</string>
     <string name="duplicate_new_copy">ดาวน์โหลดสำเนาอื่น</string>
     <string name="duplicate_replace">แทนที่ไฟล์ที่มีอยู่</string>
+    <string name="conflict_title">ชื่อไฟล์ถูกใช้ไปแล้ว</string>
+    <string name="conflict_message">%1$s มีอยู่แล้วในโฟลเดอร์ปลายทาง ต้องการให้ทำอย่างไร?</string>
+    <string name="conflict_overwrite">เขียนทับไฟล์เดิม</string>
+    <string name="conflict_rename_new">บันทึกเป็นสำเนาใหม่</string>
+    <string name="conflict_rename_old">เปลี่ยนชื่อไฟล์เดิม</string>
+    <string name="conflict_later">ตัดสินใจภายหลัง</string>
     <string name="speed_format">%1$s/s</string>
     <string name="eta_format">เหลืออีกประมาณ %1$s</string>
     <string name="permission_notif_rationale">Arc ต้องใช้สิทธิ์การแจ้งเตือนเพื่อแสดงความคืบหน้าของการดาวน์โหลดและการแจ้งเตือนเมื่อเสร็จสิ้น</string>

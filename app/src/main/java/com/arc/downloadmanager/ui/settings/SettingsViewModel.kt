@@ -139,6 +139,9 @@ class SettingsViewModel
 
         fun setOverwritePolicy(policy: OverwritePolicy) = launch { settingsRepository.setOverwritePolicy(policy) }
 
+        /** Auto-rename duplicate destination files instead of asking via the conflict dialog. */
+        fun setAutoRenameDuplicates(value: Boolean) = launch { settingsRepository.setAutoRenameDuplicates(value) }
+
         fun setTheme(mode: ThemeMode) = launch { settingsRepository.setTheme(mode) }
 
         fun setDynamicColor(value: Boolean) = launch { settingsRepository.setDynamicColor(value) }

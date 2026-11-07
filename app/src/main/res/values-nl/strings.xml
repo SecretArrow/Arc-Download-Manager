@@ -20,6 +20,7 @@
     <string name="status_waiting_storage">Wachten op opslag</string>
     <string name="status_waiting_schedule">Wachten op planning</string>
     <string name="status_auth_required">Aanmelden vereist</string>
+    <string name="status_conflict">Naamconflict</string>
     <string name="action_add_download">Download toevoegen</string>
     <string name="action_batch_download">Batch-download</string>
     <string name="action_paste_url">URL plakken</string>
@@ -27,6 +28,7 @@
     <string name="action_resume">Hervatten</string>
     <string name="action_retry">Opnieuw proberen</string>
     <string name="action_cancel">Annuleren</string>
+    <string name="action_resolve">Conflict oplossen</string>
     <string name="action_delete">Verwijderen</string>
     <string name="action_restart">Opnieuw starten</string>
     <string name="action_open">Openen</string>
@@ -161,6 +163,8 @@
     <string name="settings_overwrite_rename">Kopie hernoemen</string>
     <string name="settings_overwrite_skip">Overslaan</string>
     <string name="settings_overwrite_replace">Vervangen</string>
+    <string name="settings_auto_rename">Duplicaten automatisch hernoemen</string>
+    <string name="settings_auto_rename_hint">Uit: Arc vraagt elke keer wanneer de naam al bestaat in de doelmap</string>
     <string name="notif_channel_downloads">Downloads</string>
     <string name="notif_channel_downloads_desc">Voortgang van actieve downloads</string>
     <string name="notif_channel_status">Status</string>
@@ -200,6 +204,12 @@
     <string name="duplicate_skip">Overslaan</string>
     <string name="duplicate_new_copy">Nog een kopie downloaden</string>
     <string name="duplicate_replace">Bestaande vervangen</string>
+    <string name="conflict_title">Bestandsnaam al in gebruik</string>
+    <string name="conflict_message">%1$s bestaat al in de doelmap. Wat moet Arc doen?</string>
+    <string name="conflict_overwrite">Oude bestand overschrijven</string>
+    <string name="conflict_rename_new">Opslaan als nieuwe kopie</string>
+    <string name="conflict_rename_old">Oude bestand hernoemen</string>
+    <string name="conflict_later">Later beslissen</string>
     <string name="speed_format">%1$s/s</string>
     <string name="eta_format">Nog ongeveer %1$s</string>
     <string name="permission_notif_rationale">Arc heeft meldingstoestemming nodig om de downloadvoortgang en voltooiingsmeldingen te tonen.</string>

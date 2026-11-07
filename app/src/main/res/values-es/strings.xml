@@ -20,6 +20,7 @@
     <string name="status_waiting_storage">Esperando almacenamiento</string>
     <string name="status_waiting_schedule">Esperando programación</string>
     <string name="status_auth_required">Se requiere iniciar sesión</string>
+    <string name="status_conflict">Conflicto de nombre</string>
     <string name="action_add_download">Añadir descarga</string>
     <string name="action_batch_download">Descarga por lotes</string>
     <string name="action_paste_url">Pegar URL</string>
@@ -27,6 +28,7 @@
     <string name="action_resume">Reanudar</string>
     <string name="action_retry">Reintentar</string>
     <string name="action_cancel">Cancelar</string>
+    <string name="action_resolve">Resolver conflicto</string>
     <string name="action_delete">Eliminar</string>
     <string name="action_restart">Reiniciar</string>
     <string name="action_open">Abrir</string>
@@ -161,6 +163,8 @@
     <string name="settings_overwrite_rename">Renombrar copia</string>
     <string name="settings_overwrite_skip">Omitir</string>
     <string name="settings_overwrite_replace">Reemplazar</string>
+    <string name="settings_auto_rename">Renombrar duplicados automáticamente</string>
+    <string name="settings_auto_rename_hint">Desactivado: Arc preguntará cada vez que el nombre ya exista en la carpeta de destino</string>
     <string name="notif_channel_downloads">Descargas</string>
     <string name="notif_channel_downloads_desc">Progreso de las descargas activas</string>
     <string name="notif_channel_status">Estado</string>
@@ -200,6 +204,12 @@
     <string name="duplicate_skip">Omitir</string>
     <string name="duplicate_new_copy">Descargar otra copia</string>
     <string name="duplicate_replace">Reemplazar existente</string>
+    <string name="conflict_title">Nombre de archivo ya usado</string>
+    <string name="conflict_message">%1$s ya existe en la carpeta de destino. ¿Qué debe hacer Arc?</string>
+    <string name="conflict_overwrite">Sobrescribir el archivo antiguo</string>
+    <string name="conflict_rename_new">Guardar como copia nueva</string>
+    <string name="conflict_rename_old">Renombrar el archivo antiguo</string>
+    <string name="conflict_later">Decidir después</string>
     <string name="speed_format">%1$s/s</string>
     <string name="eta_format">Quedan unos %1$s</string>
     <string name="permission_notif_rationale">Arc necesita permiso de notificaciones para mostrar el progreso de las descargas y avisos al completarlas.</string>

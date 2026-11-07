@@ -20,6 +20,7 @@
     <string name="status_waiting_storage">Ожидание места</string>
     <string name="status_waiting_schedule">Ожидание расписания</string>
     <string name="status_auth_required">Требуется вход</string>
+    <string name="status_conflict">Конфликт имён</string>
     <string name="action_add_download">Добавить загрузку</string>
     <string name="action_batch_download">Пакетная загрузка</string>
     <string name="action_paste_url">Вставить URL</string>
@@ -27,6 +28,7 @@
     <string name="action_resume">Продолжить</string>
     <string name="action_retry">Повторить</string>
     <string name="action_cancel">Отменить</string>
+    <string name="action_resolve">Разрешить конфликт</string>
     <string name="action_delete">Удалить</string>
     <string name="action_restart">Начать заново</string>
     <string name="action_open">Открыть</string>
@@ -161,6 +163,8 @@
     <string name="settings_overwrite_rename">Переименовать копию</string>
     <string name="settings_overwrite_skip">Пропустить</string>
     <string name="settings_overwrite_replace">Заменить</string>
+    <string name="settings_auto_rename">Автопереименование дубликатов</string>
+    <string name="settings_auto_rename_hint">Если выключено, Arc спрашивает, когда имя уже есть в папке назначения</string>
     <string name="notif_channel_downloads">Загрузки</string>
     <string name="notif_channel_downloads_desc">Прогресс активных загрузок</string>
     <string name="notif_channel_status">Статус</string>
@@ -200,6 +204,12 @@
     <string name="duplicate_skip">Пропустить</string>
     <string name="duplicate_new_copy">Скачать ещё одну копию</string>
     <string name="duplicate_replace">Заменить существующую</string>
+    <string name="conflict_title">Имя файла уже занято</string>
+    <string name="conflict_message">%1$s уже существует в папке назначения. Что делать?</string>
+    <string name="conflict_overwrite">Заменить старый файл</string>
+    <string name="conflict_rename_new">Сохранить как новую копию</string>
+    <string name="conflict_rename_old">Переименовать старый файл</string>
+    <string name="conflict_later">Решить позже</string>
     <string name="speed_format">%1$s/с</string>
     <string name="eta_format">Осталось около %1$s</string>
     <string name="permission_notif_rationale">Arc нужны разрешения на уведомления, чтобы показывать прогресс загрузок и оповещения о завершении.</string>

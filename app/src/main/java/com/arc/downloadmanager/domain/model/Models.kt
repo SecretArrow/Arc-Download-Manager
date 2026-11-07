@@ -16,6 +16,9 @@ enum class DownloadStatus {
     WAITING_STORAGE,
     WAITING_SCHEDULED,
     AUTH_REQUIRED,
+
+    /** Transfer finished, but the destination already holds a file with the same name; waiting for the user's decision. */
+    CONFLICT,
     ;
 
     val isActive: Boolean
@@ -45,6 +48,24 @@ enum class DownloadSource {
     MANUAL,
     BROWSER,
     BATCH,
+}
+
+/**
+ * User decision for a filename collision at the download destination
+ * (a task parked in [DownloadStatus.CONFLICT]).
+ */
+enum class ConflictAction {
+    /** Replace the existing same-name file with the new download. */
+    OVERWRITE,
+
+    /** Keep the existing file and save the new download under a fresh name ("name (1).ext"). */
+    RENAME_NEW,
+
+    /** Rename the existing file out of the way, then save the new download under the original name. */
+    RENAME_OLD,
+
+    /** Drop the staged download; nothing is written to the destination. */
+    DISCARD,
 }
 
 /** Destination abstraction for finalized files. */

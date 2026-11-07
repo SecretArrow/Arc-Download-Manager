@@ -20,6 +20,7 @@
     <string name="status_waiting_storage">Menunggu penyimpanan</string>
     <string name="status_waiting_schedule">Menunggu jadwal</string>
     <string name="status_auth_required">Perlu masuk</string>
+    <string name="status_conflict">Konflik nama</string>
     <string name="action_add_download">Tambah unduhan</string>
     <string name="action_batch_download">Unduh massal</string>
     <string name="action_paste_url">Tempel URL</string>
@@ -27,6 +28,7 @@
     <string name="action_resume">Lanjutkan</string>
     <string name="action_retry">Coba lagi</string>
     <string name="action_cancel">Batal</string>
+    <string name="action_resolve">Selesaikan konflik</string>
     <string name="action_delete">Hapus</string>
     <string name="action_restart">Mulai ulang</string>
     <string name="action_open">Buka</string>
@@ -161,6 +163,8 @@
     <string name="settings_overwrite_rename">Ganti nama salinan</string>
     <string name="settings_overwrite_skip">Lewati</string>
     <string name="settings_overwrite_replace">Ganti</string>
+    <string name="settings_auto_rename">Ganti nama otomatis bila duplikat</string>
+    <string name="settings_auto_rename_hint">Jika nonaktif, Arc akan bertanya setiap kali nama unduhan sudah ada di folder tujuan</string>
     <string name="notif_channel_downloads">Unduhan</string>
     <string name="notif_channel_downloads_desc">Progres unduhan aktif</string>
     <string name="notif_channel_status">Status</string>
@@ -200,6 +204,12 @@
     <string name="duplicate_skip">Lewati</string>
     <string name="duplicate_new_copy">Unduh salinan lain</string>
     <string name="duplicate_replace">Ganti yang sudah ada</string>
+    <string name="conflict_title">Nama file sudah dipakai</string>
+    <string name="conflict_message">%1$s sudah ada di folder tujuan. Apa yang harus dilakukan?</string>
+    <string name="conflict_overwrite">Timpa file lama</string>
+    <string name="conflict_rename_new">Simpan sebagai salinan baru</string>
+    <string name="conflict_rename_old">Ganti nama file lama</string>
+    <string name="conflict_later">Putuskan nanti</string>
     <string name="speed_format">%1$s/s</string>
     <string name="eta_format">Sekitar %1$s lagi</string>
     <string name="permission_notif_rationale">Arc memerlukan izin notifikasi untuk menampilkan progres unduhan dan notifikasi saat unduhan selesai.</string>

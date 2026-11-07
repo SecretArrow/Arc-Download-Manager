@@ -20,6 +20,7 @@
     <string name="status_waiting_storage">স্টোরেজের জন্য অপেক্ষা</string>
     <string name="status_waiting_schedule">সময়সূচির জন্য অপেক্ষা</string>
     <string name="status_auth_required">সাইন-ইন প্রয়োজন</string>
+    <string name="status_conflict">নামের দ্বন্দ</string>
     <string name="action_add_download">ডাউনলোড যোগ করুন</string>
     <string name="action_batch_download">ব্যাচ ডাউনলোড</string>
     <string name="action_paste_url">URL পেস্ট করুন</string>
@@ -27,6 +28,7 @@
     <string name="action_resume">পুনরায় শুরু করুন</string>
     <string name="action_retry">পুনরায় চেষ্টা করুন</string>
     <string name="action_cancel">বাতিল করুন</string>
+    <string name="action_resolve">দ্বন্দ মিটান</string>
     <string name="action_delete">মুছে ফেলুন</string>
     <string name="action_restart">আবার শুরু করুন</string>
     <string name="action_open">খুলুন</string>
@@ -161,6 +163,8 @@
     <string name="settings_overwrite_rename">নতুন নামে কপি</string>
     <string name="settings_overwrite_skip">এড়িয়ে যান</string>
     <string name="settings_overwrite_replace">প্রতিস্থাপন</string>
+    <string name="settings_auto_rename">ডুপ্লিকেটের নাম স্বয়ংক্রিয়ভাবে বদলান</string>
+    <string name="settings_auto_rename_hint">বন্ধ থাকলে, গন্তব্য ফোল্ডারে নাম আগে থেকে থাকলে Arc জিজ্ঞাস কरবে</string>
     <string name="notif_channel_downloads">ডাউনলোড</string>
     <string name="notif_channel_downloads_desc">সক্রিয় ডাউনলোডের অগ্রগতি</string>
     <string name="notif_channel_status">স্ট্যাটাস</string>
@@ -200,6 +204,12 @@
     <string name="duplicate_skip">এড়িয়ে যান</string>
     <string name="duplicate_new_copy">আরেকটি কপি ডাউনলোড করুন</string>
     <string name="duplicate_replace">বিদ্যমানটি প্রতিস্থাপন করুন</string>
+    <string name="conflict_title">ফাইলের নাম আগেই ব্যবহৃত</string>
+    <string name="conflict_message">%1$s গন্তব্য ফোল্ডারে আগেই আছে। Arc কী করবে?</string>
+    <string name="conflict_overwrite">পুরনো ফাইলের বদলে লেখো</string>
+    <string name="conflict_rename_new">নতুন কপি হিসেবে সংরক্ষণ করো</string>
+    <string name="conflict_rename_old">পুরনো ফাইলের নাম বদলাও</string>
+    <string name="conflict_later">পরে সিদ্ধান্ত নাও</string>
     <string name="speed_format">%1$s/s</string>
     <string name="eta_format">প্রায় %1$s বাকি</string>
     <string name="permission_notif_rationale">ডাউনলোডের অগ্রগতি ও সম্পন্ন হওয়ার সতর্কতা দেখাতে Arc-এর বিজ্ঞপ্তির অনুমতি প্রয়োজন।</string>

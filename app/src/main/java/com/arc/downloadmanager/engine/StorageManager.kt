@@ -1,5 +1,6 @@
 package com.arc.downloadmanager.engine
 
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
@@ -128,11 +129,15 @@ class StorageManager
         /**
          * Copies the staged file into the destination and returns the content URI (or file path) of
          * the final artifact. The staged file is removed afterwards.
+         *
+         * When [overwrite] is true an existing same-name entry at the destination is replaced;
+         * otherwise a fresh non-conflicting name ("name (1).ext") is chosen if the name is taken.
          */
         @Throws(IOException::class)
         override suspend fun finalize(
             entity: DownloadEntity,
             staged: File,
+            overwrite: Boolean,
         ): String =
             withContext(Dispatchers.IO) {
                 require(staged.exists()) { "Staged file missing: ${staged.name}" }
@@ -142,17 +147,108 @@ class StorageManager
                         ?: Destination.Default
                 try {
                     when (destination) {
-                        is Destination.Default -> finalizeToPublicDownloads(entity, staged)
-                        is Destination.CustomFolder -> finalizeToSaf(entity, staged, Uri.parse(destination.treeUri))
+                        is Destination.Default -> finalizeToPublicDownloads(entity, staged, overwrite)
+                        is Destination.CustomFolder -> finalizeToSaf(entity, staged, Uri.parse(destination.treeUri), overwrite)
                     }
                 } finally {
                     staged.delete()
                 }
             }
 
+        /** True when Downloads/Arc (MediaStore, legacy dir or the SAF tree) already holds [DownloadEntity.filename]. */
+        override suspend fun destinationConflict(entity: DownloadEntity): Boolean =
+            withContext(Dispatchers.IO) {
+                val destination =
+                    entity.destinationUri
+                        ?.let { Destination.CustomFolder(it) }
+                        ?: Destination.Default
+                when (destination) {
+                    is Destination.CustomFolder -> {
+                        val tree =
+                            DocumentFile.fromTreeUri(context, Uri.parse(destination.treeUri))
+                                ?: return@withContext false
+                        tree.findFile(entity.filename)?.isFile == true
+                    }
+                    Destination.Default ->
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            mediaStoreEntryUri(entity.filename) != null
+                        } else {
+                            File(publicArcDir(), entity.filename).exists()
+                        }
+                }
+            }
+
+        /** Renames the existing same-name entry out of the way ("name (1).ext"). */
+        override suspend fun renameExisting(entity: DownloadEntity): Boolean =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val destination =
+                        entity.destinationUri
+                            ?.let { Destination.CustomFolder(it) }
+                            ?: Destination.Default
+                    when (destination) {
+                        is Destination.CustomFolder -> {
+                            val tree = DocumentFile.fromTreeUri(context, Uri.parse(destination.treeUri)) ?: return@runCatching false
+                            val doc = tree.findFile(entity.filename)?.takeIf { it.isFile } ?: return@runCatching true
+                            val newName =
+                                FilenameDetector.uniqueName(entity.filename) { candidate ->
+                                    tree.findFile(candidate) != null
+                                }
+                            doc.renameTo(newName)
+                        }
+                        Destination.Default ->
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                val uri = mediaStoreEntryUri(entity.filename) ?: return@runCatching true
+                                val newName =
+                                    FilenameDetector.uniqueName(entity.filename) { candidate ->
+                                        mediaStoreEntryUri(candidate) != null
+                                    }
+                                val values = ContentValues().apply { put(MediaStore.MediaColumns.DISPLAY_NAME, newName) }
+                                context.contentResolver.update(uri, values, null, null) > 0
+                            } else {
+                                val arcDir = publicArcDir()
+                                val existing = File(arcDir, entity.filename)
+                                if (!existing.exists()) return@runCatching true
+                                val newName =
+                                    FilenameDetector.uniqueName(entity.filename) { candidate -> File(arcDir, candidate).exists() }
+                                existing.renameTo(File(arcDir, newName))
+                            }
+                    }
+                }.getOrDefault(false)
+            }
+
+        /** Finds the staged payload of a parked task by its id prefix (the filename may have been edited). */
+        override fun findStagedFile(downloadId: String): File? = stagingRoot.listFiles()?.firstOrNull { it.isFile && it.name.startsWith("${downloadId}_") }
+
+        private fun publicArcDir(): File {
+            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            return File(downloadsDir, "Arc").apply { mkdirs() }
+        }
+
+        /** Content URI of the non-pending MediaStore row for [name] under Downloads/Arc, or null. */
+        private fun mediaStoreEntryUri(name: String): Uri? {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
+            val resolver = context.contentResolver
+            val collection = MediaStore.Downloads.EXTERNAL_CONTENT_URI
+            val selection =
+                "${MediaStore.MediaColumns.DISPLAY_NAME}=? AND ${MediaStore.MediaColumns.RELATIVE_PATH}=? AND ${MediaStore.MediaColumns.IS_PENDING}=0"
+            val args =
+                arrayOf(name, Environment.DIRECTORY_DOWNLOADS + "/Arc")
+            return resolver
+                .query(collection, arrayOf(MediaStore.MediaColumns._ID), selection, args, null)
+                ?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        ContentUris.withAppendedId(collection, cursor.getLong(0))
+                    } else {
+                        null
+                    }
+                }
+        }
+
         private fun finalizeToPublicDownloads(
             entity: DownloadEntity,
             staged: File,
+            overwrite: Boolean,
         ): String {
             val mime =
                 FilenameDetector.guessMime(entity.filename)
@@ -160,6 +256,15 @@ class StorageManager
                     ?: "application/octet-stream"
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val resolver = context.contentResolver
+                if (overwrite) {
+                    // The user explicitly asked to replace the old artifact: drop same-name rows
+                    // so MediaStore keeps the requested name instead of appending " (1)".
+                    resolver.delete(
+                        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                        "${MediaStore.MediaColumns.DISPLAY_NAME}=? AND ${MediaStore.MediaColumns.RELATIVE_PATH}=?",
+                        arrayOf(entity.filename, Environment.DIRECTORY_DOWNLOADS + "/Arc"),
+                    )
+                }
                 val values =
                     ContentValues().apply {
                         put(MediaStore.MediaColumns.DISPLAY_NAME, entity.filename)
@@ -184,9 +289,13 @@ class StorageManager
                 return uri.toString()
             }
             // Legacy path (API 26..28)
-            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            val arcDir = File(downloadsDir, "Arc").apply { mkdirs() }
-            val target = File(arcDir, FilenameDetector.uniqueName(entity.filename) { File(arcDir, it).exists() })
+            val arcDir = publicArcDir()
+            val target =
+                if (overwrite) {
+                    File(arcDir, entity.filename)
+                } else {
+                    File(arcDir, FilenameDetector.uniqueName(entity.filename) { File(arcDir, it).exists() })
+                }
             staged.copyTo(target, overwrite = true)
             return Uri.fromFile(target).toString()
         }
@@ -195,6 +304,7 @@ class StorageManager
             entity: DownloadEntity,
             staged: File,
             treeUri: Uri,
+            overwrite: Boolean,
         ): String {
             val tree =
                 DocumentFile.fromTreeUri(context, treeUri)
@@ -205,11 +315,14 @@ class StorageManager
                     ?: "application/octet-stream"
             val existing = tree.findFile(entity.filename)
             val doc =
-                if (existing != null && existing.isFile) {
-                    existing
-                } else {
-                    val name = FilenameDetector.uniqueName(entity.filename) { tree.findFile(it) != null }
-                    tree.createFile(mime, name) ?: throw IOException("Cannot create file in destination folder")
+                when {
+                    existing != null && existing.isFile && overwrite -> existing
+                    existing != null -> {
+                        // Keep both files: never clobber the old artifact silently.
+                        val name = FilenameDetector.uniqueName(entity.filename) { tree.findFile(it) != null }
+                        tree.createFile(mime, name) ?: throw IOException("Cannot create file in destination folder")
+                    }
+                    else -> tree.createFile(mime, entity.filename) ?: throw IOException("Cannot create file in destination folder")
                 }
             context.contentResolver.openOutputStream(doc.uri)?.use { out ->
                 staged.inputStream().use { it.copyTo(out) }

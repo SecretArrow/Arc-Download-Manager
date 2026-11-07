@@ -20,6 +20,7 @@
     <string name="status_waiting_storage">En attente du stockage</string>
     <string name="status_waiting_schedule">En attente de la planification</string>
     <string name="status_auth_required">Connexion requise</string>
+    <string name="status_conflict">Conflit de nom</string>
     <string name="action_add_download">Ajouter un téléchargement</string>
     <string name="action_batch_download">Téléchargement groupé</string>
     <string name="action_paste_url">Coller l\\u2019URL</string>
@@ -27,6 +28,7 @@
     <string name="action_resume">Reprendre</string>
     <string name="action_retry">Réessayer</string>
     <string name="action_cancel">Annuler</string>
+    <string name="action_resolve">Résoudre le conflit</string>
     <string name="action_delete">Supprimer</string>
     <string name="action_restart">Redémarrer</string>
     <string name="action_open">Ouvrir</string>
@@ -161,6 +163,8 @@
     <string name="settings_overwrite_rename">Renommer la copie</string>
     <string name="settings_overwrite_skip">Ignorer</string>
     <string name="settings_overwrite_replace">Remplacer</string>
+    <string name="settings_auto_rename">Renommer automatiquement les doublons</string>
+    <string name="settings_auto_rename_hint">Désactivé : Arc demande quoi faire chaque fois que le nom existe déjà dans le dossier de destination</string>
     <string name="notif_channel_downloads">Téléchargements</string>
     <string name="notif_channel_downloads_desc">Progression des téléchargements actifs</string>
     <string name="notif_channel_status">État</string>
@@ -200,6 +204,12 @@
     <string name="duplicate_skip">Ignorer</string>
     <string name="duplicate_new_copy">Télécharger une autre copie</string>
     <string name="duplicate_replace">Remplacer l\\u2019existant</string>
+    <string name="conflict_title">Nom de fichier déjà utilisé</string>
+    <string name="conflict_message">%1$s existe déjà dans le dossier de destination. Que faut-il faire ?</string>
+    <string name="conflict_overwrite">Remplacer le fichier existant</string>
+    <string name="conflict_rename_new">Enregistrer comme nouvelle copie</string>
+    <string name="conflict_rename_old">Renommer le fichier existant</string>
+    <string name="conflict_later">Décider plus tard</string>
     <string name="speed_format">%1$s/s</string>
     <string name="eta_format">Il reste environ %1$s</string>
     <string name="permission_notif_rationale">Arc a besoin de l\\u2019autorisation de notification pour afficher la progression des téléchargements et les alertes de fin.</string>

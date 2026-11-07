@@ -4,6 +4,7 @@ import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.data.settings.EngineSettings
 import com.arc.downloadmanager.data.settings.OverwritePolicy
 import com.arc.downloadmanager.data.settings.SettingsRepository
+import com.arc.downloadmanager.domain.model.ConflictAction
 import com.arc.downloadmanager.domain.model.DownloadRequest
 import com.arc.downloadmanager.domain.model.DownloadSource
 import com.arc.downloadmanager.domain.model.DownloadStatus
@@ -228,6 +229,12 @@ class DownloadRepository
         fun retry(id: String) = engine.retry(id)
 
         fun restart(id: String) = engine.restart(id)
+
+        /** Applies the user's decision for a destination-filename collision (CONFLICT task). */
+        fun resolveConflict(
+            id: String,
+            action: ConflictAction,
+        ) = engine.resolveConflict(id, action)
 
         fun pauseAll() = engine.pauseAll()
 

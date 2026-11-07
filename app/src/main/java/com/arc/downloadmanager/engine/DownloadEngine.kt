@@ -2,6 +2,7 @@ package com.arc.downloadmanager.engine
 
 import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.data.settings.EngineSettings
+import com.arc.downloadmanager.domain.model.ConflictAction
 import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.engine.store.DownloadStore
 import com.arc.downloadmanager.engine.torrent.TorrentEngine
@@ -153,7 +154,44 @@ class DownloadEngine
                 if (entity.status.isTerminal && entity.status != DownloadStatus.CANCELED) return@launch
                 storage.cleanup(id)
                 store.deleteSegments(id)
+                // A CONFLICT-parked task keeps its finished payload in the staging area;
+                // canceling means discarding it too.
+                if (entity.status == DownloadStatus.CONFLICT) {
+                    storage.findStagedFile(id)?.delete()
+                }
                 store.updateStatus(id, DownloadStatus.CANCELED, DownloadError.CANCELED.name, null)
+            }
+        }
+
+        /**
+         * Applies the user's decision for a filename collision (task parked in CONFLICT).
+         * OVERWRITE replaces the old artifact, RENAME_NEW keeps it and saves a fresh copy,
+         * RENAME_OLD renames the old artifact away first, DISCARD drops the download.
+         */
+        fun resolveConflict(
+            id: String,
+            action: ConflictAction,
+        ) {
+            scope.launch {
+                val entity = store.getById(id) ?: return@launch
+                if (entity.status != DownloadStatus.CONFLICT) return@launch
+                when (action) {
+                    ConflictAction.DISCARD -> {
+                        storage.cleanup(id)
+                        storage.findStagedFile(id)?.delete()
+                        store.deleteSegments(id)
+                        store.updateStatus(id, DownloadStatus.CANCELED, DownloadError.CANCELED.name, null)
+                    }
+                    ConflictAction.OVERWRITE -> taskRunner.publishStaged(id, settingsRepository.snapshot(), overwrite = true)
+                    ConflictAction.RENAME_NEW -> taskRunner.publishStaged(id, settingsRepository.snapshot(), overwrite = false)
+                    ConflictAction.RENAME_OLD -> {
+                        // Move the old artifact out of the way first; if the rename fails
+                        // (provider quirk), the publish step still never destroys it — it
+                        // falls back to a fresh "name (1).ext" copy.
+                        storage.renameExisting(entity)
+                        taskRunner.publishStaged(id, settingsRepository.snapshot(), overwrite = false)
+                    }
+                }
             }
         }
 

@@ -20,6 +20,7 @@
     <string name="status_waiting_storage">في انتظار مساحة التخزين</string>
     <string name="status_waiting_schedule">في انتظار الجدولة</string>
     <string name="status_auth_required">يلزم تسجيل الدخول</string>
+    <string name="status_conflict">تعارض في الاسم</string>
     <string name="action_add_download">إضافة تنزيل</string>
     <string name="action_batch_download">تنزيل مجمّع</string>
     <string name="action_paste_url">لصق الرابط</string>
@@ -27,6 +28,7 @@
     <string name="action_resume">استئناف</string>
     <string name="action_retry">إعادة المحاولة</string>
     <string name="action_cancel">إلغاء</string>
+    <string name="action_resolve">حل التعارض</string>
     <string name="action_delete">حذف</string>
     <string name="action_restart">إعادة من البداية</string>
     <string name="action_open">فتح</string>
@@ -161,6 +163,8 @@
     <string name="settings_overwrite_rename">إعادة تسمية النسخة</string>
     <string name="settings_overwrite_skip">تخطي</string>
     <string name="settings_overwrite_replace">استبدال</string>
+    <string name="settings_auto_rename">إعادة تسمية المكررات تلقائيًا</string>
+    <string name="settings_auto_rename_hint">عند الإيقاف، يسأل Arc في كل مرة يكون فيها الاسم موجودًا بالفعل في مجلد الوجهة</string>
     <string name="notif_channel_downloads">التنزيلات</string>
     <string name="notif_channel_downloads_desc">تقدّم التنزيلات النشطة</string>
     <string name="notif_channel_status">الحالة</string>
@@ -200,6 +204,12 @@
     <string name="duplicate_skip">تخطي</string>
     <string name="duplicate_new_copy">تنزيل نسخة أخرى</string>
     <string name="duplicate_replace">استبدال الموجود</string>
+    <string name="conflict_title">اسم الملف مستخدم بالفعل</string>
+    <string name="conflict_message">%1$s موجود بالفعل في مجلد الوجهة. ماذا يفعل Arc؟</string>
+    <string name="conflict_overwrite">استبدال الملف القديم</string>
+    <string name="conflict_rename_new">حفظ كنسخة جديدة</string>
+    <string name="conflict_rename_old">إعادة تسمية الملف القديم</string>
+    <string name="conflict_later">اقرر لاحقًا</string>
     <string name="speed_format">%1$s/s</string>
     <string name="eta_format">بقي حوالي %1$s</string>
     <string name="permission_notif_rationale">يحتاج Arc إلى إذن الإشعارات لعرض تقدّم التنزيل وتنبيهات الاكتمال.</string>

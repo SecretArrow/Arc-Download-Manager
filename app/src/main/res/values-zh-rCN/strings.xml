@@ -20,6 +20,7 @@
     <string name="status_waiting_storage">等待存储空间</string>
     <string name="status_waiting_schedule">等待计划时间</string>
     <string name="status_auth_required">需要登录</string>
+    <string name="status_conflict">文件名冲突</string>
     <string name="action_add_download">添加下载</string>
     <string name="action_batch_download">批量下载</string>
     <string name="action_paste_url">粘贴链接</string>
@@ -27,6 +28,7 @@
     <string name="action_resume">继续</string>
     <string name="action_retry">重试</string>
     <string name="action_cancel">取消</string>
+    <string name="action_resolve">解决冲突</string>
     <string name="action_delete">删除</string>
     <string name="action_restart">重新开始</string>
     <string name="action_open">打开</string>
@@ -161,6 +163,8 @@
     <string name="settings_overwrite_rename">重命名副本</string>
     <string name="settings_overwrite_skip">跳过</string>
     <string name="settings_overwrite_replace">替换</string>
+    <string name="settings_auto_rename">自动重命名重复文件</string>
+    <string name="settings_auto_rename_hint">关闭时，若目标文件夹已存在同名文件，Arc 会询问如何处理</string>
     <string name="notif_channel_downloads">下载</string>
     <string name="notif_channel_downloads_desc">进行中下载的进度</string>
     <string name="notif_channel_status">状态</string>
@@ -200,6 +204,12 @@
     <string name="duplicate_skip">跳过</string>
     <string name="duplicate_new_copy">再下载一份</string>
     <string name="duplicate_replace">替换现有文件</string>
+    <string name="conflict_title">文件名已被使用</string>
+    <string name="conflict_message">目标文件夹中已存在 %1$s。要如何处理？</string>
+    <string name="conflict_overwrite">覆盖旧文件</string>
+    <string name="conflict_rename_new">另存为新副本</string>
+    <string name="conflict_rename_old">重命名旧文件</string>
+    <string name="conflict_later">稍后决定</string>
     <string name="speed_format">%1$s/s</string>
     <string name="eta_format">剩余约 %1$s</string>
     <string name="permission_notif_rationale">Arc 需要通知权限，才能显示下载进度和完成提醒。</string>

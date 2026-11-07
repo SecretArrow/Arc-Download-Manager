@@ -20,6 +20,7 @@
     <string name="status_waiting_storage">Warten auf Speicher</string>
     <string name="status_waiting_schedule">Warten auf Zeitplan</string>
     <string name="status_auth_required">Anmeldung erforderlich</string>
+    <string name="status_conflict">Namenskonflikt</string>
     <string name="action_add_download">Download hinzufügen</string>
     <string name="action_batch_download">Stapel-Download</string>
     <string name="action_paste_url">URL einfügen</string>
@@ -27,6 +28,7 @@
     <string name="action_resume">Fortsetzen</string>
     <string name="action_retry">Wiederholen</string>
     <string name="action_cancel">Abbrechen</string>
+    <string name="action_resolve">Konflikt lösen</string>
     <string name="action_delete">Löschen</string>
     <string name="action_restart">Neu starten</string>
     <string name="action_open">Öffnen</string>
@@ -161,6 +163,8 @@
     <string name="settings_overwrite_rename">Kopie umbenennen</string>
     <string name="settings_overwrite_skip">Überspringen</string>
     <string name="settings_overwrite_replace">Ersetzen</string>
+    <string name="settings_auto_rename">Duplikate automatisch umbenennen</string>
+    <string name="settings_auto_rename_hint">Aus: Arc fragt bei jedem Namenskonflikt im Zielordner, was zu tun ist</string>
     <string name="notif_channel_downloads">Downloads</string>
     <string name="notif_channel_downloads_desc">Fortschritt aktiver Downloads</string>
     <string name="notif_channel_status">Status</string>
@@ -200,6 +204,12 @@
     <string name="duplicate_skip">Überspringen</string>
     <string name="duplicate_new_copy">Weitere Kopie herunterladen</string>
     <string name="duplicate_replace">Vorhandene ersetzen</string>
+    <string name="conflict_title">Dateiname bereits vergeben</string>
+    <string name="conflict_message">%1$s existiert im Zielordner bereits. Was soll Arc tun?</string>
+    <string name="conflict_overwrite">Alte Datei überschreiben</string>
+    <string name="conflict_rename_new">Als neue Kopie speichern</string>
+    <string name="conflict_rename_old">Alte Datei umbenennen</string>
+    <string name="conflict_later">Später entscheiden</string>
     <string name="speed_format">%1$s/s</string>
     <string name="eta_format">Noch etwa %1$s</string>
     <string name="permission_notif_rationale">Arc benötigt die Benachrichtigungsberechtigung, um den Download-Fortschritt und Abschlusswarnungen anzuzeigen.</string>

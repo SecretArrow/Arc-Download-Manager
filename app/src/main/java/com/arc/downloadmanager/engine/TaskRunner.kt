@@ -53,6 +53,9 @@ sealed interface TaskOutcome {
 
     data object Canceled : TaskOutcome
 
+    /** The staged payload is done but the destination name is taken; parked for a user decision. */
+    data object Conflict : TaskOutcome
+
     data class Failed(val error: DownloadError, val message: String?, val retryAfterSec: Long? = null) : TaskOutcome
 }
 
@@ -1335,6 +1338,8 @@ class TaskRunner
             entity: DownloadEntity,
             staged: File,
             settings: EngineSettings,
+            conflictCheck: Boolean = true,
+            overwrite: Boolean = false,
         ): TaskOutcome {
             store.updateStatus(entity.id, DownloadStatus.VERIFYING)
             val expected = entity.expectedSha256?.let { Checksum.normalize(it) }
@@ -1351,7 +1356,13 @@ class TaskRunner
                 computed = runCatching { Checksum.sha256(staged) }.getOrNull()
             }
             return try {
-                val finalUri = storage.finalize(entity, staged)
+                if (conflictCheck && !settings.autoRenameDuplicates && storage.destinationConflict(entity)) {
+                    // The staged bytes stay safe on internal storage; the user decides what to
+                    // do with the collision (overwrite / rename new / rename old / discard).
+                    store.updateStatus(entity.id, DownloadStatus.CONFLICT, DownloadError.FILE_EXISTS.name, null)
+                    return TaskOutcome.Conflict
+                }
+                val finalUri = storage.finalize(entity, staged, overwrite)
                 val done = store.getById(entity.id) ?: return TaskOutcome.Canceled
                 store.update(
                     done.copy(
@@ -1370,6 +1381,38 @@ class TaskRunner
                 store.updateStatus(entity.id, DownloadStatus.FAILED, DownloadError.IO_ERROR.name, e.message)
                 TaskOutcome.Failed(DownloadError.IO_ERROR, e.message)
             }
+        }
+
+        /**
+         * Publishes the staged payload of a task parked in [DownloadStatus.CONFLICT] after the
+         * user picked a resolution. No bytes are re-downloaded: the staged file is finalized
+         * as-is under the entity's (possibly edited) filename. [overwrite]=true replaces the
+         * existing same-name entry; false keeps it and chooses a fresh name.
+         * Returns true when the task reached COMPLETED.
+         */
+        suspend fun publishStaged(
+            id: String,
+            settings: EngineSettings,
+            overwrite: Boolean,
+        ): Boolean {
+            val entity = store.getById(id) ?: return false
+            if (entity.status != DownloadStatus.CONFLICT) return false
+            val staged = storage.findStagedFile(id)
+            if (staged == null || !staged.exists()) {
+                store.updateStatus(id, DownloadStatus.FAILED, DownloadError.IO_ERROR.name, "Staged file missing")
+                return false
+            }
+            val outcome =
+                finalizeDownload(
+                    entity,
+                    staged,
+                    settings,
+                    // The user already decided how to handle the collision; the storage layer
+                    // enforces it (overwrite / fresh name) without re-asking.
+                    conflictCheck = false,
+                    overwrite = overwrite,
+                )
+            return outcome == TaskOutcome.Completed
         }
 
         private fun emptyStagingFile(entity: DownloadEntity): File =
@@ -1428,6 +1471,7 @@ class TaskRunner
                     handleFailure(entity, outcome, settings)
                 }
                 TaskOutcome.Completed -> Unit // handled in finalizeDownload
+                TaskOutcome.Conflict -> Unit // handled in finalizeDownload
             }
         }
 

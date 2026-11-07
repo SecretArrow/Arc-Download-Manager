@@ -9,6 +9,7 @@ object TaskActions {
     const val RETRY = "retry"
     const val CANCEL = "cancel"
     const val RESTART = "restart"
+    const val RESOLVE = "resolve"
     const val PAUSE_ALL = "pause_all"
     const val RESUME_ALL = "resume_all"
 }
@@ -52,4 +53,15 @@ object PendingActionPolicy {
             val status = statuses[id]
             status != null && isActive(action, status, nowMs, timeoutMs)
         }
+}
+
+/**
+ * Pure selection logic for the filename-conflict prompt: picks the first download parked in
+ * [DownloadStatus.CONFLICT] that the user has not resolved or postponed in this session.
+ */
+object ConflictPromptPolicy {
+    fun next(
+        statuses: Map<String, DownloadStatus>,
+        resolved: Set<String>,
+    ): String? = statuses.entries.firstOrNull { (id, status) -> status == DownloadStatus.CONFLICT && id !in resolved }?.key
 }

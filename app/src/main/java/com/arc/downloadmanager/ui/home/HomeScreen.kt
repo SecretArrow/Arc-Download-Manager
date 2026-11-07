@@ -98,6 +98,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arc.downloadmanager.R
 import com.arc.downloadmanager.data.settings.OverwritePolicy
+import com.arc.downloadmanager.domain.model.ConflictAction
 import com.arc.downloadmanager.ui.components.DownloadRow
 import com.arc.downloadmanager.ui.downloads.AddDownloadSheet
 import com.arc.downloadmanager.ui.theme.ArcHeroBrush
@@ -116,6 +117,7 @@ fun HomeScreen(
     val ui by viewModel.ui.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val pendingDuplicate by viewModel.pendingDuplicate.collectAsStateWithLifecycle()
+    val activeConflict by viewModel.activeConflict.collectAsStateWithLifecycle()
     var showAdd by rememberSaveable { mutableStateOf(false) }
     var addSheetUrl by rememberSaveable { mutableStateOf("") }
     var viewMode by rememberSaveable { mutableIntStateOf(1) } // 0 compact, 1 detailed
@@ -347,6 +349,7 @@ fun HomeScreen(
                         },
                         onCancel = { viewModel.cancel(entity.id) },
                         onRetry = { viewModel.retry(entity.id) },
+                        onResolve = { viewModel.openConflict(entity.id) },
                         speedBps = ui.speeds[entity.id] ?: 0L,
                         selected = entity.id in ui.selection,
                         inSelectionMode = ui.inSelectionMode,
@@ -424,6 +427,53 @@ fun HomeScreen(
             },
         )
     }
+
+    activeConflict?.let { conflict ->
+        FilenameConflictDialog(
+            filename = conflict.filename,
+            onOverwrite = { viewModel.resolveConflict(conflict.id, ConflictAction.OVERWRITE) },
+            onRenameNew = { viewModel.resolveConflict(conflict.id, ConflictAction.RENAME_NEW) },
+            onRenameOld = { viewModel.resolveConflict(conflict.id, ConflictAction.RENAME_OLD) },
+            onLater = { viewModel.dismissConflict(conflict.id) },
+        )
+    }
+}
+
+/**
+ * Filename collision at the destination: the finished download is parked until the user picks
+ * overwrite / a fresh copy / renaming the old file away (or postpones the decision).
+ */
+@Composable
+private fun FilenameConflictDialog(
+    filename: String,
+    onOverwrite: () -> Unit,
+    onRenameNew: () -> Unit,
+    onRenameOld: () -> Unit,
+    onLater: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onLater,
+        title = { Text(stringResource(R.string.conflict_title)) },
+        text = {
+            Column {
+                Text(stringResource(R.string.conflict_message, filename))
+                Spacer(Modifier.height(10.dp))
+                TextButton(onClick = onOverwrite, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.conflict_overwrite), modifier = Modifier.fillMaxWidth())
+                }
+                TextButton(onClick = onRenameNew, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.conflict_rename_new), modifier = Modifier.fillMaxWidth())
+                }
+                TextButton(onClick = onRenameOld, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.conflict_rename_old), modifier = Modifier.fillMaxWidth())
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onLater) { Text(stringResource(R.string.conflict_later)) }
+        },
+    )
 }
 
 /** Plain text from the system clipboard; null on any failure (some OEM clipboard impls throw). */

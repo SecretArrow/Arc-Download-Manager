@@ -20,6 +20,7 @@
     <string name="status_waiting_storage">Oczekiwanie na miejsce</string>
     <string name="status_waiting_schedule">Oczekiwanie na harmonogram</string>
     <string name="status_auth_required">Wymagane logowanie</string>
+    <string name="status_conflict">Konflikt nazw</string>
     <string name="action_add_download">Dodaj pobieranie</string>
     <string name="action_batch_download">Pobieranie wsadowe</string>
     <string name="action_paste_url">Wklej adres URL</string>
@@ -27,6 +28,7 @@
     <string name="action_resume">Wznów</string>
     <string name="action_retry">Ponów</string>
     <string name="action_cancel">Anuluj</string>
+    <string name="action_resolve">Rozwiąż konflikt</string>
     <string name="action_delete">Usuń</string>
     <string name="action_restart">Uruchom ponownie</string>
     <string name="action_open">Otwórz</string>
@@ -161,6 +163,8 @@
     <string name="settings_overwrite_rename">Zmień nazwę kopii</string>
     <string name="settings_overwrite_skip">Pomiń</string>
     <string name="settings_overwrite_replace">Zastąp</string>
+    <string name="settings_auto_rename">Automatycznie zmieniaj nazwy duplikatów</string>
+    <string name="settings_auto_rename_hint">Wyłączone: Arc pyta za każdym razem, gdy nazwa już istnieje w folderze docelowym</string>
     <string name="notif_channel_downloads">Pobieranie</string>
     <string name="notif_channel_downloads_desc">Postęp aktywnych pobrań</string>
     <string name="notif_channel_status">Stan</string>
@@ -200,6 +204,12 @@
     <string name="duplicate_skip">Pomiń</string>
     <string name="duplicate_new_copy">Pobierz drugą kopię</string>
     <string name="duplicate_replace">Zastąp istniejące</string>
+    <string name="conflict_title">Nazwa pliku jest już zajęta</string>
+    <string name="conflict_message">%1$s już istnieje w folderze docelowym. Co zrobić?</string>
+    <string name="conflict_overwrite">Zastąp stary plik</string>
+    <string name="conflict_rename_new">Zapisz jako nową kopię</string>
+    <string name="conflict_rename_old">Zmień nazwę starego pliku</string>
+    <string name="conflict_later">Zdecyduj później</string>
     <string name="speed_format">%1$s/s</string>
     <string name="eta_format">Zostało około %1$s</string>
     <string name="permission_notif_rationale">Arc potrzebuje uprawnień do powiadomień, aby pokazywać postęp pobierania i alerty o ukończeniu.</string>
