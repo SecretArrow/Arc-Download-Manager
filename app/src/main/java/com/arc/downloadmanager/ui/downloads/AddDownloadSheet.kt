@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -89,6 +91,7 @@ fun AddDownloadSheet(
     var batchText by rememberSaveable { mutableStateOf("") }
     var batchMessage by rememberSaveable { mutableStateOf("") }
     var error by rememberSaveable { mutableStateOf(false) }
+    var batchSubmitting by rememberSaveable { mutableStateOf(false) }
     val scheme = remember(url) { com.arc.downloadmanager.engine.Protocols.schemeOf(url) }
     val urlSupported = remember(url) { com.arc.downloadmanager.engine.CookieScopePolicy.isSupportedUrl(url) }
 
@@ -304,22 +307,30 @@ fun AddDownloadSheet(
                 Text("$valid / ${urls.size} valid URLs")
                 if (batchMessage.isNotBlank()) Text(batchMessage)
                 Button(
-                    enabled = valid > 0,
+                    enabled = valid > 0 && !batchSubmitting,
                     onClick = {
                         val requests =
                             urls
                                 .filter { CookieScopePolicy.isSupportedUrl(it) }
                                 .map { DownloadRequest(url = it, source = com.arc.downloadmanager.domain.model.DownloadSource.BATCH) }
                         val template = context.getString(R.string.add_batch_started)
+                        batchSubmitting = true
                         onAddBatch(requests) { started, invalid ->
                             batchMessage =
                                 template
                                     .replace("%1\$d", started.toString())
                                     .replace("%2\$d", invalid.toString())
+                            batchSubmitting = false
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
+                    if (batchSubmitting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.padding(end = 6.dp).size(16.dp),
+                            strokeWidth = 2.dp,
+                        )
+                    }
                     Text(stringResource(R.string.action_start_all))
                 }
             }

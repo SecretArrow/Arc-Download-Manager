@@ -172,11 +172,25 @@ fun HomeScreen(
                                 contentDescription = stringResource(R.string.search_hint),
                             )
                         }
-                        IconButton(onClick = viewModel::pauseAll) {
-                            Icon(Icons.Filled.Pause, contentDescription = stringResource(R.string.notif_pause_all))
+                        IconButton(onClick = viewModel::pauseAll, enabled = ui.bulkAction == null) {
+                            if (ui.bulkAction == com.arc.downloadmanager.ui.components.TaskActions.PAUSE_ALL) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(22.dp),
+                                    strokeWidth = 2.dp,
+                                )
+                            } else {
+                                Icon(Icons.Filled.Pause, contentDescription = stringResource(R.string.notif_pause_all))
+                            }
                         }
-                        IconButton(onClick = viewModel::resumeAll) {
-                            Icon(Icons.Filled.PlayArrow, contentDescription = stringResource(R.string.notif_resume_all))
+                        IconButton(onClick = viewModel::resumeAll, enabled = ui.bulkAction == null) {
+                            if (ui.bulkAction == com.arc.downloadmanager.ui.components.TaskActions.RESUME_ALL) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(22.dp),
+                                    strokeWidth = 2.dp,
+                                )
+                            } else {
+                                Icon(Icons.Filled.PlayArrow, contentDescription = stringResource(R.string.notif_resume_all))
+                            }
                         }
                     },
                 )
@@ -275,6 +289,7 @@ fun HomeScreen(
                         selected = entity.id in ui.selection,
                         inSelectionMode = ui.inSelectionMode,
                         onLongPress = { viewModel.toggleSelected(entity.id) },
+                        pendingAction = ui.pendingActions[entity.id]?.action,
                         modifier = Modifier.animateItem(),
                     )
                 }
@@ -339,6 +354,7 @@ fun HomeScreen(
                         onArchive = {
                             if (ui.filter == HomeFilter.ARCHIVED) viewModel.restore(entity.id) else viewModel.archive(entity.id)
                         },
+                        pendingAction = ui.pendingActions[entity.id]?.action,
                         modifier = Modifier.animateItem(),
                     )
                 }
@@ -355,6 +371,7 @@ fun HomeScreen(
                         onRetry = {},
                         selected = false,
                         inSelectionMode = false,
+                        pendingAction = ui.pendingActions[entity.id]?.action,
                         modifier = Modifier.animateItem(),
                     )
                 }

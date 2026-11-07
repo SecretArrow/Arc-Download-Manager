@@ -13,6 +13,9 @@ import com.arc.downloadmanager.engine.torrent.TorrentEngine
 import com.arc.downloadmanager.engine.torrent.TorrentFileInfo
 import com.arc.downloadmanager.engine.torrent.TorrentRunState
 import com.arc.downloadmanager.engine.torrent.TorrentSnapshot
+import com.arc.downloadmanager.ui.components.PendingAction
+import com.arc.downloadmanager.ui.components.PendingActionPolicy
+import com.arc.downloadmanager.ui.components.TaskActions
 import com.arc.downloadmanager.util.SpeedTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -43,6 +46,15 @@ class DownloadDetailViewModel
         private val id: String = savedStateHandle.get<String>("id") ?: ""
         private val speedTracker = SpeedTracker()
 
+        /** Action clicked but not yet reflected by the engine (button spinner). */
+        private val pendingAction = MutableStateFlow<PendingAction?>(null)
+
+        /** "Save to Vault" copy/encrypt in progress. */
+        private val vaultSaving = MutableStateFlow(false)
+
+        /** Delete (task + optional file) in progress. */
+        private val deleting = MutableStateFlow(false)
+
         val detail: StateFlow<DetailUiState> =
             combine(
                 repository.observeById(id),
@@ -53,7 +65,9 @@ class DownloadDetailViewModel
                         delay(1_000)
                     }
                 },
-            ) { entity, segments, _ ->
+                pendingAction,
+                combine(vaultSaving, deleting) { saving, deleting -> saving to deleting },
+            ) { entity, segments, _, pending, (saving, deleting) ->
                 // Live smoothed speed while the task moves; drops history when terminal.
                 val speed =
                     if (entity != null && entity.status.isActive) {
@@ -69,11 +83,19 @@ class DownloadDetailViewModel
                     } else {
                         null
                     }
+                // Resolve the pending click once the status moves (or it times out).
+                val liveAction =
+                    entity?.let { e ->
+                        pending?.takeIf { PendingActionPolicy.isActive(it, e.status, System.currentTimeMillis()) }
+                    }?.action
                 DetailUiState(
                     entity = entity,
                     segments = segments,
                     speedBps = speed,
                     torrent = torrent,
+                    pendingAction = liveAction,
+                    vaultSaving = saving,
+                    deleting = deleting,
                 )
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DetailUiState())
 
@@ -110,15 +132,36 @@ class DownloadDetailViewModel
             super.onCleared()
         }
 
-        fun pause() = repository.pause(id)
+        fun pause() {
+            recordAction(TaskActions.PAUSE)
+            repository.pause(id)
+        }
 
-        fun resume() = repository.resume(id)
+        fun resume() {
+            recordAction(TaskActions.RESUME)
+            repository.resume(id)
+        }
 
-        fun cancel() = repository.cancel(id)
+        fun cancel() {
+            recordAction(TaskActions.CANCEL)
+            repository.cancel(id)
+        }
 
-        fun retry() = repository.retry(id)
+        fun retry() {
+            recordAction(TaskActions.RETRY)
+            repository.retry(id)
+        }
 
-        fun restart() = repository.restart(id)
+        fun restart() {
+            recordAction(TaskActions.RESTART)
+            repository.restart(id)
+        }
+
+        /** Snapshots the current status at click time for the in-flight spinner. */
+        private fun recordAction(action: String) {
+            val entity = detail.value.entity ?: return
+            pendingAction.value = PendingAction(action, entity.status, System.currentTimeMillis())
+        }
 
         fun archive() = repository.archive(listOf(id), archived = true)
 
@@ -131,36 +174,42 @@ class DownloadDetailViewModel
         ) {
             val uris = com.arc.downloadmanager.util.ShareUris.split(entity.finalUri)
             if (uris.isEmpty()) return onResult(R.string.vault_import_failed, null)
+            if (vaultSaving.value) return
+            vaultSaving.value = true
             viewModelScope.launch {
-                var saved = 0
-                var firstName: String? = null
-                for (uri in uris) {
-                    when (
-                        val r =
-                            vaultRepository.saveFromExternal(
-                                uri,
-                                entity.filename,
-                                entity.mimeType,
-                            )
-                    ) {
-                        is com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.Done -> {
-                            saved++
-                            if (firstName == null) firstName = r.name
-                        }
-                        com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.Failed -> Unit
-                        com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.NeedsSetup,
-                        com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.NeedsUnlock,
-                        -> {
-                            onNavigate()
-                            return@launch
+                try {
+                    var saved = 0
+                    var firstName: String? = null
+                    for (uri in uris) {
+                        when (
+                            val r =
+                                vaultRepository.saveFromExternal(
+                                    uri,
+                                    entity.filename,
+                                    entity.mimeType,
+                                )
+                        ) {
+                            is com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.Done -> {
+                                saved++
+                                if (firstName == null) firstName = r.name
+                            }
+                            com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.Failed -> Unit
+                            com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.NeedsSetup,
+                            com.arc.downloadmanager.data.vault.VaultRepository.ExternalSaveResult.NeedsUnlock,
+                            -> {
+                                onNavigate()
+                                return@launch
+                            }
                         }
                     }
-                }
-                if (saved == 0 || firstName == null) {
-                    onResult(R.string.vault_import_failed, null)
-                } else {
-                    val label = if (saved > 1) "$firstName (+${saved - 1})" else firstName
-                    onResult(R.string.vault_saved_to_vault, label)
+                    if (saved == 0 || firstName == null) {
+                        onResult(R.string.vault_import_failed, null)
+                    } else {
+                        val label = if (saved > 1) "$firstName (+${saved - 1})" else firstName
+                        onResult(R.string.vault_saved_to_vault, label)
+                    }
+                } finally {
+                    vaultSaving.value = false
                 }
             }
         }
@@ -171,9 +220,15 @@ class DownloadDetailViewModel
             deleteFile: Boolean,
             onDone: () -> Unit,
         ) {
+            if (deleting.value) return
+            deleting.value = true
             viewModelScope.launch {
-                repository.delete(id, deleteFile = deleteFile)
-                onDone()
+                try {
+                    repository.delete(id, deleteFile = deleteFile)
+                    onDone()
+                } finally {
+                    deleting.value = false
+                }
             }
         }
 
@@ -237,4 +292,10 @@ data class DetailUiState(
     val speedBps: Long = 0L,
     /** Live BitTorrent stats for magnet tasks (null otherwise). */
     val torrent: TorrentSnapshot? = null,
+    /** Action clicked but not yet applied by the engine (button spinner). */
+    val pendingAction: String? = null,
+    /** "Save to Vault" copy/encrypt in progress. */
+    val vaultSaving: Boolean = false,
+    /** Delete in progress. */
+    val deleting: Boolean = false,
 )

@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.PauseCircle
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Unarchive
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -54,6 +55,29 @@ import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.ui.theme.categoryAccent
 import com.arc.downloadmanager.ui.theme.categoryGradient
 import com.arc.downloadmanager.util.Format
+
+/** In-flight icon-button: spinner while busy (locked), otherwise the plain action icon. */
+@Composable
+private fun ActionIconButton(
+    busy: Boolean,
+    busyTint: Color,
+    icon: ImageVector,
+    contentDescription: String,
+    tint: Color,
+    onClick: () -> Unit,
+) {
+    IconButton(onClick = onClick, enabled = !busy) {
+        if (busy) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(18.dp),
+                strokeWidth = 2.dp,
+                color = busyTint,
+            )
+        } else {
+            Icon(icon, contentDescription = contentDescription, tint = tint)
+        }
+    }
+}
 
 /** Maps a status (plus optional error code) to a color-consistent icon + text pair (never color alone). */
 fun statusLabelRes(
@@ -131,6 +155,8 @@ fun DownloadRow(
     inSelectionMode: Boolean = false,
     onLongPress: () -> Unit = {},
     onArchive: (() -> Unit)? = null,
+    /** Action clicked but not yet applied by the engine (spinner + locked button). */
+    pendingAction: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val status = entity.status
@@ -251,40 +277,54 @@ fun DownloadRow(
                             }
                         }
                         when {
-                            active || status == DownloadStatus.PAUSING ->
-                                IconButton(onClick = onPauseResume) {
-                                    Icon(
-                                        Icons.Filled.PauseCircle,
-                                        contentDescription = androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_pause),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                            status == DownloadStatus.PAUSED || status == DownloadStatus.WAITING_NETWORK ||
-                                status == DownloadStatus.WAITING_STORAGE || status == DownloadStatus.WAITING_SCHEDULED ->
-                                IconButton(onClick = onPauseResume) {
-                                    Icon(
-                                        Icons.Filled.PlayCircle,
-                                        contentDescription = androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_resume),
-                                        tint = MaterialTheme.colorScheme.primary,
-                                    )
-                                }
-                            status.isTerminal || status == DownloadStatus.AUTH_REQUIRED ->
-                                IconButton(onClick = onRetry) {
-                                    Icon(
-                                        Icons.Filled.Refresh,
-                                        contentDescription = androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_retry),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                        }
-                        if (!status.isTerminal || status == DownloadStatus.CANCELED) {
-                            IconButton(onClick = onCancel) {
-                                Icon(
-                                    Icons.Filled.Close,
-                                    contentDescription = androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_cancel),
+                            active || status == DownloadStatus.PAUSING -> {
+                                val busy = pendingAction == TaskActions.PAUSE || status == DownloadStatus.PAUSING
+                                ActionIconButton(
+                                    busy = busy,
+                                    busyTint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    icon = Icons.Filled.PauseCircle,
+                                    contentDescription =
+                                        androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_pause),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    onClick = onPauseResume,
                                 )
                             }
+                            status == DownloadStatus.PAUSED || status == DownloadStatus.WAITING_NETWORK ||
+                                status == DownloadStatus.WAITING_STORAGE || status == DownloadStatus.WAITING_SCHEDULED -> {
+                                val busy = pendingAction == TaskActions.RESUME
+                                ActionIconButton(
+                                    busy = busy,
+                                    busyTint = MaterialTheme.colorScheme.primary,
+                                    icon = Icons.Filled.PlayCircle,
+                                    contentDescription =
+                                        androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_resume),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    onClick = onPauseResume,
+                                )
+                            }
+                            status.isTerminal || status == DownloadStatus.AUTH_REQUIRED -> {
+                                val busy = pendingAction == TaskActions.RETRY
+                                ActionIconButton(
+                                    busy = busy,
+                                    busyTint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    icon = Icons.Filled.Refresh,
+                                    contentDescription =
+                                        androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_retry),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    onClick = onRetry,
+                                )
+                            }
+                        }
+                        if (!status.isTerminal || status == DownloadStatus.CANCELED) {
+                            ActionIconButton(
+                                busy = pendingAction == TaskActions.CANCEL,
+                                busyTint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                icon = Icons.Filled.Close,
+                                contentDescription =
+                                    androidx.compose.ui.res.stringResource(com.arc.downloadmanager.R.string.action_cancel),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                onClick = onCancel,
+                            )
                         }
                     }
                 }

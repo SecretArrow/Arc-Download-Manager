@@ -9,7 +9,11 @@ import com.arc.downloadmanager.data.repository.DownloadRepository
 import com.arc.downloadmanager.data.settings.OverwritePolicy
 import com.arc.downloadmanager.data.settings.SettingsRepository
 import com.arc.downloadmanager.domain.model.DownloadRequest
+import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.engine.StorageManager
+import com.arc.downloadmanager.ui.components.PendingAction
+import com.arc.downloadmanager.ui.components.PendingActionPolicy
+import com.arc.downloadmanager.ui.components.TaskActions
 import com.arc.downloadmanager.util.SpeedTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -31,6 +35,15 @@ class HomeViewModel
         private val storageManager: StorageManager,
     ) : ViewModel() {
         private val speedTracker = SpeedTracker()
+
+        /**
+         * Actions clicked but not yet reflected by the engine, keyed by task id —
+         * drives spinner + locked state on the affected row buttons.
+         */
+        private val pendingActions = MutableStateFlow<Map<String, PendingAction>>(emptyMap())
+
+        /** Bulk top-bar action currently in flight (pause-all / resume-all). */
+        private val bulkAction = MutableStateFlow<String?>(null)
 
         val downloads: StateFlow<List<DownloadEntity>> =
             repository.observeAll()
@@ -64,8 +77,14 @@ class HomeViewModel
         )
 
         val ui: StateFlow<HomeUiState> =
-            combine(repository.observeAll(), ticker, controls) { list, _, controls ->
+            combine(repository.observeAll(), ticker, controls, pendingActions, bulkAction) { list, _, controls, pending, bulk ->
                 val visible = HomeListFilter.apply(list, controls.query, controls.filter, controls.sort)
+                val liveActions =
+                    PendingActionPolicy.activeOnly(
+                        pending,
+                        list.associate { it.id to it.status },
+                        System.currentTimeMillis(),
+                    )
                 val active = list.filter { it.status.isActive && it.archivedAt == null }
                 val speeds = mutableMapOf<String, Long>()
                 val liveIds = active.map { it.id }.toSet()
@@ -106,6 +125,8 @@ class HomeViewModel
                     speeds = speeds,
                     totalSpeed = active.sumOf { speeds[it.id] ?: 0L },
                     storageFree = storageManager.freeBytes(),
+                    pendingActions = liveActions,
+                    bulkAction = bulk,
                 )
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
@@ -149,19 +170,82 @@ class HomeViewModel
             }
         }
 
-        fun pause(id: String) = repository.pause(id)
+        fun pause(id: String) {
+            recordAction(id, TaskActions.PAUSE)
+            repository.pause(id)
+        }
 
-        fun resume(id: String) = repository.resume(id)
+        fun resume(id: String) {
+            recordAction(id, TaskActions.RESUME)
+            repository.resume(id)
+        }
 
-        fun cancel(id: String) = repository.cancel(id)
+        fun cancel(id: String) {
+            recordAction(id, TaskActions.CANCEL)
+            repository.cancel(id)
+        }
 
-        fun retry(id: String) = repository.retry(id)
+        fun retry(id: String) {
+            recordAction(id, TaskActions.RETRY)
+            repository.retry(id)
+        }
 
-        fun restart(id: String) = repository.restart(id)
+        fun restart(id: String) {
+            recordAction(id, TaskActions.RESTART)
+            repository.restart(id)
+        }
 
-        fun pauseAll() = repository.pauseAll()
+        fun pauseAll() {
+            val now = System.currentTimeMillis()
+            bulkAction.value = TaskActions.PAUSE_ALL
+            val targets =
+                downloads.value.filter {
+                    it.archivedAt == null && (it.status.isActive || it.status.isRunningCandidate)
+                }
+            pendingActions.value =
+                pendingActions.value +
+                targets.associate { it.id to PendingAction(TaskActions.PAUSE, it.status, now) }
+            repository.pauseAll()
+            clearBulkAfterDelay()
+        }
 
-        fun resumeAll() = repository.resumeAll()
+        fun resumeAll() {
+            val now = System.currentTimeMillis()
+            bulkAction.value = TaskActions.RESUME_ALL
+            val targets =
+                downloads.value.filter {
+                    it.archivedAt == null &&
+                        (
+                            it.status == DownloadStatus.PAUSED || it.status.isRunningCandidate ||
+                                it.status == DownloadStatus.FAILED ||
+                                it.status == DownloadStatus.AUTH_REQUIRED ||
+                                it.status == DownloadStatus.CANCELED
+                        )
+                }
+            pendingActions.value =
+                pendingActions.value +
+                targets.associate { it.id to PendingAction(TaskActions.RESUME, it.status, now) }
+            repository.resumeAll()
+            clearBulkAfterDelay()
+        }
+
+        /** Records a click so the affected button spins until the engine reflects it. */
+        private fun recordAction(
+            id: String,
+            action: String,
+        ) {
+            val entity = downloads.value.firstOrNull { it.id == id } ?: return
+            pendingActions.value =
+                pendingActions.value + (id to PendingAction(action, entity.status, System.currentTimeMillis()))
+        }
+
+        /** The top-bar bulk button only needs a short anti-double-click window. */
+        private fun clearBulkAfterDelay() {
+            viewModelScope.launch {
+                delay(BULK_BUSY_MS)
+                bulkAction.value = null
+            }
+        }
 
         // List shaping ---------------------------------------------------------
 
@@ -233,6 +317,10 @@ class HomeViewModel
                 onDone(repository.setTaskMeta(id, url, filename))
             }
         }
+
+        private companion object {
+            const val BULK_BUSY_MS = 1_500L
+        }
     }
 
 data class HomeUiState(
@@ -254,6 +342,10 @@ data class HomeUiState(
     val speeds: Map<String, Long> = emptyMap(),
     val totalSpeed: Long = 0L,
     val storageFree: Long = 0L,
+    /** Clicked-but-not-yet-applied actions, keyed by task id (button spinners). */
+    val pendingActions: Map<String, com.arc.downloadmanager.ui.components.PendingAction> = emptyMap(),
+    /** Bulk pause-all/resume-all currently in flight (locks the top-bar buttons). */
+    val bulkAction: String? = null,
 ) {
     val activeBytes: Long
         get() = downloads.filter { it.status.isActive }.sumOf { it.downloadedBytes }

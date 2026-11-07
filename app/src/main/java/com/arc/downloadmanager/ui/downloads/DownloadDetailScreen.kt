@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -32,6 +33,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -62,6 +64,7 @@ import com.arc.downloadmanager.data.db.DownloadEntity
 import com.arc.downloadmanager.domain.model.DownloadStatus
 import com.arc.downloadmanager.engine.FilenameDetector
 import com.arc.downloadmanager.engine.torrent.TorrentFileInfo
+import com.arc.downloadmanager.ui.components.TaskActions
 import com.arc.downloadmanager.ui.components.statusColor
 import com.arc.downloadmanager.ui.components.statusLabelRes
 import com.arc.downloadmanager.util.Format
@@ -121,7 +124,15 @@ fun DownloadDetailScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             ProgressCard(entity, state.segments, state.speedBps)
-            ActionRow(entity, viewModel, context, onEdit = { showEditDialog = true }, onOpenVault = onOpenVault)
+            ActionRow(
+                entity,
+                viewModel,
+                context,
+                pendingAction = state.pendingAction,
+                vaultSaving = state.vaultSaving,
+                onEdit = { showEditDialog = true },
+                onOpenVault = onOpenVault,
+            )
             InfoSection(entity, state.torrent)
             if (entity.url.startsWith("magnet:")) {
                 TorrentFilesCard(files = torrentFiles, onToggle = viewModel::setTorrentFileIncluded)
@@ -151,11 +162,22 @@ fun DownloadDetailScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
-                    showDeleteDialog = false
-                    viewModel.delete(deleteFile = alsoDeleteFile, onDone = onBack)
-                }) {
-                    Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        viewModel.delete(deleteFile = alsoDeleteFile, onDone = onBack)
+                    },
+                    enabled = !state.deleting,
+                ) {
+                    if (state.deleting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    } else {
+                        Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
+                    }
                 }
             },
             dismissButton = {
@@ -266,28 +288,53 @@ private fun ActionRow(
     entity: DownloadEntity,
     viewModel: DownloadDetailViewModel,
     context: android.content.Context,
+    pendingAction: String?,
+    vaultSaving: Boolean,
     onEdit: () -> Unit,
     onOpenVault: () -> Unit,
 ) {
     val active = entity.status.isActive
+    // While a task is queued/waiting (e.g. right after Resume), the meaningful
+    // action is Pause — showing Resume again invites dead no-op clicks.
+    val showPause = active || entity.status.isRunningCandidate
+    val pauseBusy = pendingAction == TaskActions.PAUSE || entity.status == DownloadStatus.PAUSING
+    val resumeBusy = pendingAction == TaskActions.RESUME
+    val retryBusy = pendingAction == TaskActions.RETRY
+    val restartBusy = pendingAction == TaskActions.RESTART
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (active) {
-            Button(onClick = viewModel::pause) {
-                Icon(Icons.Filled.Pause, contentDescription = null)
+        if (showPause) {
+            Button(onClick = viewModel::pause, enabled = !pauseBusy) {
+                if (pauseBusy) {
+                    CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                } else {
+                    Icon(Icons.Filled.Pause, contentDescription = null)
+                }
                 Text(stringResource(R.string.action_pause), Modifier.padding(start = 4.dp))
             }
         } else {
-            Button(onClick = viewModel::resume) {
-                Icon(Icons.Filled.PlayArrow, contentDescription = null)
+            Button(onClick = viewModel::resume, enabled = !resumeBusy) {
+                if (resumeBusy) {
+                    CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                } else {
+                    Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                }
                 Text(stringResource(R.string.action_resume), Modifier.padding(start = 4.dp))
             }
         }
-        OutlinedButton(onClick = viewModel::retry) {
-            Icon(Icons.Filled.Refresh, contentDescription = null)
+        OutlinedButton(onClick = viewModel::retry, enabled = !retryBusy) {
+            if (retryBusy) {
+                CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+            } else {
+                Icon(Icons.Filled.Refresh, contentDescription = null)
+            }
             Text(stringResource(R.string.action_retry), Modifier.padding(start = 4.dp))
         }
-        OutlinedButton(onClick = viewModel::restart) {
-            Icon(Icons.Filled.RestartAlt, contentDescription = null)
+        OutlinedButton(onClick = viewModel::restart, enabled = !restartBusy) {
+            if (restartBusy) {
+                CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+            } else {
+                Icon(Icons.Filled.RestartAlt, contentDescription = null)
+            }
         }
     }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -375,8 +422,13 @@ private fun ActionRow(
                     android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
                 }
             },
+            enabled = !vaultSaving,
         ) {
-            Icon(Icons.Filled.Lock, contentDescription = null)
+            if (vaultSaving) {
+                CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+            } else {
+                Icon(Icons.Filled.Lock, contentDescription = null)
+            }
             Text(stringResource(R.string.action_save_to_vault), Modifier.padding(start = 4.dp))
         }
     }
